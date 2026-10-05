@@ -1,0 +1,101 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * CityPizza360 — Design System (Lovable)
+ * Paleta: Rojo #C0392B, Amarillo #F1C40F, Negro #1C1C1C, Blanco
+ * Fuente: Poppins (cargada vía <link> en index.html)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-brand-red: var(--brand-red);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-black: var(--brand-black);
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+  --brand-red: oklch(0.521 0.191 27.5);
+  --brand-yellow: oklch(0.828 0.165 89.5);
+  --brand-black: oklch(0.215 0.005 0);
+  --background: oklch(0.99 0.004 90);
+  --foreground: oklch(0.215 0.005 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.215 0.005 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.215 0.005 0);
+  --primary: oklch(0.521 0.191 27.5);
+  --primary-foreground: oklch(0.99 0.004 90);
+  --secondary: oklch(0.828 0.165 89.5);
+  --secondary-foreground: oklch(0.215 0.005 0);
+  --muted: oklch(0.955 0.01 90);
+  --muted-foreground: oklch(0.48 0.02 30);
+  --accent: oklch(0.828 0.165 89.5);
+  --accent-foreground: oklch(0.215 0.005 0);
+  --destructive: oklch(0.521 0.191 27.5);
+  --destructive-foreground: oklch(0.99 0.004 90);
+  --border: oklch(0.91 0.01 80);
+  --input: oklch(0.91 0.01 80);
+  --ring: oklch(0.521 0.191 27.5);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+}
+
+@utility btn-tactile {
+  min-height: 3.25rem;
+  border-radius: var(--radius-xl);
+  font-weight: 600;
+  touch-action: manipulation;
+}
+
+@utility card-soft {
+  background: var(--color-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 12px oklch(0.215 0.005 0 / 6%);
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
