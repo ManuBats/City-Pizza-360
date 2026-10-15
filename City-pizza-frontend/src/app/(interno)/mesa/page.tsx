@@ -1,14 +1,9 @@
-import { useMemo, useState } from "react";
 import { CheckCircle2, Minus, Plus, Send, UtensilsCrossed } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
+import { useComanda } from "@/hooks/use-comanda";
 import { PRODUCTOS, soles } from "@/lib/pizzas";
-
-type LineaComanda = { productoId: string; nombre: string; tamano: "Personal" | "Familiar"; precio: number; qty: number };
-
-type Comanda = { id: string; mesa: number; items: LineaComanda[]; nota: string; total: number; hora: string };
-
-const MESAS = Array.from({ length: 12 }, (_, i) => i + 1);
+import { MESAS } from "@/types/mesa";
 
 export default function MesaPage() {
   return (
@@ -19,47 +14,13 @@ export default function MesaPage() {
 }
 
 function MesaContent() {
-  const [mesa, setMesa] = useState<number | null>(null);
-  const [lineas, setLineas] = useState<LineaComanda[]>([]);
-  const [nota, setNota] = useState("");
-  const [enviadas, setEnviadas] = useState<Comanda[]>([]);
-  const [tamanoPorId, setTamanoPorId] = useState<Record<string, "Personal" | "Familiar">>({});
-
-  const total = useMemo(() => lineas.reduce((acc, l) => acc + l.precio * l.qty, 0), [lineas]);
-
-  function agregar(productoId: string, nombre: string, precioPersonal: number, precioFamiliar: number, esBebida: boolean) {
-    const tamano = esBebida ? "Personal" : (tamanoPorId[productoId] ?? "Familiar");
-    const precio = tamano === "Personal" ? precioPersonal : precioFamiliar;
-    setLineas((prev) => {
-      const i = prev.findIndex((l) => l.productoId === productoId && l.tamano === tamano);
-      if (i >= 0) return prev.map((l, j) => (j === i ? { ...l, qty: l.qty + 1 } : l));
-      return [...prev, { productoId, nombre, tamano, precio, qty: 1 }];
-    });
-  }
-
-  function cambiarQty(index: number, delta: number) {
-    setLineas((prev) =>
-      prev
-        .map((l, i) => (i === index ? { ...l, qty: l.qty + delta } : l))
-        .filter((l) => l.qty > 0),
-    );
-  }
-
-  function enviarACocina() {
-    if (mesa === null || lineas.length === 0) return;
-    const comanda: Comanda = {
-      id: `#M${String(enviadas.length + 1).padStart(3, "0")}`,
-      mesa,
-      items: lineas,
-      nota: nota.trim(),
-      total,
-      hora: new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
-    };
-    setEnviadas((prev) => [comanda, ...prev]);
-    setLineas([]);
-    setNota("");
-    setMesa(null);
-  }
+  const {
+    mesa, setMesa,
+    lineas, nota, setNota, enviadas,
+    tamanoPorId, setTamano,
+    total,
+    agregar, cambiarQty, enviarACocina,
+  } = useComanda();
 
   return (
     <StaffLayout
@@ -108,7 +69,7 @@ function MesaContent() {
                         {(["Personal", "Familiar"] as const).map((t) => (
                           <button
                             key={t}
-                            onClick={() => setTamanoPorId((prev) => ({ ...prev, [p.id]: t }))}
+                            onClick={() => setTamano(p.id, t)}
                             className={`rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                               tamano === t ? "bg-primary text-white" : "text-muted-foreground"
                             }`}

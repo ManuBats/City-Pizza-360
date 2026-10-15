@@ -1,32 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { Loader2, Lock, Pizza, User } from "lucide-react";
-import { useState } from "react";
-import { useSessionContext } from "@/context/session-context";
+import { useLogin } from "@/hooks/use-login";
 
 export default function LoginPage() {
-  const { login } = useSessionContext();
-  const [error, setError] = useState<string | null>(null);
-  const [cargando, setCargando] = useState(false);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    setCargando(true);
-    try {
-      const form = new FormData(e.currentTarget);
-      const res = await login(
-        String(form.get("usuario") ?? ""),
-        String(form.get("password") ?? ""),
-      );
-      if (!res) {
-        setError("Usuario o contraseña incorrectos.");
-      }
-    } catch {
-      setError("No se pudo iniciar sesión. Intenta de nuevo.");
-    } finally {
-      setCargando(false);
-    }
-  }
+  const { error, cargando, onSubmit } = useLogin();
 
   return (
     <div className="grid min-h-screen place-items-center bg-brand-black px-4 text-white">

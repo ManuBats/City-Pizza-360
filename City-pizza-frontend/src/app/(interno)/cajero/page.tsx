@@ -1,38 +1,8 @@
-import { useState } from "react";
 import { Banknote, Bike, ChefHat, Clock, Package, Plus, Tag } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
-import { PRODUCTOS, soles, type Producto } from "@/lib/pizzas";
-
-type EstadoPedido = "Recibido" | "En cocina" | "Listo" | "En camino" | "Entregado";
-
-type Pedido = {
-  id: string;
-  cliente: string;
-  items: string;
-  total: number;
-  estado: EstadoPedido;
-  entrega: "Delivery" | "Recojo";
-  hora: string;
-};
-
-// Mock temporal. NOTA: estados de vista ("En cocina") ≠ estados backend
-// (Recibido→Preparación→Listo→En Camino→Entregado); se mapea al conectar.
-// TODO(módulo Pedidos/Catálogo): GET pedidos + PATCH estado + toggle disponible.
-const PEDIDOS_INICIALES: Pedido[] = [
-  { id: "#0127", cliente: "Rosa Quispe", items: "1× Hawaiana Familiar, 1× Gaseosa 1L", total: 45, estado: "Recibido", entrega: "Delivery", hora: "20:31" },
-  { id: "#0126", cliente: "Carlos Mendoza", items: "2× Pepperoni Personal", total: 38, estado: "En cocina", entrega: "Recojo", hora: "20:24" },
-  { id: "#0125", cliente: "María Torres", items: "1× Americana Familiar, 1× Cuatro Quesos Personal", total: 59, estado: "En camino", entrega: "Delivery", hora: "20:10" },
-];
-
-const SIGUIENTE_ESTADO: Partial<Record<EstadoPedido, EstadoPedido>> = {
-  Recibido: "En cocina",
-  "En cocina": "Listo",
-  Listo: "En camino",
-  "En camino": "Entregado",
-};
-
-type PromoFlash = { id: string; titulo: string; detalle: string; venceEn: number };
+import { useCajero, type TabCajero } from "@/hooks/use-cajero";
+import { soles } from "@/lib/pizzas";
 
 export default function CajeroPage() {
   return (
@@ -43,43 +13,15 @@ export default function CajeroPage() {
 }
 
 function CajeroContent() {
-  const [tab, setTab] = useState<"pedidos" | "carta" | "promo">("pedidos");
-  const [pedidos, setPedidos] = useState(PEDIDOS_INICIALES);
-  const [productos, setProductos] = useState<Producto[]>(PRODUCTOS);
-  const [promos, setPromos] = useState<PromoFlash[]>([]);
-  const [titulo, setTitulo] = useState("");
-  const [detalle, setDetalle] = useState("");
-  const [horas, setHoras] = useState(24);
-  const [errorPromo, setErrorPromo] = useState<string | null>(null);
-
-  function crearPromo(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (horas > 48) {
-      setErrorPromo("Las promos de caja duran máximo 48 horas.");
-      return;
-    }
-    if (horas < 1) {
-      setErrorPromo("La promo debe durar al menos 1 hora.");
-      return;
-    }
-    if (!titulo.trim() || !detalle.trim()) {
-      setErrorPromo("Completa título y detalle.");
-      return;
-    }
-    setErrorPromo(null);
-    setPromos((prev) => [
-      {
-        id: `pf-${Date.now()}`,
-        titulo: titulo.trim(),
-        detalle: detalle.trim(),
-        venceEn: Date.now() + horas * 60 * 60 * 1000,
-      },
-      ...prev,
-    ]);
-    setTitulo("");
-    setDetalle("");
-    setHoras(24);
-  }
+  const {
+    tab, setTab,
+    pedidos, avanzarPedido,
+    productos, toggleDisponible,
+    promos,
+    titulo, setTitulo, detalle, setDetalle, horas, setHoras,
+    errorPromo, crearPromo,
+    siguienteEstado,
+  } = useCajero();
 
   return (
     <StaffLayout
@@ -136,19 +78,13 @@ function CajeroContent() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-extrabold text-primary">{soles(p.total)}</span>
-                  {SIGUIENTE_ESTADO[p.estado] && (
+                  {siguienteEstado[p.estado] && (
                     <button
-                      onClick={() =>
-                        setPedidos((prev) =>
-                          prev.map((x) =>
-                            x.id === p.id ? { ...x, estado: SIGUIENTE_ESTADO[p.estado]! } : x,
-                          ),
-                        )
-                      }
+                      onClick={() => avanzarPedido(p.id)}
                       className="btn-tactile flex items-center gap-2 bg-primary px-5 text-sm text-white transition-colors hover:bg-primary/90"
                     >
                       <ChefHat className="h-4 w-4" />
-                      {SIGUIENTE_ESTADO[p.estado]}
+                      {siguienteEstado[p.estado]}
                     </button>
                   )}
                 </div>
@@ -168,11 +104,7 @@ function CajeroContent() {
                   </p>
                 </div>
                 <button
-                  onClick={() =>
-                    setProductos((prev) =>
-                      prev.map((x) => (x.id === prod.id ? { ...x, disponible: !x.disponible } : x)),
-                    )
-                  }
+                  onClick={() => toggleDisponible(prod.id)}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
                     prod.disponible ? "bg-secondary text-brand-black" : "bg-primary/10 text-primary"
                   }`}
