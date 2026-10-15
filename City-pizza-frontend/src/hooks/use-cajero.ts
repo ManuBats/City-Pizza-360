@@ -35,7 +35,7 @@ export function useCajero() {
     );
   }
 
-  function toggleDisponible(id: string) {
+  function toggleDisponible(id: number) {
     setProductos((prev) =>
       prev.map((x) => (x.id === id ? { ...x, disponible: !x.disponible } : x)),
     );

@@ -6,10 +6,15 @@ import { soles, type Producto } from "@/lib/pizzas";
 /** Tarjeta de producto del menú (extraída de routes/menu.tsx). */
 export function PizzaCard({ producto }: { producto: Producto }) {
   const { add } = useCart();
-  const [tamano, setTamano] = useState<"Personal" | "Familiar">("Familiar");
+  const [tamano, setTamano] = useState<"Personal" | "Mediana" | "Familiar">("Familiar");
   const [qty, setQty] = useState(1);
   const esBebida = producto.categoria === "Bebidas";
-  const precio = tamano === "Personal" ? producto.precioPersonal : producto.precioFamiliar;
+  const precio =
+    tamano === "Personal"
+      ? producto.precioPersonal
+      : tamano === "Mediana"
+        ? producto.precioMediana
+        : producto.precioFamiliar;
 
   return (
     <article className="card-soft overflow-hidden">
@@ -40,8 +45,8 @@ export function PizzaCard({ producto }: { producto: Producto }) {
         </p>
 
         {!esBebida && (
-          <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
-            {(["Personal", "Familiar"] as const).map((t) => (
+          <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+            {(["Personal", "Mediana", "Familiar"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTamano(t)}

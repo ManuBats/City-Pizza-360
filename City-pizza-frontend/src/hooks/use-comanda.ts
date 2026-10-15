@@ -8,11 +8,11 @@ export function useComanda() {
   const [lineas, setLineas] = useState<LineaComanda[]>([]);
   const [nota, setNota] = useState("");
   const [enviadas, setEnviadas] = useState<Comanda[]>([]);
-  const [tamanoPorId, setTamanoPorId] = useState<Record<string, "Personal" | "Familiar">>({});
+  const [tamanoPorId, setTamanoPorId] = useState<Record<number, "Personal" | "Familiar">>({});
 
   const total = useMemo(() => lineas.reduce((acc, l) => acc + l.precio * l.qty, 0), [lineas]);
 
-  function agregar(productoId: string, nombre: string, precioPersonal: number, precioFamiliar: number, esBebida: boolean) {
+  function agregar(productoId: number, nombre: string, precioPersonal: number, precioFamiliar: number, esBebida: boolean) {
     const tamano = esBebida ? "Personal" : (tamanoPorId[productoId] ?? "Familiar");
     const precio = tamano === "Personal" ? precioPersonal : precioFamiliar;
     setLineas((prev) => {
@@ -30,7 +30,7 @@ export function useComanda() {
     );
   }
 
-  function setTamano(productoId: string, tamano: "Personal" | "Familiar") {
+  function setTamano(productoId: number, tamano: "Personal" | "Familiar") {
     setTamanoPorId((prev) => ({ ...prev, [productoId]: tamano }));
   }
 

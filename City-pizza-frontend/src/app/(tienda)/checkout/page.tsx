@@ -1,16 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { Banknote, Minus, Phone, Plus, Trash2 } from "lucide-react";
+import { Banknote, Minus, Phone, Plus, QrCode, Trash2 } from "lucide-react";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
+import { YapeModal } from "@/components/checkout/YapeModal";
 import { useCheckout } from "@/hooks/use-checkout";
 import { COSTO_DELIVERY, soles } from "@/lib/pizzas";
 
 export function CheckoutPage() {
   const {
     items, subtotal, total, esDelivery, errores, enviando,
-    nombres, apellidos, celular, direccion, referencia, entrega,
-    setNombres, setApellidos, setCelular, setDireccion, setReferencia, setEntrega,
-    setQty, remove, confirmar,
+    nombres, apellidos, celular, direccion, referencia, entrega, metodoPago,
+    confirmado,
+    setNombres, setApellidos, setCelular, setDireccion, setReferencia,
+    setEntrega, setMetodoPago,
+    setQty, setNota, setExtraQueso, remove, confirmar, irATracking,
   } = useCheckout();
+  const esYape = metodoPago === "Yape";
 
   return (
     <TiendaLayout>
@@ -45,41 +49,62 @@ export function CheckoutPage() {
                 {items.map((item) => (
                   <li
                     key={item.key}
-                    className="flex items-center gap-3 rounded-2xl border border-border p-3"
+                    className="rounded-2xl border border-border p-3"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{item.nombre}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.tamano} · {soles(item.precio)} c/u
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold">{item.nombre}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.tamano} · {soles(item.precio)} c/u
+                          {item.extraQueso ? " · +queso" : ""}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          onClick={() => setQty(item.key, item.qty - 1)}
+                          className="grid h-9 w-9 place-items-center rounded-full bg-muted"
+                          aria-label="Quitar uno"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="w-7 text-center font-bold">{item.qty}</span>
+                        <button
+                          onClick={() => setQty(item.key, item.qty + 1)}
+                          className="grid h-9 w-9 place-items-center rounded-full bg-muted"
+                          aria-label="Agregar uno"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => remove(item.key)}
+                          className="grid h-9 w-9 place-items-center rounded-full text-primary"
+                          aria-label="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <span className="w-16 shrink-0 text-right font-bold">
+                        {soles(item.precio * item.qty)}
+                      </span>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1">
-                      <button
-                        onClick={() => setQty(item.key, item.qty - 1)}
-                        className="grid h-9 w-9 place-items-center rounded-full bg-muted"
-                        aria-label="Quitar uno"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="w-7 text-center font-bold">{item.qty}</span>
-                      <button
-                        onClick={() => setQty(item.key, item.qty + 1)}
-                        className="grid h-9 w-9 place-items-center rounded-full bg-muted"
-                        aria-label="Agregar uno"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => remove(item.key)}
-                        className="grid h-9 w-9 place-items-center rounded-full text-primary"
-                        aria-label="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <input
+                        value={item.nota ?? ""}
+                        onChange={(e) => setNota(item.key, e.target.value)}
+                        placeholder="Nota para esta pizza (ej. sin aceitunas)"
+                        maxLength={200}
+                        className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2 text-xs outline-none focus:border-primary"
+                      />
+                      <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-semibold">
+                        <input
+                          type="checkbox"
+                          checked={item.extraQueso === true}
+                          onChange={(e) => setExtraQueso(item.key, e.target.checked)}
+                          className="h-4 w-4 accent-primary"
+                        />
+                        Extra queso (+S/3)
+                      </label>
                     </div>
-                    <span className="w-16 shrink-0 text-right font-bold">
-                      {soles(item.precio * item.qty)}
-                    </span>
                   </li>
                 ))}
               </ul>
@@ -185,13 +210,48 @@ export function CheckoutPage() {
                 </>
               )}
 
+              <div>
+                <label className="text-sm font-medium">Método de pago</label>
+                <div className="mt-1 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+                  <button
+                    onClick={() => setMetodoPago("Efectivo")}
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+                      !esYape ? "bg-primary text-white" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Banknote className="h-4 w-4" /> Efectivo
+                  </button>
+                  <button
+                    onClick={() => setMetodoPago("Yape")}
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+                      esYape ? "bg-primary text-white" : "text-muted-foreground"
+                    }`}
+                  >
+                    <QrCode className="h-4 w-4" /> Yape
+                  </button>
+                </div>
+              </div>
+
               <div className="rounded-xl bg-muted p-3">
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <Banknote className="h-4 w-4 text-primary" /> Pago en efectivo
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Pagas al recibir tu pedido. Ten el monto exacto si puedes.
-                </p>
+                {esYape ? (
+                  <>
+                    <p className="flex items-center gap-2 text-sm font-semibold">
+                      <QrCode className="h-4 w-4 text-primary" /> Pago con Yape
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Al confirmar verás el QR del local y subirás tu captura.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="flex items-center gap-2 text-sm font-semibold">
+                      <Banknote className="h-4 w-4 text-primary" /> Pago en efectivo
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Pagas al recibir tu pedido. Ten el monto exacto si puedes.
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="space-y-1 border-t border-border pt-3 text-sm">
@@ -212,7 +272,7 @@ export function CheckoutPage() {
               </div>
 
               <button
-                onClick={confirmar}
+                onClick={() => void confirmar()}
                 disabled={enviando}
                 className="btn-tactile w-full bg-primary text-base text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
@@ -222,6 +282,14 @@ export function CheckoutPage() {
           </aside>
         </div>
       </main>
+
+      {confirmado?.requiereYape && (
+        <YapeModal
+          pedido={confirmado.pedido}
+          onSubido={(pedido) => void irATracking(pedido)}
+          onOmitir={() => void irATracking(confirmado.pedido)}
+        />
+      )}
     </TiendaLayout>
   );
 }

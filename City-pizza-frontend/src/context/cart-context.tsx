@@ -10,17 +10,21 @@ import {
 
 export type CartItem = {
   key: string;
-  productoId: string;
+  productoId: number;
   nombre: string;
-  tamano: "Personal" | "Familiar";
+  tamano: "Personal" | "Mediana" | "Familiar";
   precio: number;
   qty: number;
+  nota?: string;
+  extraQueso?: boolean;
 };
 
 type CartContextValue = {
   items: CartItem[];
   add: (item: Omit<CartItem, "key" | "qty">, qty?: number) => void;
   setQty: (key: string, qty: number) => void;
+  setNota: (key: string, nota: string) => void;
+  setExtraQueso: (key: string, extra: boolean) => void;
   remove: (key: string) => void;
   clear: () => void;
   subtotal: number;
@@ -73,6 +77,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const setNota = useCallback((key: string, nota: string) => {
+    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, nota } : i)));
+  }, []);
+
+  const setExtraQueso = useCallback((key: string, extra: boolean) => {
+    setItems((prev) =>
+      prev.map((i) =>
+        i.key === key && Boolean(i.extraQueso) !== extra
+          ? { ...i, extraQueso: extra, precio: i.precio + (extra ? 3 : -3) }
+          : i,
+      ),
+    );
+  }, []);
+
   const remove = useCallback((key: string) => {
     setItems((prev) => prev.filter((i) => i.key !== key));
   }, []);
@@ -86,8 +104,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const count = useMemo(() => items.reduce((acc, i) => acc + i.qty, 0), [items]);
 
   const value = useMemo(
-    () => ({ items, add, setQty, remove, clear, subtotal, count }),
-    [items, add, setQty, remove, clear, subtotal, count],
+    () => ({ items, add, setQty, setNota, setExtraQueso, remove, clear, subtotal, count }),
+    [items, add, setQty, setNota, setExtraQueso, remove, clear, subtotal, count],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

@@ -1,13 +1,31 @@
 import { apiFetch } from "./api";
 import type { PizzaApi } from "@/types/pizza";
 
-type PizzaRaw = Omit<PizzaApi, "precio"> & { precio: number | string };
+type PizzaRaw = Omit<
+  PizzaApi,
+  "precio" | "precioPersonal" | "precioMediana" | "precioFamiliar"
+> & {
+  precio: number | string;
+  precioPersonal: number | string;
+  precioMediana: number | string;
+  precioFamiliar: number | string;
+};
+
+function normalizar(p: PizzaRaw): PizzaApi {
+  return {
+    ...p,
+    precio: Number(p.precio),
+    precioPersonal: Number(p.precioPersonal),
+    precioMediana: Number(p.precioMediana),
+    precioFamiliar: Number(p.precioFamiliar),
+  };
+}
 
 /** Módulo Catálogo: GET /pizzas + toggle Disponible/Agotado. */
 export const CatalogoService = {
   async list(): Promise<PizzaApi[]> {
     const data = await apiFetch<PizzaRaw[]>("/pizzas");
-    return data.map((p) => ({ ...p, precio: Number(p.precio) }));
+    return data.map(normalizar);
   },
 
   async setDisponibilidad(id: number, disponible: boolean): Promise<PizzaApi> {
@@ -15,6 +33,6 @@ export const CatalogoService = {
       method: "PATCH",
       body: JSON.stringify({ disponible }),
     });
-    return { ...data, precio: Number(data.precio) };
+    return normalizar(data);
   },
 };

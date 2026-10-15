@@ -1,20 +1,40 @@
+import { useState } from "react";
 import {
   Check,
   ChefHat,
   ClipboardCheck,
   Clock,
+  Loader2,
   PackageCheck,
   Phone,
   Pizza,
+  Search,
   Truck,
 } from "lucide-react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
-import { useTrackingSimulado } from "@/hooks/use-tracking";
-import { LOCAL } from "@/lib/pizzas";
+import { useTrackingReal, useTrackingSimulado } from "@/hooks/use-tracking";
+import { LOCAL, soles } from "@/lib/pizzas";
 
 export function TrackingPage() {
-  // Mock temporal. TODO(Fase B): código + celular + polling 10s real.
-  const { pasoActual } = useTrackingSimulado();
+  const { codigo, celular } = useSearch({ from: "/tracking" });
+  const navigate = useNavigate({ from: "/tracking" });
+  const real = useTrackingReal(codigo, celular);
+  const sim = useTrackingSimulado();
+
+  const [codigoInput, setCodigoInput] = useState(codigo ?? "");
+  const [celularInput, setCelularInput] = useState(celular ?? "");
+
+  function buscar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    navigate({
+      search: {
+        codigo: codigoInput.trim() || undefined,
+        celular: celularInput.replace(/\D/g, "").slice(0, 9) || undefined,
+      },
+    });
+  }
+
   const PASOS = [
     { id: "recibido", label: "Recibido", icon: ClipboardCheck },
     { id: "confirmado", label: "Confirmado", icon: Check },
@@ -26,20 +46,65 @@ export function TrackingPage() {
 
   const mapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(LOCAL.mapsQuery)}&output=embed`;
 
+  // Sin búsqueda: demo visual (mock). Con búsqueda: datos reales del backend.
+  const pasoActual = real.buscar ? real.pasoActual : sim.pasoActual;
+  const titulo = real.buscar && real.pedido ? `Pedido ${real.pedido.codigo}` : "Pedido #0125";
+  const totalLinea =
+    real.buscar && real.pedido
+      ? `${real.pedido.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre}`).join(", ")} · ${soles(Number(real.pedido.total))}`
+      : "Gracias por tu compra. Aquí va tu pizza.";
+
   return (
     <TiendaLayout>
       <main className="mx-auto max-w-3xl px-4 py-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-extrabold">Pedido #0125</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Gracias por tu compra. Aquí va tu pizza.
-            </p>
-          </div>
-          <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-bold text-brand-black">
-            <Clock className="h-4 w-4" /> Tiempo estimado: 25–35 min
-          </span>
-        </div>
+        {/* Buscador código + celular */}
+        <form
+          onSubmit={buscar}
+          className="card-soft flex flex-col gap-2 p-4 sm:flex-row"
+        >
+          <input
+            value={codigoInput}
+            onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
+            placeholder="Código (ej. CP360-1234)"
+            className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+          />
+          <input
+            value={celularInput}
+            onChange={(e) => setCelularInput(e.target.value.replace(/\D/g, "").slice(0, 9))}
+            inputMode="numeric"
+            placeholder="Celular (9 dígitos)"
+            className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+          />
+          <button
+            type="submit"
+            className="btn-tactile inline-flex items-center justify-center gap-2 bg-primary px-6 text-white transition-colors hover:bg-primary/90"
+          >
+            <Search className="h-4 w-4" /> Buscar
+          </button>
+        </form>
+
+        {real.buscar && real.cargando && (
+          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Buscando tu pedido…
+          </p>
+        )}
+        {real.buscar && real.error && !real.cargando && (
+          <p className="card-soft mt-6 p-4 text-center text-sm font-semibold text-primary">
+            {real.error} Revisa el código y el celular.
+          </p>
+        )}
+
+        {(!real.buscar || real.pedido) && (
+          <>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h1 className="text-3xl font-extrabold">{titulo}</h1>
+                <p className="mt-1 text-sm text-muted-foreground">{totalLinea}</p>
+              </div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-bold text-brand-black">
+                <Clock className="h-4 w-4" /> Tiempo estimado: 25–35 min
+              </span>
+            </div>
 
         {/* Timeline */}
         <section className="card-soft mt-6 p-6">
@@ -118,6 +183,8 @@ export function TrackingPage() {
             loading="lazy"
           />
         </section>
+          </>
+        )}
       </main>
     </TiendaLayout>
   );

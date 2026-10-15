@@ -45,6 +45,7 @@ enum TipoPromocion {
 model Pizza {
   id             Int            @id @default(autoincrement())
   nombre         String         @unique
+  descripcion    String?
   tipo           String         @default("Pizza")
   categoria      String         @default("Clásicas")
   precio         Decimal        @db.Decimal(10, 2) @default(0) // legacy: usar precio* por tamaño

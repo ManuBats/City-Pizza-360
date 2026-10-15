@@ -8,7 +8,7 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { getWorkerSession } from "@/lib/auth";
+import { AuthService } from "@/services/auth.service";
 import { puedeAcceder } from "@/lib/access-control";
 import { CATEGORIAS, type Categoria } from "@/lib/pizzas";
 import { AppShell } from "./app/shell";
@@ -40,11 +40,16 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 /** Guard estilo proxy.ts de CCA: sin rol con acceso → /login. */
 function staffGuard(path: string) {
   return async ({ context }: { context: RouterContext }) => {
-    const session = await context.queryClient.fetchQuery({
-      queryKey: ["worker-session"],
-      queryFn: () => getWorkerSession(),
-      staleTime: 30_000,
-    });
+    let session = null;
+    try {
+      session = await context.queryClient.fetchQuery({
+        queryKey: ["worker-session"],
+        queryFn: () => AuthService.me(),
+        staleTime: 30_000,
+      });
+    } catch {
+      session = null;
+    }
     if (!puedeAcceder(session?.rol, path)) {
       throw redirect({ to: "/login" });
     }
@@ -79,6 +84,13 @@ const checkoutRoute = createRoute({
 const trackingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tracking",
+  validateSearch: (search: Record<string, unknown>): {
+    codigo?: string | undefined;
+    celular?: string | undefined;
+  } => ({
+    codigo: typeof search.codigo === "string" ? search.codigo : undefined,
+    celular: typeof search.celular === "string" ? search.celular : undefined,
+  }),
   component: TrackingPage,
 });
 

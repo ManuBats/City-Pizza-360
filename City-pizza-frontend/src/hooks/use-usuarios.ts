@@ -1,20 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createWorker, listWorkers, setWorkerActivo } from "@/lib/auth";
+import { AuthService } from "@/services/auth.service";
 import { getErrorMessage } from "@/services/api";
-import type { Rol } from "@/components/worker/worker-auth";
+import type { RolUi } from "@/types/trabajador";
 
-// Gestión de usuarios (admin) extraída de routes/admin-usuarios.tsx.
-// Lee del mock local lib/auth.ts.
-// TODO(Fase B): reemplazar por AuthService.listWorkers/createWorker/setWorkerActivo.
+// Gestión de usuarios (admin) contra el backend real.
 export function useUsuarios() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
   const equipo = useQuery({
     queryKey: ["workers"],
-    queryFn: () => listWorkers(),
+    queryFn: () => AuthService.listWorkers(),
   });
 
   async function recargar() {
@@ -22,13 +20,9 @@ export function useUsuarios() {
   }
 
   const crear = useMutation({
-    mutationFn: (input: { usuario: string; nombre: string; password: string; rol: Rol }) =>
-      createWorker(input),
-    onSuccess: (res) => {
-      if (!res.ok) {
-        setError(res.error ?? "No se pudo crear el usuario.");
-        return;
-      }
+    mutationFn: (input: { usuario: string; nombre: string; password: string; rol: RolUi }) =>
+      AuthService.createWorker(input),
+    onSuccess: () => {
       setError(null);
       toast.success("Usuario creado");
       void recargar();
@@ -39,18 +33,15 @@ export function useUsuarios() {
 
   const toggle = useMutation({
     mutationFn: (input: { usuario: string; activo: boolean }) =>
-      setWorkerActivo(input.usuario, input.activo),
-    onSuccess: (res) => {
-      if (!res.ok) {
-        setError(res.error ?? "No se pudo actualizar.");
-        toast.error(res.error ?? "No se pudo actualizar.");
-      } else {
-        setError(null);
-      }
+      AuthService.setWorkerActivo(input.usuario, input.activo),
+    onSuccess: () => {
+      setError(null);
       void recargar();
     },
     onError: (e) => {
-      setError(getErrorMessage(e, "No se pudo actualizar."));
+      const msg = getErrorMessage(e, "No se pudo actualizar.");
+      setError(msg);
+      toast.error(msg);
     },
   });
 

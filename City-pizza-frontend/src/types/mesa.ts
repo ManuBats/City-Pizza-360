@@ -2,7 +2,7 @@
  *  TODO(Fase 3): POST /pedidos con { mesa } + nota por línea.
  */
 export type LineaComanda = {
-  productoId: string;
+  productoId: number;
   nombre: string;
   tamano: "Personal" | "Familiar";
   precio: number;
