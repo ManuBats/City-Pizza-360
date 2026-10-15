@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import type { EstadoPago, EstadoPedido } from '@prisma/client';
 import { precioLinea, type Tamano } from '../../../utils/precios';
+import { COSTO_DELIVERY } from '../../../constants/negocio.constants';
 import { serializarPedido } from '../../../utils/serializar';
 import { PrismaService } from '../../../config/prisma/prisma.service';
 import { CreatePedidoDto } from '../dto/pedido.dto';
@@ -55,12 +56,13 @@ export class PedidosService {
       }
     }
 
-    // El total lo calcula el servidor: precio por tamaño + extra queso (+S/3).
-    const total = dto.items.reduce((acc, item) => {
+    // El total lo calcula el servidor: líneas + fee delivery si aplica.
+    const subtotal = dto.items.reduce((acc, item) => {
       const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
       const unit = precioLinea(pizza, item.tamano as Tamano, item.extraQueso === true);
       return acc + unit * item.cantidad;
     }, 0);
+    const total = subtotal + (tipoEntrega === 'Delivery' && subtotal > 0 ? COSTO_DELIVERY : 0);
 
     let codigo = codigoPedido();
     for (let i = 0; i < 5; i++) {
@@ -113,7 +115,7 @@ export class PedidosService {
     });
   }
 
-  /** Tracking invitado por código + celular. */
+  /** Tracking invitado por código + celular (con repartidor si fue asignado). */
   async tracking(codigo: string, celular: string) {
     const pedido = await this.prisma.pedido.findUnique({
       where: { codigo },
@@ -121,7 +123,13 @@ export class PedidosService {
     });
     if (!pedido || pedido.celular !== celular)
       throw new NotFoundException('Pedido no encontrado');
-    return serializarPedido(pedido);
+    const base = serializarPedido(pedido);
+    if (!pedido.repartidorId) return { ...base, repartidor: null };
+    const rep = await this.prisma.trabajador.findUnique({
+      where: { id: pedido.repartidorId },
+      select: { nombre: true, usuario: true },
+    });
+    return { ...base, repartidor: rep };
   }
 
   /** Avance de estado con máquina estricta (JWT rol). */

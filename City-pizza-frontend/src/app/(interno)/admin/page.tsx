@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Bike, ChefHat, Package, Pencil, Plus, Tag, Trash2, Upload, Users } from "lucide-react";
+import { Bike, ChefHat, Package, Pencil, Plus, Star, Tag, Trash2, Upload, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { LogoutButton, RequireRole } from "@/components/worker/worker-auth";
@@ -19,7 +19,7 @@ function AdminDashboard() {
   const {
     tab, setTab,
     pedidos, cargandoPedidos, avanzarPedido,
-    productos, toggleDisponible,
+    productos, toggleDisponible, toggleDestacada,
     crearProducto, creandoProducto,
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
     prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
@@ -220,6 +220,16 @@ function AdminDashboard() {
                       }`}
                     >
                       {prod.disponible ? "Disponible" : "Agotado"}
+                    </button>
+                    <button
+                      onClick={() => toggleDestacada(prod.id, !prod.destacada)}
+                      className={`grid h-9 w-9 place-items-center rounded-full ${
+                        prod.destacada ? "bg-secondary text-brand-black" : "bg-muted text-muted-foreground"
+                      }`}
+                      aria-label="Marcar como favorita"
+                      title="Mostrar en Las más pedidas"
+                    >
+                      <Star className="h-4 w-4" />
                     </button>
                     <button className="grid h-9 w-9 place-items-center rounded-full bg-muted" aria-label="Editar">
                       <Pencil className="h-4 w-4" />

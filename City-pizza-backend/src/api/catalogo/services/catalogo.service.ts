@@ -57,6 +57,7 @@ export class CatalogoService {
       data.precio = dto.precioFamiliar;
     }
     if (dto.disponible !== undefined) data.disponible = dto.disponible;
+    if (dto.destacada !== undefined) data.destacada = dto.destacada;
     const actualizada = await this.prisma.pizza.update({ where: { id }, data });
     return serializarPizza(actualizada);
   }

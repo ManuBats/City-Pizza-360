@@ -11,8 +11,6 @@ import {
 } from "@/lib/pizzas";
 import type { PizzaApi } from "@/types/pizza";
 
-const TOP_SLUGS = ["hawaiana", "americana", "pepperoni"];
-
 const IMAGEN_POR_SLUG: Record<string, string> = {
   hawaiana: "/images/pizza-hawaiana.png",
   americana: "/images/pizza-americana.png",
@@ -33,7 +31,8 @@ function mapear(p: PizzaApi): Producto {
     precioFamiliar: Number(p.precioFamiliar),
     imagen: p.imagenUrl || IMAGEN_POR_SLUG[slug] || IMAGEN_GENERICA,
     disponible: p.disponible,
-    top: TOP_SLUGS.includes(slug),
+    top: p.destacada,
+    destacada: p.destacada,
   };
 }
 

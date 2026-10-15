@@ -11,6 +11,7 @@ export type PizzaApi = {
   precioMediana: number;
   precioFamiliar: number;
   imagenUrl: string | null;
+  destacada: boolean;
   disponible: boolean;
 };
 

@@ -16,6 +16,7 @@ export type Producto = {
   imagen: string;
   disponible: boolean;
   top?: boolean;
+  destacada?: boolean;
 };
 
 /** Slug estable para matchear carrito histórico ("hawaiana") con IDs reales. */

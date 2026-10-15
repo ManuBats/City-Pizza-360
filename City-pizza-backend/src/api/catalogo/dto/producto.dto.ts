@@ -72,4 +72,8 @@ export class UpdateProductoDto {
   @IsOptional()
   @IsBoolean()
   disponible?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  destacada?: boolean;
 }

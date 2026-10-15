@@ -26,11 +26,12 @@ const PIZZAS: {
   mediana: number;
   familiar: number;
   descripcion: string;
+  destacada?: boolean;
   insumos: string[];
 }[] = [
-  { nombre: 'Hawaiana', tipo: 'Pizza', categoria: 'Clásicas', personal: 18, mediana: 25, familiar: 32, descripcion: 'Queso mozzarella, jamón, piña en trozos', insumos: ['Queso mozzarella', 'Jamón', 'Piña en trozos'] },
-  { nombre: 'Americana', tipo: 'Pizza', categoria: 'Clásicas', personal: 18, mediana: 25, familiar: 32, descripcion: 'Queso mozzarella, salame, tocino, jamón', insumos: ['Queso mozzarella', 'Salame', 'Tocino', 'Jamón'] },
-  { nombre: 'Pepperoni', tipo: 'Pizza', categoria: 'Clásicas', personal: 19, mediana: 26, familiar: 34, descripcion: 'Queso mozzarella, doble pepperoni', insumos: ['Queso mozzarella', 'Pepperoni'] },
+  { nombre: 'Hawaiana', tipo: 'Pizza', categoria: 'Clásicas', personal: 18, mediana: 25, familiar: 32, destacada: true, descripcion: 'Queso mozzarella, jamón, piña en trozos', insumos: ['Queso mozzarella', 'Jamón', 'Piña en trozos'] },
+  { nombre: 'Americana', tipo: 'Pizza', categoria: 'Clásicas', personal: 18, mediana: 25, familiar: 32, destacada: true, descripcion: 'Queso mozzarella, salame, tocino, jamón', insumos: ['Queso mozzarella', 'Salame', 'Tocino', 'Jamón'] },
+  { nombre: 'Pepperoni', tipo: 'Pizza', categoria: 'Clásicas', personal: 19, mediana: 26, familiar: 34, destacada: true, descripcion: 'Queso mozzarella, doble pepperoni', insumos: ['Queso mozzarella', 'Pepperoni'] },
   { nombre: 'Suprema', tipo: 'Pizza', categoria: 'Clásicas', personal: 20, mediana: 28, familiar: 36, descripcion: 'Queso, pepperoni, jamón, tocino, aceitunas', insumos: ['Queso mozzarella', 'Pepperoni', 'Jamón', 'Tocino'] },
   { nombre: 'BBQ Chicken', tipo: 'Pizza', categoria: 'Especiales', personal: 22, mediana: 30, familiar: 38, descripcion: 'Pollo a la brasa, salsa BBQ, cebolla caramelizada', insumos: ['Queso mozzarella', 'Pollo a la brasa'] },
   { nombre: 'Cuatro Quesos', tipo: 'Pizza', categoria: 'Especiales', personal: 22, mediana: 30, familiar: 38, descripcion: 'Mozzarella, parmesano, gorgonzola, provolone', insumos: ['Queso mozzarella'] },
@@ -69,6 +70,7 @@ async function main() {
         tipo: p.tipo,
         categoria: p.categoria,
         descripcion: p.descripcion,
+        destacada: p.destacada ?? false,
         precio: p.familiar,
         precioPersonal: p.personal,
         precioMediana: p.mediana,
@@ -77,6 +79,7 @@ async function main() {
       create: {
         nombre: p.nombre,
         descripcion: p.descripcion,
+        destacada: p.destacada ?? false,
         tipo: p.tipo,
         categoria: p.categoria,
         precio: p.familiar,

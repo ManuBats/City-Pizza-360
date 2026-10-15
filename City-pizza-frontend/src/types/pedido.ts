@@ -31,6 +31,7 @@ export type Pedido = {
   estadoPago: "Pendiente" | "Verificado" | "Rechazado";
   comprobanteUrl: string | null;
   repartidorId: number | null;
+  repartidor: { nombre: string; usuario: string } | null;
   mesa: number | null;
   estado: EstadoPedido;
   total: number;

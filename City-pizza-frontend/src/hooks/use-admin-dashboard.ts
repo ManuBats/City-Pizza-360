@@ -103,6 +103,16 @@ export function useAdminDashboard() {
     onError: (e) => err(e, "No se pudo actualizar."),
   });
 
+  const toggleDestacada = useMutation({
+    mutationFn: ({ id, destacada }: { id: number; destacada: boolean }) =>
+      CatalogoService.actualizar(id, { destacada }),
+    onSuccess: () => {
+      void recargar(["pizzas"]);
+      toast.success("Destacadas actualizadas");
+    },
+    onError: (e) => err(e, "No se pudo actualizar."),
+  });
+
   const crearPromo = useMutation({
     mutationFn: () =>
       PromocionesService.crear({
@@ -227,6 +237,8 @@ export function useAdminDashboard() {
     avanzarPedido: (id: number, a: EstadoPedido) => avanzar.mutate({ id, a }),
     productos, cargandoCarta, toggleDisponible: (id: number, disponible: boolean) =>
       toggleCarta.mutate({ id, disponible }),
+    toggleDestacada: (id: number, destacada: boolean) =>
+      toggleDestacada.mutate({ id, destacada }),
     crearProducto: () => crearProducto.mutate(), creandoProducto: crearProducto.isPending,
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
     prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,

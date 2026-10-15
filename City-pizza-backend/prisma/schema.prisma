@@ -53,6 +53,7 @@ model Pizza {
   precioMediana  Decimal        @db.Decimal(10, 2) @default(0)
   precioFamiliar Decimal        @db.Decimal(10, 2) @default(0)
   imagenUrl      String?
+  destacada      Boolean        @default(false)
   disponible     Boolean        @default(true)
   insumos        PizzaInsumo[]
   detalles       DetallePedido[]

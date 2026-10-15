@@ -37,6 +37,14 @@ export const CatalogoService = {
     return normalizar(data);
   },
 
+  async actualizar(id: number, patch: Partial<Pick<PizzaApi, "disponible"> & { destacada?: boolean }>): Promise<PizzaApi> {
+    const data = await apiFetch<PizzaRaw>(`/pizzas/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+    return normalizar(data);
+  },
+
   async crear(input: {
     nombre: string;
     tipo?: string;

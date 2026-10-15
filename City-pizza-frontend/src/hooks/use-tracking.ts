@@ -1,20 +1,7 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
 import type { EstadoPedido } from "@/types/pedido";
-
-/** Mock temporal cuando se entra a /tracking sin código (demo visual). */
-export function useTrackingSimulado() {
-  const [pasoActual, setPasoActual] = useState(2);
-  useEffect(() => {
-    const t = setInterval(() => {
-      setPasoActual((p) => Math.min(p + 1, 5));
-    }, 15000);
-    return () => clearInterval(t);
-  }, []);
-  return { pasoActual, totalPasos: 6 };
-}
 
 const PASO_POR_ESTADO: Record<EstadoPedido, number> = {
   Recibido: 0,
