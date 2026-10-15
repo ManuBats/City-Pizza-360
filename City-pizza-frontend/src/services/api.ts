@@ -59,5 +59,14 @@ export async function apiFetch<T>(
 }
 
 export function getErrorMessage(error: unknown, fallback: string): string {
+  if (esErrorDeRed(error)) return "Sin conexión con el servidor. Revisa tu internet.";
   return error instanceof Error ? error.message : fallback;
+}
+
+/** fetch lanza TypeError cuando no hay red o el servidor está caído. */
+export function esErrorDeRed(error: unknown): boolean {
+  return (
+    error instanceof TypeError ||
+    (error instanceof Error && /failed to fetch|networkerror|load failed/i.test(error.message))
+  );
 }

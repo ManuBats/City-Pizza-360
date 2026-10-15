@@ -1,5 +1,6 @@
 import { Banknote, Bike, ChefHat, Clock, Package, Plus, Tag } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
 import { useCajero, etiquetaEstado } from "@/hooks/use-cajero";
 import { soles } from "@/lib/pizzas";
@@ -15,7 +16,7 @@ export default function CajeroPage() {
 function CajeroContent() {
   const {
     tab, setTab,
-    pedidos, cargandoPedidos, avanzarPedido,
+    pedidos, cargandoPedidos, errorPedidos, reintentarPedidos, avanzarPedido,
     productos, toggleDisponible,
     promos,
     titulo, setTitulo, detalle, setDetalle, precio, setPrecio, horas, setHoras,
@@ -51,7 +52,10 @@ function CajeroContent() {
 
         {tab === "pedidos" && (
           <section className="mt-6 space-y-3">
-            {cargandoPedidos && pedidos.length === 0 && (
+            {errorPedidos && pedidos.length === 0 && (
+              <ErrorBanner mensaje={errorPedidos} onReintentar={() => void reintentarPedidos()} />
+            )}
+            {cargandoPedidos && pedidos.length === 0 && !errorPedidos && (
               <p className="py-8 text-center text-sm text-muted-foreground">Cargando pedidos…</p>
             )}
             {pedidos.map((p) => (

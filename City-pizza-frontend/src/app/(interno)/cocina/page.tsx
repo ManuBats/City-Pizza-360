@@ -1,6 +1,7 @@
 import { Bell, Flame } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { TicketKds } from "@/components/cocina/TicketKds";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
 import { useCola } from "@/hooks/use-cola";
 
@@ -14,7 +15,7 @@ export default function CocinaPage() {
 }
 
 function CocinaContenido() {
-  const { tickets, ahora, nuevos, preparando, cargando, repartidores, iniciar, marcarListo, asignar } = useCola();
+  const { tickets, ahora, nuevos, preparando, cargando, errorCola, reintentar, repartidores, iniciar, marcarListo, asignar } = useCola();
 
   return (
     <StaffLayout
@@ -30,7 +31,12 @@ function CocinaContenido() {
       }
     >
       <main className="mx-auto grid max-w-7xl gap-4 px-4 py-6 md:grid-cols-2 xl:grid-cols-3">
-        {cargando && tickets.length === 0 && (
+        {errorCola && tickets.length === 0 && (
+          <div className="col-span-full">
+            <ErrorBanner mensaje={errorCola} onReintentar={() => void reintentar()} />
+          </div>
+        )}
+        {cargando && tickets.length === 0 && !errorCola && (
           <div className="col-span-full py-24 text-center">
             <p className="text-2xl font-extrabold text-white/80">Cargando comandas…</p>
           </div>

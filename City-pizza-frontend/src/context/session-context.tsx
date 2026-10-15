@@ -9,6 +9,8 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthService } from "@/services/auth.service";
+import { ApiError } from "@/services/api";
+import { toast } from "sonner";
 import type { RolUi, WorkerSession } from "@/types/trabajador";
 import { rutaInicialPorRol } from "@/lib/access-control";
 import { setWorkerToken } from "@/lib/worker-token";
@@ -21,7 +23,7 @@ interface SessionContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (usuario: string, password: string) => Promise<WorkerSession | null>;
-  logout: () => Promise<void>;
+  logout: (avisar?: boolean) => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
@@ -44,16 +46,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     retry: false,
   });
 
-  const logout = useCallback(async () => {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    setWorkerToken(null);
-    await navigate({ to: "/login", replace: true });
-  }, [queryClient, navigate]);
+  const logout = useCallback(
+    async (avisar = false) => {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      setWorkerToken(null);
+      if (avisar) toast.info("Tu sesión terminó. Ingresa de nuevo.");
+      await navigate({ to: "/login", replace: true });
+    },
+    [queryClient, navigate],
+  );
 
   useEffect(() => {
-    window.addEventListener("session:expired", logout);
-    return () => window.removeEventListener("session:expired", logout);
+    const onExpired = () => void logout(true);
+    window.addEventListener("session:expired", onExpired);
+    return () => window.removeEventListener("session:expired", onExpired);
   }, [logout]);
 
   const login = useCallback(
@@ -61,8 +68,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       let res;
       try {
         res = await AuthService.login(usuario, password);
-      } catch {
-        return null;
+      } catch (e) {
+        // 401 = credenciales malas (retorna null); lo demás se propaga
+        // para mostrar "sin conexión" en vez de mentir.
+        if (e instanceof ApiError && e.status === 401) return null;
+        throw e;
       }
       setWorkerToken(res.token);
       queryClient.setQueryData(["worker-session"], {

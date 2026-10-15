@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Bike, ChefHat, Package, Pencil, Plus, Star, Tag, Trash2, Upload, Users } from "lucide-react";
+import { Bike, ChefHat, Package, Plus, Star, Tag, Trash2, Upload, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { LogoutButton, RequireRole } from "@/components/worker/worker-auth";
 import { etiquetaEstadoAdmin, useAdminDashboard } from "@/hooks/use-admin-dashboard";
 import { LOCAL, soles } from "@/lib/pizzas";
@@ -18,7 +19,7 @@ export default function AdminPage() {
 function AdminDashboard() {
   const {
     tab, setTab,
-    pedidos, cargandoPedidos, avanzarPedido,
+    pedidos, cargandoPedidos, errorPedidos, reintentarPedidos, avanzarPedido,
     productos, toggleDisponible, toggleDestacada,
     crearProducto, creandoProducto,
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
@@ -95,7 +96,10 @@ function AdminDashboard() {
 
         {tab === "pedidos" && (
           <section className="mt-6 space-y-3">
-            {cargandoPedidos && pedidos.length === 0 && (
+            {errorPedidos && pedidos.length === 0 && (
+              <ErrorBanner mensaje={errorPedidos} onReintentar={() => void reintentarPedidos()} />
+            )}
+            {cargandoPedidos && pedidos.length === 0 && !errorPedidos && (
               <p className="py-8 text-center text-sm text-muted-foreground">Cargando pedidos…</p>
             )}
             {pedidos.map((p) => (
@@ -211,29 +215,6 @@ function AdminDashboard() {
                         {prod.categoria} · Pers {soles(prod.precioPersonal)} · Med {soles(prod.precioMediana)} · Fam {soles(prod.precioFamiliar)}
                       </p>
                     </div>
-                    <button
-                      onClick={() => toggleDisponible(prod.id, !prod.disponible)}
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${
-                        prod.disponible
-                          ? "bg-secondary text-brand-black"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {prod.disponible ? "Disponible" : "Agotado"}
-                    </button>
-                    <button
-                      onClick={() => toggleDestacada(prod.id, !prod.destacada)}
-                      className={`grid h-9 w-9 place-items-center rounded-full ${
-                        prod.destacada ? "bg-secondary text-brand-black" : "bg-muted text-muted-foreground"
-                      }`}
-                      aria-label="Marcar como favorita"
-                      title="Mostrar en Las más pedidas"
-                    >
-                      <Star className="h-4 w-4" />
-                    </button>
-                    <button className="grid h-9 w-9 place-items-center rounded-full bg-muted" aria-label="Editar">
-                      <Pencil className="h-4 w-4" />
-                    </button>
                     <button
                       onClick={() => setEliminarTarget({ tipo: "producto", id: prod.id, nombre: prod.nombre })}
                       className="grid h-9 w-9 place-items-center rounded-full text-primary"

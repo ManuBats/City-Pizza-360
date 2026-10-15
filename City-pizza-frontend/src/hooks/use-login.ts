@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSessionContext } from "@/context/session-context";
+import { esErrorDeRed } from "@/services/api";
 
 // Lógica de login extraída de app/(interno)/login/page.tsx (como use-login de CCA).
 export function useLogin() {
@@ -20,8 +21,12 @@ export function useLogin() {
       if (!res) {
         setError("Usuario o contraseña incorrectos.");
       }
-    } catch {
-      setError("No se pudo iniciar sesión. Intenta de nuevo.");
+    } catch (e) {
+      setError(
+        esErrorDeRed(e)
+          ? "Sin conexión con el servidor. Revisa tu internet e intenta de nuevo."
+          : "No se pudo iniciar sesión. Intenta de nuevo.",
+      );
     } finally {
       setCargando(false);
     }

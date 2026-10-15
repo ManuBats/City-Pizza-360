@@ -52,8 +52,9 @@ export function useEntregas() {
 
   return {
     activas: entregas,
-    hechas: [] as Entrega[],
     cargando: consulta.isLoading,
+    errorEntregas: consulta.error ? getErrorMessage(consulta.error, "No se pudieron cargar las entregas.") : null,
+    reintentar: recargar,
     avanzar: (id: number, actual: Entrega["estado"]) =>
       avanzar.mutate({ id, a: actual === "pendiente" ? "EnCamino" : "Entregado" }),
   };

@@ -75,6 +75,8 @@ export function useCola() {
     nuevos: tickets.filter((t) => t.estado === "nuevo"),
     preparando: tickets.filter((t) => t.estado === "preparando"),
     cargando: cola.isLoading,
+    errorCola: cola.error ? getErrorMessage(cola.error, "No se pudo cargar la cola.") : null,
+    reintentar: recargar,
     repartidores: (equipo.data ?? []) as Repartidor[],
     iniciar: (id: number) => avanzar.mutate({ id, a: "Preparacion" }),
     marcarListo: (id: number) => avanzar.mutate({ id, a: "Listo" }),

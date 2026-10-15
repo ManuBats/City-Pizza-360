@@ -234,6 +234,8 @@ export function useAdminDashboard() {
   return {
     tab, setTab,
     pedidos, cargandoPedidos: pedidosQ.isLoading,
+    errorPedidos: pedidosQ.error ? getErrorMessage(pedidosQ.error, "No se pudieron cargar los pedidos.") : null,
+    reintentarPedidos: () => queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
     avanzarPedido: (id: number, a: EstadoPedido) => avanzar.mutate({ id, a }),
     productos, cargandoCarta, toggleDisponible: (id: number, disponible: boolean) =>
       toggleCarta.mutate({ id, disponible }),
