@@ -3,10 +3,10 @@ import { mapsUrl, type Entrega } from "@/hooks/use-entregas";
 
 interface DeliveryCardProps {
   entrega: Entrega;
-  onAvanzar: (id: string) => void;
+  onAvanzar: (id: number, actual: Entrega["estado"]) => void;
 }
 
-/** Tarjeta de entrega activa (extraída de routes/delivery.tsx). */
+/** Tarjeta de entrega activa con datos reales del backend. */
 export function DeliveryCard({ entrega: e, onAvanzar }: DeliveryCardProps) {
   return (
     <article className="card-soft p-5">
@@ -14,7 +14,7 @@ export function DeliveryCard({ entrega: e, onAvanzar }: DeliveryCardProps) {
         <div>
           <p className="text-lg font-extrabold">{e.cliente}</p>
           <p className="text-xs font-semibold text-muted-foreground">
-            Pedido {e.id} · {e.resumen}
+            Pedido {e.codigo} · {e.resumen}
           </p>
         </div>
         <span
@@ -52,8 +52,8 @@ export function DeliveryCard({ entrega: e, onAvanzar }: DeliveryCardProps) {
         >
           <Phone className="h-5 w-5" />
         </a>
-        <button
-          onClick={() => onAvanzar(e.id)}
+              <button
+                onClick={() => onAvanzar(e.id, e.estado)}
           className="btn-tactile bg-primary text-base text-white transition-colors hover:bg-primary/90"
         >
           {e.estado === "pendiente" ? "En Camino" : "Entregado ✓"}

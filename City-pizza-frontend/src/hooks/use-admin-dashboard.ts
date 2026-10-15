@@ -1,108 +1,249 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   CheckCircle2,
   Clock,
   LayoutDashboard,
 } from "lucide-react";
-import { PRODUCTOS, soles, type Producto } from "@/lib/pizzas";
-import {
-  SIGUIENTE_ESTADO_VISTA,
-  type InsumoVista,
-  type PromoVista,
-  type PedidoVista,
-  type TabAdmin,
-} from "@/types/admin";
+import { PedidosService } from "@/services/pedidos.service";
+import { CatalogoService } from "@/services/catalogo.service";
+import { PromocionesService } from "@/services/promociones.service";
+import { InventarioService, ReportesService } from "@/services/operacion.service";
+import { usePizzas } from "@/hooks/use-pizzas";
+import { getErrorMessage } from "@/services/api";
+import type { EstadoPedido } from "@/types/pedido";
+import type { TabAdmin } from "@/types/admin";
 
-const PEDIDOS_INICIALES: PedidoVista[] = [
-  { id: "#0127", cliente: "Rosa Quispe", celular: "987 654 321", items: "1× Hawaiana Familiar, 1× Gaseosa 1L", total: 45, estado: "Recibido", entrega: "Delivery", hora: "20:31" },
-  { id: "#0126", cliente: "Carlos Mendoza", celular: "912 345 678", items: "2× Pepperoni Personal", total: 38, estado: "En cocina", entrega: "Recojo", hora: "20:24" },
-  { id: "#0125", cliente: "María Torres", celular: "999 111 222", items: "1× Americana Familiar, 1× Cuatro Quesos Personal", total: 59, estado: "En camino", entrega: "Delivery", hora: "20:10" },
-  { id: "#0124", cliente: "Jorge Huamán", celular: "955 444 333", items: "1× Familiar Carnes", total: 42, estado: "Entregado", entrega: "Delivery", hora: "19:48" },
-  { id: "#0123", cliente: "Ana Flores", celular: "933 222 111", items: "1× Vegetariana Familiar, 2× Gaseosa Personal", total: 42, estado: "Entregado", entrega: "Recojo", hora: "19:30" },
-];
+const ETIQUETA: Record<EstadoPedido, string> = {
+  Recibido: "Recibido",
+  Preparacion: "En cocina",
+  Listo: "Listo",
+  EnCamino: "En camino",
+  Entregado: "Entregado",
+};
 
-const INVENTARIO_INICIAL: InsumoVista[] = [
-  { nombre: "Queso mozzarella", stock: 2, minimo: 5, unidad: "kg" },
-  { nombre: "Pepperoni", stock: 8, minimo: 3, unidad: "kg" },
-  { nombre: "Jamón", stock: 6, minimo: 3, unidad: "kg" },
-  { nombre: "Piña en trozos", stock: 4, minimo: 2, unidad: "kg" },
-  { nombre: "Masa premezcla", stock: 30, minimo: 10, unidad: "unds" },
-  { nombre: "Salsa de tomate", stock: 7, minimo: 4, unidad: "L" },
-  { nombre: "Gaseosa 1L", stock: 18, minimo: 6, unidad: "unds" },
-];
+const SIGUIENTE: Record<EstadoPedido, EstadoPedido | null> = {
+  Recibido: "Preparacion",
+  Preparacion: "Listo",
+  Listo: "EnCamino",
+  EnCamino: "Entregado",
+  Entregado: null,
+};
 
-const PROMOS_INICIALES: PromoVista[] = [
-  { id: "p1", titulo: "2×1 Martes", detalle: "2 pizzas familiares clásicas por S/58", activa: true },
-  { id: "p2", titulo: "Combo Familiar", detalle: "Familiar + Gaseosa 1L por S/45", activa: true },
-  { id: "p3", titulo: "Personal + Gaseosa", detalle: "Pizza personal + gaseosa 500ml por S/20", activa: false },
-];
+export function etiquetaEstadoAdmin(e: EstadoPedido): string {
+  return ETIQUETA[e];
+}
 
-// Lógica del dashboard admin extraída de app/(interno)/admin/page.tsx (mock).
-// TODO(Fase 3): GET /pedidos, /pizzas, /promociones, /inventario, /reportes/resumen.
+// Dashboard admin real contra el backend.
 export function useAdminDashboard() {
+  const queryClient = useQueryClient();
+  const { productos, loading: cargandoCarta } = usePizzas();
   const [tab, setTab] = useState<TabAdmin>("pedidos");
-  const [pedidos, setPedidos] = useState(PEDIDOS_INICIALES);
-  const [productos, setProductos] = useState<Producto[]>(PRODUCTOS);
-  const [promos, setPromos] = useState(PROMOS_INICIALES);
-  const [inventario, setInventario] = useState(INVENTARIO_INICIAL);
-  const [promoAEliminar, setPromoAEliminar] = useState<{ id: string; titulo: string } | null>(null);
+  const [eliminarTarget, setEliminarTarget] = useState<
+    { tipo: "promo" | "producto" | "insumo"; id: number; nombre: string } | null
+  >(null);
 
-  function avanzarPedido(id: string) {
-    setPedidos((prev) =>
-      prev.map((x) =>
-        x.id === id ? { ...x, estado: SIGUIENTE_ESTADO_VISTA[x.estado]! } : x,
-      ),
-    );
-  }
+  // Formularios inline
+  const [promoNombre, setPromoNombre] = useState("");
+  const [promoDetalle, setPromoDetalle] = useState("");
+  const [promoPrecio, setPromoPrecio] = useState(45);
+  const [promoHoras, setPromoHoras] = useState(0);
+  const [prodNombre, setProdNombre] = useState("");
+  const [prodTipo, setProdTipo] = useState("Pizza");
+  const [prodCategoria, setProdCategoria] = useState("Clásicas");
+  const [prodPersonal, setProdPersonal] = useState(18);
+  const [prodMediana, setProdMediana] = useState(25);
+  const [prodFamiliar, setProdFamiliar] = useState(32);
+  const [prodImagen, setProdImagen] = useState<File | null>(null);
+  const [insNombre, setInsNombre] = useState("");
+  const [insStock, setInsStock] = useState(0);
+  const [insMinimo, setInsMinimo] = useState(0);
+  const [insUnidad, setInsUnidad] = useState("kg");
 
-  function toggleDisponible(id: number) {
-    setProductos((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, disponible: !x.disponible } : x)),
-    );
-  }
+  const resumenQ = useQuery({
+    queryKey: ["reportes-resumen"],
+    queryFn: () => ReportesService.resumen(),
+  });
+  const pedidosQ = useQuery({
+    queryKey: ["pedidos"],
+    queryFn: () => PedidosService.list(),
+    refetchInterval: 10_000,
+  });
+  const promosQ = useQuery({
+    queryKey: ["promos-admin"],
+    queryFn: () => PromocionesService.list(),
+  });
+  const inventarioQ = useQuery({
+    queryKey: ["inventario"],
+    queryFn: () => InventarioService.list(),
+  });
 
-  function togglePromo(id: string) {
-    setPromos((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, activa: !x.activa } : x)),
-    );
-  }
+  const recargar = (key: string[]) => queryClient.invalidateQueries({ queryKey: key });
+  const err = (e: unknown, fb: string) => toast.error(getErrorMessage(e, fb));
 
-  function confirmarEliminarPromo() {
-    if (!promoAEliminar) return;
-    setPromos((prev) => prev.filter((x) => x.id !== promoAEliminar.id));
-    setPromoAEliminar(null);
-  }
+  const avanzar = useMutation({
+    mutationFn: ({ id, a }: { id: number; a: EstadoPedido }) =>
+      PedidosService.cambiarEstado(id, a),
+    onSuccess: () => {
+      void recargar(["pedidos"]);
+      void recargar(["reportes-resumen"]);
+    },
+    onError: (e) => err(e, "No se pudo avanzar el pedido."),
+  });
 
-  function ajustarStock(nombre: string, delta: number) {
-    setInventario((prev) =>
-      prev.map((x) =>
-        x.nombre === nombre ? { ...x, stock: Math.max(0, x.stock + delta) } : x,
-      ),
-    );
-  }
+  const toggleCarta = useMutation({
+    mutationFn: ({ id, disponible }: { id: number; disponible: boolean }) =>
+      CatalogoService.setDisponibilidad(id, disponible),
+    onSuccess: () => {
+      void recargar(["pizzas"]);
+      toast.success("Disponibilidad actualizada");
+    },
+    onError: (e) => err(e, "No se pudo actualizar."),
+  });
 
-  const activos = pedidos.filter((p) => p.estado !== "Entregado");
-  const ventasHoy = pedidos.reduce((acc, p) => acc + p.total, 0);
-  const alertas = inventario.filter((i) => i.stock <= i.minimo);
+  const crearPromo = useMutation({
+    mutationFn: () =>
+      PromocionesService.crear({
+        nombre: promoNombre.trim(),
+        descripcion: promoDetalle.trim() || undefined,
+        precioPromo: promoPrecio,
+        tipo: "Permanente",
+        vigenciaHoras: promoHoras > 0 ? promoHoras : undefined,
+      }),
+    onSuccess: () => {
+      setPromoNombre("");
+      setPromoDetalle("");
+      setPromoPrecio(45);
+      setPromoHoras(0);
+      toast.success("Promoción creada");
+      void recargar(["promos-admin"]);
+    },
+    onError: (e) => err(e, "No se pudo crear la promo."),
+  });
 
-  const kpis = useMemo(
-    () => [
-      { icon: LayoutDashboard, label: "Pedidos hoy", valor: String(pedidos.length) },
-      { icon: Clock, label: "En curso", valor: String(activos.length) },
-      { icon: CheckCircle2, label: "Ventas hoy", valor: soles(ventasHoy) },
-      { icon: AlertTriangle, label: "Alertas stock", valor: String(alertas.length) },
-    ],
-    [pedidos.length, activos.length, ventasHoy, alertas.length],
-  );
+  const crearProducto = useMutation({
+    mutationFn: async () => {
+      const p = await CatalogoService.crear({
+        nombre: prodNombre.trim(),
+        tipo: prodTipo.trim() || "Pizza",
+        categoria: prodCategoria.trim() || "Clásicas",
+        precioPersonal: prodPersonal,
+        precioMediana: prodMediana,
+        precioFamiliar: prodFamiliar,
+      });
+      if (prodImagen) await CatalogoService.subirImagen(p.id, prodImagen);
+      return p;
+    },
+    onSuccess: () => {
+      setProdNombre("");
+      setProdImagen(null);
+      toast.success("Producto creado");
+      void recargar(["pizzas"]);
+    },
+    onError: (e) => err(e, "No se pudo crear el producto."),
+  });
+
+  const crearInsumo = useMutation({
+    mutationFn: () =>
+      InventarioService.crear({
+        nombre: insNombre.trim(),
+        stock: insStock,
+        stockMinimo: insMinimo,
+        unidad: insUnidad.trim() || "kg",
+      }),
+    onSuccess: () => {
+      setInsNombre("");
+      setInsStock(0);
+      setInsMinimo(0);
+      toast.success("Insumo creado");
+      void recargar(["inventario"]);
+    },
+    onError: (e) => err(e, "No se pudo crear el insumo."),
+  });
+
+  const eliminar = useMutation({
+    mutationFn: async () => {
+      if (!eliminarTarget) throw new Error("Sin objetivo");
+      if (eliminarTarget.tipo === "promo") return PromocionesService.eliminar(eliminarTarget.id);
+      if (eliminarTarget.tipo === "producto") return CatalogoService.eliminar(eliminarTarget.id);
+      return InventarioService.eliminar(eliminarTarget.id);
+    },
+    onSuccess: () => {
+      setEliminarTarget(null);
+      toast.success("Eliminado");
+      void recargar(["promos-admin"]);
+      void recargar(["pizzas"]);
+      void recargar(["inventario"]);
+    },
+    onError: (e) => err(e, "No se pudo eliminar (puede tener historial)."),
+  });
+
+  const togglePromo = useMutation({
+    mutationFn: ({ id, activa }: { id: number; activa: boolean }) =>
+      PromocionesService.toggle(id, activa),
+    onSuccess: () => void recargar(["promos-admin"]),
+    onError: (e) => err(e, "No se pudo actualizar la promo."),
+  });
+
+  const ajustar = useMutation({
+    mutationFn: ({ id, delta }: { id: number; delta: number }) =>
+      InventarioService.ajustar(id, delta),
+    onSuccess: () => {
+      void recargar(["inventario"]);
+      void recargar(["reportes-resumen"]);
+    },
+    onError: (e) => err(e, "No se pudo ajustar el stock."),
+  });
+
+  const resumen = resumenQ.data;
+  const pedidos = (pedidosQ.data ?? []).map((p) => ({
+    id: p.id,
+    codigo: p.codigo,
+    cliente: `${p.nombres} ${p.apellidos}${p.celular ? ` · ${p.celular}` : ""}`,
+    items: p.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre} (${d.tamano})`).join(", "),
+    total: Number(p.total),
+    estado: p.estado,
+    etiqueta: etiquetaEstadoAdmin(p.estado),
+    siguiente: SIGUIENTE[p.estado],
+    entrega: p.tipoEntrega,
+    hora: new Date(p.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
+  }));
+
+  const inventario = inventarioQ.data ?? [];
+  const alertas = inventario.filter((i) => i.stock <= i.stockMinimo);
+
+  const kpis = [
+    { icon: LayoutDashboard, label: "Pedidos hoy", valor: String(resumen?.pedidosHoy ?? "…") },
+    { icon: Clock, label: "En curso", valor: String(resumen?.enCurso ?? "…") },
+    { icon: CheckCircle2, label: "Ventas hoy", valor: resumen ? `S/${resumen.ventasHoy}` : "…" },
+    { icon: AlertTriangle, label: "Alertas stock", valor: String(resumen?.alertasStock ?? alertas.length) },
+  ];
 
   return {
     tab, setTab,
-    pedidos, avanzarPedido,
-    productos, toggleDisponible,
-    promos, togglePromo, promoAEliminar, setPromoAEliminar, confirmarEliminarPromo,
-    inventario, ajustarStock, alertas,
-    activos, ventasHoy, kpis,
-    siguienteEstado: SIGUIENTE_ESTADO_VISTA,
+    pedidos, cargandoPedidos: pedidosQ.isLoading,
+    avanzarPedido: (id: number, a: EstadoPedido) => avanzar.mutate({ id, a }),
+    productos, cargandoCarta, toggleDisponible: (id: number, disponible: boolean) =>
+      toggleCarta.mutate({ id, disponible }),
+    crearProducto: () => crearProducto.mutate(), creandoProducto: crearProducto.isPending,
+    prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
+    prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
+    prodImagen, setProdImagen,
+    promos: promosQ.data ?? [],
+    togglePromo: (id: number, activa: boolean) => togglePromo.mutate({ id, activa }),
+    promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
+    promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
+    crearPromo: () => crearPromo.mutate(), creandoPromo: crearPromo.isPending,
+    inventario, cargandoInventario: inventarioQ.isLoading, alertas,
+    ajustar: (id: number, delta: number) => ajustar.mutate({ id, delta }),
+    insNombre, setInsNombre, insStock, setInsStock, insMinimo, setInsMinimo,
+    insUnidad, setInsUnidad,
+    crearInsumo: () => crearInsumo.mutate(), creandoInsumo: crearInsumo.isPending,
+    eliminarTarget, setEliminarTarget,
+    confirmarEliminar: () => eliminar.mutate(), eliminando: eliminar.isPending,
+    kpis,
+    siguienteEstado: SIGUIENTE,
   };
 }

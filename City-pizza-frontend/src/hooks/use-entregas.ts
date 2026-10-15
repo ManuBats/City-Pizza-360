@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { PedidosService } from "@/services/pedidos.service";
+import { getErrorMessage } from "@/services/api";
 
 export type Entrega = {
-  id: string;
+  id: number;
+  codigo: string;
   cliente: string;
   celular: string;
   direccion: string;
@@ -10,57 +14,47 @@ export type Entrega = {
   estado: "pendiente" | "en-camino" | "entregado";
 };
 
-const ENTREGAS_INICIALES: Entrega[] = [
-  {
-    id: "#0125",
-    cliente: "María Torres",
-    celular: "999111222",
-    direccion: "Jr. Grau 123, San Vicente de Cañete",
-    referencia: "Frente al parque, puerta negra",
-    resumen: "Americana Familiar + Cuatro Quesos Personal",
-    estado: "en-camino",
-  },
-  {
-    id: "#0127",
-    cliente: "Rosa Quispe",
-    celular: "987654321",
-    direccion: "Av. Sepúlveda 450, San Vicente de Cañete",
-    referencia: "Casa amarilla, segundo piso",
-    resumen: "Hawaiana Familiar + Gaseosa 1L",
-    estado: "pendiente",
-  },
-  {
-    id: "#0124",
-    cliente: "Jorge Huamán",
-    celular: "955444333",
-    direccion: "Calle Los Pinos 88, San Vicente de Cañete",
-    resumen: "Familiar Carnes",
-    estado: "entregado",
-  },
-];
-
 export function mapsUrl(direccion: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion + ", Perú")}`;
 }
 
-// Lógica de entregas extraída de routes/delivery.tsx (mock temporal).
-// TODO(módulo Delivery): PedidosService.misEntregas() + cambiarEstado().
+// Mis entregas reales: GET /pedidos/mis-entregas + avance de estado.
 export function useEntregas() {
-  const [entregas, setEntregas] = useState(ENTREGAS_INICIALES);
+  const queryClient = useQueryClient();
 
-  function avanzar(id: string) {
-    setEntregas((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? { ...e, estado: e.estado === "pendiente" ? "en-camino" : "entregado" }
-          : e,
-      ),
-    );
+  const consulta = useQuery({
+    queryKey: ["mis-entregas"],
+    queryFn: () => PedidosService.misEntregas(),
+    refetchInterval: 10_000,
+  });
+
+  async function recargar() {
+    await queryClient.invalidateQueries({ queryKey: ["mis-entregas"] });
   }
 
+  const avanzar = useMutation({
+    mutationFn: ({ id, a }: { id: number; a: "EnCamino" | "Entregado" }) =>
+      PedidosService.cambiarEstado(id, a),
+    onSuccess: () => void recargar(),
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo actualizar la entrega.")),
+  });
+
+  const entregas: Entrega[] = (consulta.data ?? []).map((p) => ({
+    id: p.id,
+    codigo: p.codigo,
+    cliente: `${p.nombres} ${p.apellidos}`,
+    celular: p.celular,
+    direccion: p.direccion,
+    referencia: p.referencia ?? undefined,
+    resumen: p.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre} (${d.tamano})`).join(" + "),
+    estado: p.estado === "EnCamino" ? "en-camino" : "pendiente",
+  }));
+
   return {
-    activas: entregas.filter((e) => e.estado !== "entregado"),
-    hechas: entregas.filter((e) => e.estado === "entregado"),
-    avanzar,
+    activas: entregas,
+    hechas: [] as Entrega[],
+    cargando: consulta.isLoading,
+    avanzar: (id: number, actual: Entrega["estado"]) =>
+      avanzar.mutate({ id, a: actual === "pendiente" ? "EnCamino" : "Entregado" }),
   };
 }

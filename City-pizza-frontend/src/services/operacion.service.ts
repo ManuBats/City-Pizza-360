@@ -16,10 +16,16 @@ export type ResumenApi = {
   alertasStock: number;
 };
 
-/** Módulo Cocina: cola KDS. */
+/** Módulo Cocina: cola KDS + asignación de repartidor. */
 export const CocinaService = {
   async cola(): Promise<Pedido[]> {
     return apiFetch<Pedido[]>("/cocina/cola");
+  },
+
+  async repartidores(): Promise<{ id: number; usuario: string; nombre: string }[]> {
+    return apiFetch<{ id: number; usuario: string; nombre: string }[]>(
+      "/trabajadores/repartidores",
+    );
   },
 };
 
@@ -38,6 +44,22 @@ export const InventarioService = {
       method: "PATCH",
       body: JSON.stringify({ delta }),
     });
+  },
+
+  async crear(input: {
+    nombre: string;
+    stock?: number;
+    stockMinimo?: number;
+    unidad?: string;
+  }): Promise<InsumoApi> {
+    return apiFetch<InsumoApi>("/inventario", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async eliminar(id: number): Promise<{ ok: boolean }> {
+    return apiFetch<{ ok: boolean }>(`/inventario/${id}`, { method: "DELETE" });
   },
 };
 

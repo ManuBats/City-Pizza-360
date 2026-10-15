@@ -73,4 +73,15 @@ export const PedidosService = {
       body: JSON.stringify({ estado }),
     });
   },
+
+  async asignarRepartidor(id: number, repartidorId: number): Promise<Pedido> {
+    return apiFetch<Pedido>(`/pedidos/${id}/asignar`, {
+      method: "PATCH",
+      body: JSON.stringify({ repartidorId }),
+    });
+  },
+
+  async misEntregas(): Promise<Pedido[]> {
+    return apiFetch<Pedido[]>("/pedidos/mis-entregas");
+  },
 };

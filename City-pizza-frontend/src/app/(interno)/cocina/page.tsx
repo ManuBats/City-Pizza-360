@@ -14,7 +14,7 @@ export default function CocinaPage() {
 }
 
 function CocinaContenido() {
-  const { tickets, ahora, nuevos, preparando, iniciar, marcarListo } = useCola();
+  const { tickets, ahora, nuevos, preparando, cargando, repartidores, iniciar, marcarListo, asignar } = useCola();
 
   return (
     <StaffLayout
@@ -30,11 +30,24 @@ function CocinaContenido() {
       }
     >
       <main className="mx-auto grid max-w-7xl gap-4 px-4 py-6 md:grid-cols-2 xl:grid-cols-3">
+        {cargando && tickets.length === 0 && (
+          <div className="col-span-full py-24 text-center">
+            <p className="text-2xl font-extrabold text-white/80">Cargando comandas…</p>
+          </div>
+        )}
         {tickets.map((t) => (
-          <TicketKds key={t.id} ticket={t} ahora={ahora} onIniciar={iniciar} onListo={marcarListo} />
+          <TicketKds
+            key={t.id}
+            ticket={t}
+            ahora={ahora}
+            repartidores={repartidores}
+            onIniciar={iniciar}
+            onListo={marcarListo}
+            onAsignar={asignar}
+          />
         ))}
 
-        {tickets.length === 0 && (
+        {!cargando && tickets.length === 0 && (
           <div className="col-span-full py-24 text-center">
             <p className="text-2xl font-extrabold text-white/80">Sin comandas activas</p>
             <p className="mt-1 text-sm text-white/50">Las nuevas aparecerán aquí automáticamente.</p>

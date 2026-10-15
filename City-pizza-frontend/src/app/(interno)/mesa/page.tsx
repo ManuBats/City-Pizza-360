@@ -2,7 +2,8 @@ import { CheckCircle2, Minus, Plus, Send, UtensilsCrossed } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
 import { useComanda } from "@/hooks/use-comanda";
-import { PRODUCTOS, soles } from "@/lib/pizzas";
+import { soles } from "@/lib/pizzas";
+import { usePizzas } from "@/hooks/use-pizzas";
 import { MESAS } from "@/types/mesa";
 
 export default function MesaPage() {
@@ -17,10 +18,13 @@ function MesaContent() {
   const {
     mesa, setMesa,
     lineas, nota, setNota, enviadas,
+    nombre, setNombre, celular, setCelular,
+    metodoPago, setMetodoPago, enviando,
     tamanoPorId, setTamano,
     total,
     agregar, cambiarQty, enviarACocina,
   } = useComanda();
+  const { productos: carta } = usePizzas();
 
   return (
     <StaffLayout
@@ -52,7 +56,7 @@ function MesaContent() {
           <section>
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Carta</h2>
             <div className="mt-2 grid gap-3 sm:grid-cols-2">
-              {PRODUCTOS.filter((p) => p.disponible).map((p) => {
+              {carta.filter((p) => p.disponible).map((p) => {
                 const esBebida = p.categoria === "Bebidas";
                 const tamano = tamanoPorId[p.id] ?? "Familiar";
                 const precio = esBebida || tamano === "Personal" ? p.precioPersonal : p.precioFamiliar;
@@ -134,16 +138,44 @@ function MesaContent() {
               rows={2}
               className="mt-3 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <input
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="Cliente"
+                className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              <input
+                value={celular}
+                onChange={(e) => setCelular(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                inputMode="numeric"
+                placeholder="Celular"
+                className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+              {(["Efectivo", "Yape"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMetodoPago(m)}
+                  className={`rounded-lg py-2 text-xs font-semibold transition-colors ${
+                    metodoPago === m ? "bg-primary text-white" : "text-muted-foreground"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
             <div className="mt-3 flex justify-between border-t border-border pt-3 text-lg font-extrabold">
               <span>Total</span>
               <span className="text-primary">{soles(total)}</span>
             </div>
             <button
-              onClick={enviarACocina}
-              disabled={mesa === null || lineas.length === 0}
+              onClick={() => void enviarACocina()}
+              disabled={mesa === null || lineas.length === 0 || enviando}
               className="btn-tactile mt-3 flex w-full items-center justify-center gap-2 bg-primary text-base text-white transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
-              <Send className="h-5 w-5" /> Enviar a cocina
+              <Send className="h-5 w-5" /> {enviando ? "Enviando…" : "Enviar a cocina"}
             </button>
           </aside>
         </div>

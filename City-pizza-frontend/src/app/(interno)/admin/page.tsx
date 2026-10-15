@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Bike, ChefHat, Package, Pencil, Plus, Tag, Trash2, Users } from "lucide-react";
+import { Bike, ChefHat, Package, Pencil, Plus, Tag, Trash2, Upload, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { LogoutButton, RequireRole } from "@/components/worker/worker-auth";
-import { useAdminDashboard } from "@/hooks/use-admin-dashboard";
+import { etiquetaEstadoAdmin, useAdminDashboard } from "@/hooks/use-admin-dashboard";
 import { LOCAL, soles } from "@/lib/pizzas";
 import type { TabAdmin } from "@/types/admin";
 
@@ -18,12 +18,22 @@ export default function AdminPage() {
 function AdminDashboard() {
   const {
     tab, setTab,
-    pedidos, avanzarPedido,
+    pedidos, cargandoPedidos, avanzarPedido,
     productos, toggleDisponible,
-    promos, togglePromo, promoAEliminar, setPromoAEliminar, confirmarEliminarPromo,
-    inventario, ajustarStock, alertas,
+    crearProducto, creandoProducto,
+    prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
+    prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
+    prodImagen, setProdImagen,
+    promos, togglePromo,
+    promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
+    promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
+    crearPromo, creandoPromo,
+    inventario, alertas,
+    ajustar,
+    insNombre, setInsNombre, insStock, setInsStock, insMinimo, setInsMinimo,
+    insUnidad, setInsUnidad, crearInsumo, creandoInsumo,
+    eliminarTarget, setEliminarTarget, confirmarEliminar, eliminando,
     kpis,
-    siguienteEstado,
   } = useAdminDashboard();
 
   return (
@@ -85,41 +95,42 @@ function AdminDashboard() {
 
         {tab === "pedidos" && (
           <section className="mt-6 space-y-3">
+            {cargandoPedidos && pedidos.length === 0 && (
+              <p className="py-8 text-center text-sm text-muted-foreground">Cargando pedidos…</p>
+            )}
             {pedidos.map((p) => (
               <article key={p.id} className="card-soft flex flex-wrap items-center gap-4 p-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-lg font-extrabold">{p.id}</span>
+                    <span className="text-lg font-extrabold">{p.codigo}</span>
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
                         p.estado === "Entregado"
                           ? "bg-muted text-muted-foreground"
-                          : p.estado === "En camino"
+                          : p.estado === "EnCamino"
                             ? "bg-secondary text-brand-black"
                             : "bg-primary/10 text-primary"
                       }`}
                     >
-                      {p.estado}
+                      {p.etiqueta}
                     </span>
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       {p.entrega === "Delivery" ? <Bike className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />}
                       {p.entrega} · {p.hora}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm font-semibold">
-                    {p.cliente} · {p.celular}
-                  </p>
+                  <p className="mt-1 text-sm font-semibold">{p.cliente}</p>
                   <p className="text-sm text-muted-foreground">{p.items}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-extrabold text-primary">{soles(p.total)}</span>
-                  {siguienteEstado[p.estado] && (
+                  {p.siguiente && (
                     <button
-                      onClick={() => avanzarPedido(p.id)}
+                      onClick={() => avanzarPedido(p.id, p.siguiente!)}
                       className="btn-tactile flex items-center gap-2 bg-primary px-5 text-sm text-white transition-colors hover:bg-primary/90"
                     >
                       <ChefHat className="h-4 w-4" />
-                      {siguienteEstado[p.estado]}
+                      {etiquetaEstadoAdmin(p.siguiente!)}
                     </button>
                   )}
                 </div>
@@ -132,10 +143,60 @@ function AdminDashboard() {
           <section className="mt-6 grid gap-6 lg:grid-cols-2">
             {/* Productos */}
             <div className="card-soft p-5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold">Productos</h2>
-                <button className="btn-tactile flex min-h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm text-white">
-                  <Plus className="h-4 w-4" /> Nuevo
+              <h2 className="font-bold">Productos</h2>
+              <div className="mt-4 space-y-2 rounded-2xl border border-border p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={prodNombre}
+                    onChange={(e) => setProdNombre(e.target.value)}
+                    placeholder="Nombre (ej. Carnívora)"
+                    className="col-span-2 rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                  <input
+                    value={prodTipo}
+                    onChange={(e) => setProdTipo(e.target.value)}
+                    placeholder="Tipo (Pizza/Bebida)"
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                  <input
+                    value={prodCategoria}
+                    onChange={(e) => setProdCategoria(e.target.value)}
+                    placeholder="Categoría"
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                  <input
+                    type="number" min={1} value={prodPersonal}
+                    onChange={(e) => setProdPersonal(Number(e.target.value))}
+                    placeholder="S/ Personal"
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                  <input
+                    type="number" min={1} value={prodMediana}
+                    onChange={(e) => setProdMediana(Number(e.target.value))}
+                    placeholder="S/ Mediana"
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                  <input
+                    type="number" min={1} value={prodFamiliar}
+                    onChange={(e) => setProdFamiliar(Number(e.target.value))}
+                    placeholder="S/ Familiar"
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                  <label className="col-span-2 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-input px-3 py-2 text-sm">
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    {prodImagen ? prodImagen.name : "Imagen (opcional)"}
+                    <input
+                      type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                      onChange={(e) => setProdImagen(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                </div>
+                <button
+                  onClick={crearProducto}
+                  disabled={creandoProducto}
+                  className="btn-tactile mt-2 flex w-full items-center justify-center gap-1.5 bg-primary text-sm text-white disabled:opacity-60"
+                >
+                  <Plus className="h-4 w-4" /> Crear producto
                 </button>
               </div>
               <ul className="mt-4 space-y-2">
@@ -147,11 +208,11 @@ function AdminDashboard() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{prod.nombre}</p>
                       <p className="text-xs text-muted-foreground">
-                        {prod.categoria} · Pers {soles(prod.precioPersonal)} · Fam {soles(prod.precioFamiliar)}
+                        {prod.categoria} · Pers {soles(prod.precioPersonal)} · Med {soles(prod.precioMediana)} · Fam {soles(prod.precioFamiliar)}
                       </p>
                     </div>
                     <button
-                      onClick={() => toggleDisponible(prod.id)}
+                      onClick={() => toggleDisponible(prod.id, !prod.disponible)}
                       className={`rounded-full px-3 py-1 text-xs font-bold ${
                         prod.disponible
                           ? "bg-secondary text-brand-black"
@@ -163,6 +224,13 @@ function AdminDashboard() {
                     <button className="grid h-9 w-9 place-items-center rounded-full bg-muted" aria-label="Editar">
                       <Pencil className="h-4 w-4" />
                     </button>
+                    <button
+                      onClick={() => setEliminarTarget({ tipo: "producto", id: prod.id, nombre: prod.nombre })}
+                      className="grid h-9 w-9 place-items-center rounded-full text-primary"
+                      aria-label="Eliminar producto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -170,10 +238,40 @@ function AdminDashboard() {
 
             {/* Promos */}
             <div className="card-soft h-fit p-5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold">Promociones</h2>
-                <button className="btn-tactile flex min-h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm text-white">
-                  <Plus className="h-4 w-4" /> Nueva
+              <h2 className="font-bold">Promociones permanentes</h2>
+              <div className="mt-4 space-y-2 rounded-2xl border border-border p-3">
+                <input
+                  value={promoNombre}
+                  onChange={(e) => setPromoNombre(e.target.value)}
+                  placeholder="Título (ej. 2×1 Martes)"
+                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  value={promoDetalle}
+                  onChange={(e) => setPromoDetalle(e.target.value)}
+                  placeholder="Detalle"
+                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number" min={1} value={promoPrecio}
+                    onChange={(e) => setPromoPrecio(Number(e.target.value))}
+                    placeholder="S/"
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                  <input
+                    type="number" min={0} value={promoHoras}
+                    onChange={(e) => setPromoHoras(Number(e.target.value))}
+                    placeholder="Horas (0 = siempre)"
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </div>
+                <button
+                  onClick={crearPromo}
+                  disabled={creandoPromo}
+                  className="btn-tactile flex w-full items-center justify-center gap-1.5 bg-primary text-sm text-white disabled:opacity-60"
+                >
+                  <Plus className="h-4 w-4" /> Nueva promo
                 </button>
               </div>
               <ul className="mt-4 space-y-2">
@@ -184,11 +282,11 @@ function AdminDashboard() {
                   >
                     <Tag className="h-5 w-5 shrink-0 text-primary" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">{promo.titulo}</p>
-                      <p className="text-xs text-muted-foreground">{promo.detalle}</p>
+                      <p className="text-sm font-semibold">{promo.nombre} · {soles(Number(promo.precioPromo))}</p>
+                      <p className="text-xs text-muted-foreground">{promo.descripcion}</p>
                     </div>
                     <button
-                      onClick={() => togglePromo(promo.id)}
+                      onClick={() => togglePromo(promo.id, !promo.activa)}
                       className={`rounded-full px-3 py-1 text-xs font-bold ${
                         promo.activa ? "bg-secondary text-brand-black" : "bg-muted text-muted-foreground"
                       }`}
@@ -196,7 +294,7 @@ function AdminDashboard() {
                       {promo.activa ? "Activa" : "Pausada"}
                     </button>
                     <button
-                      onClick={() => setPromoAEliminar({ id: promo.id, titulo: promo.titulo })}
+                      onClick={() => setEliminarTarget({ tipo: "promo", id: promo.id, nombre: promo.nombre })}
                       className="grid h-9 w-9 place-items-center rounded-full text-primary"
                       aria-label="Eliminar promo"
                     >
@@ -213,7 +311,6 @@ function AdminDashboard() {
           <section className="mt-6 space-y-4">
             {alertas.length > 0 && (
               <div className="flex items-start gap-3 rounded-2xl border-2 border-primary bg-primary/5 p-4">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <div>
                   <p className="font-bold text-primary">
                     {alertas.length === 1 ? "1 insumo bajo de stock" : `${alertas.length} insumos bajos de stock`}
@@ -224,6 +321,42 @@ function AdminDashboard() {
                 </div>
               </div>
             )}
+            <div className="card-soft p-5">
+              <h2 className="font-bold">Nuevo insumo</h2>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                <input
+                  value={insNombre}
+                  onChange={(e) => setInsNombre(e.target.value)}
+                  placeholder="Nombre"
+                  className="col-span-2 rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  type="number" min={0} value={insStock}
+                  onChange={(e) => setInsStock(Number(e.target.value))}
+                  placeholder="Stock"
+                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  type="number" min={0} value={insMinimo}
+                  onChange={(e) => setInsMinimo(Number(e.target.value))}
+                  placeholder="Mínimo"
+                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <input
+                  value={insUnidad}
+                  onChange={(e) => setInsUnidad(e.target.value)}
+                  placeholder="Und"
+                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <button
+                onClick={crearInsumo}
+                disabled={creandoInsumo}
+                className="btn-tactile mt-2 flex items-center gap-1.5 bg-primary px-4 text-sm text-white disabled:opacity-60"
+              >
+                <Plus className="h-4 w-4" /> Crear insumo
+              </button>
+            </div>
             <div className="card-soft overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
@@ -232,18 +365,19 @@ function AdminDashboard() {
                     <th className="px-4 py-3">Stock</th>
                     <th className="px-4 py-3">Mínimo</th>
                     <th className="px-4 py-3">Estado</th>
+                    <th className="px-4 py-3"><span className="sr-only">Acciones</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {inventario.map((ins) => {
-                    const bajo = ins.stock <= ins.minimo;
+                    const bajo = ins.stock <= ins.stockMinimo;
                     return (
-                      <tr key={ins.nombre} className="border-b border-border last:border-0">
+                      <tr key={ins.id} className="border-b border-border last:border-0">
                         <td className="px-4 py-3 font-semibold">{ins.nombre}</td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-2">
                             <button
-                              onClick={() => ajustarStock(ins.nombre, -1)}
+                              onClick={() => ajustar(ins.id, -1)}
                               className="grid h-7 w-7 place-items-center rounded-full bg-muted text-base font-bold"
                               aria-label="Restar stock"
                             >
@@ -253,7 +387,7 @@ function AdminDashboard() {
                               {ins.stock} {ins.unidad}
                             </span>
                             <button
-                              onClick={() => ajustarStock(ins.nombre, 1)}
+                              onClick={() => ajustar(ins.id, 1)}
                               className="grid h-7 w-7 place-items-center rounded-full bg-muted text-base font-bold"
                               aria-label="Sumar stock"
                             >
@@ -262,7 +396,7 @@ function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">
-                          {ins.minimo} {ins.unidad}
+                          {ins.stockMinimo} {ins.unidad}
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -272,6 +406,15 @@ function AdminDashboard() {
                           >
                             {bajo ? "Bajo" : "OK"}
                           </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => setEliminarTarget({ tipo: "insumo", id: ins.id, nombre: ins.nombre })}
+                            className="grid h-8 w-8 place-items-center rounded-full text-primary"
+                            aria-label="Eliminar insumo"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -284,11 +427,17 @@ function AdminDashboard() {
       </main>
 
       <DeleteConfirmDialog
-        open={promoAEliminar !== null}
-        entityLabel="promoción"
-        itemName={promoAEliminar?.titulo}
-        onClose={() => setPromoAEliminar(null)}
-        onConfirm={confirmarEliminarPromo}
+        open={eliminarTarget !== null}
+        entityLabel={
+          eliminarTarget?.tipo === "promo"
+            ? "promoción"
+            : eliminarTarget?.tipo === "producto"
+              ? "producto"
+              : "insumo"
+        }
+        itemName={eliminarTarget?.nombre}
+        onClose={() => setEliminarTarget(null)}
+        onConfirm={confirmarEliminar}
       />
     </div>
   );

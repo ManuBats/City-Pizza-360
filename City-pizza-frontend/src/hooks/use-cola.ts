@@ -1,96 +1,84 @@
-import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { CocinaService } from "@/services/operacion.service";
+import { PedidosService } from "@/services/pedidos.service";
+import { getErrorMessage } from "@/services/api";
+
+export type Repartidor = { id: number; usuario: string; nombre: string };
 
 export type TicketKds = {
-  id: string;
+  id: number;
+  codigo: string;
   cliente: string;
-  entrega: "Delivery" | "Recojo";
+  entrega: "Delivery" | "Recojo" | "Mesa";
   recibidoEn: number;
   estado: "nuevo" | "preparando";
+  yapePendiente: boolean;
+  repartidorId: number | null;
   items: { qty: number; nombre: string; nota?: string }[];
 };
 
-const AHORA = Date.now();
-
-const TICKETS_INICIALES: TicketKds[] = [
-  {
-    id: "#0125",
-    cliente: "María Torres",
-    entrega: "Delivery",
-    recibidoEn: AHORA - 21 * 60_000,
-    estado: "preparando",
-    items: [
-      { qty: 1, nombre: "Americana Familiar" },
-      { qty: 1, nombre: "Cuatro Quesos Personal", nota: "Sin aceitunas" },
-    ],
-  },
-  {
-    id: "#0126",
-    cliente: "Carlos Mendoza",
-    entrega: "Recojo",
-    recibidoEn: AHORA - 9 * 60_000,
-    estado: "preparando",
-    items: [{ qty: 2, nombre: "Pepperoni Personal", nota: "Extra queso en una" }],
-  },
-  {
-    id: "#0127",
-    cliente: "Rosa Quispe",
-    entrega: "Delivery",
-    recibidoEn: AHORA - 2 * 60_000,
-    estado: "nuevo",
-    items: [
-      { qty: 1, nombre: "Hawaiana Familiar" },
-      { qty: 1, nombre: "Gaseosa 1L", nota: "Inca Kola" },
-    ],
-  },
-];
-
-// Lógica KDS extraída de routes/cocina.tsx (mock temporal).
-// TODO(Fase B): useQuery(CocinaService.cola, { refetchInterval: 3_000 }) +
-// PedidosService.cambiarEstado para Iniciar/¡Listo! + asignar repartidor.
+// Cola KDS real: GET /cocina/cola cada 3s + avance + asignación.
 export function useCola() {
-  const [tickets, setTickets] = useState(TICKETS_INICIALES);
-  const [ahora, setAhora] = useState(Date.now());
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAhora(Date.now());
-      setTickets((prev) => {
-        const siguiente = 128 + Math.floor((Date.now() - AHORA) / 30_000);
-        const existe = prev.some((t) => t.id === `#0${siguiente}`);
-        if (existe || prev.length >= 6) return prev;
-        return [
-          ...prev,
-          {
-            id: `#0${siguiente}`,
-            cliente: "Cliente mostrador",
-            entrega: "Recojo" as const,
-            recibidoEn: Date.now(),
-            estado: "nuevo" as const,
-            items: [{ qty: 1, nombre: "Suprema Familiar" }],
-          },
-        ];
-      });
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const cola = useQuery({
+    queryKey: ["cocina-cola"],
+    queryFn: () => CocinaService.cola(),
+    refetchInterval: 3_000,
+  });
 
-  function iniciar(id: string) {
-    setTickets((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, estado: "preparando" as const } : x)),
-    );
+  const equipo = useQuery({
+    queryKey: ["repartidores"],
+    queryFn: () => CocinaService.repartidores(),
+    staleTime: 60_000,
+  });  async function recargar() {
+    await queryClient.invalidateQueries({ queryKey: ["cocina-cola"] });
   }
 
-  function marcarListo(id: string) {
-    setTickets((prev) => prev.filter((x) => x.id !== id));
-  }
+  const avanzar = useMutation({
+    mutationFn: ({ id, a }: { id: number; a: "Preparacion" | "Listo" }) =>
+      PedidosService.cambiarEstado(id, a),
+    onSuccess: () => void recargar(),
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo avanzar el pedido.")),
+  });
+
+  const asignar = useMutation({
+    mutationFn: ({ id, repartidorId }: { id: number; repartidorId: number }) =>
+      PedidosService.asignarRepartidor(id, repartidorId),
+    onSuccess: () => {
+      toast.success("Repartidor asignado");
+      void recargar();
+    },
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo asignar.")),
+  });
+
+  const tickets: TicketKds[] = (cola.data ?? []).map((p) => ({
+    id: p.id,
+    codigo: p.codigo,
+    cliente: `${p.nombres} ${p.apellidos}`,
+    entrega: (p.tipoEntrega === "Mesa" ? "Mesa" : p.tipoEntrega) as TicketKds["entrega"],
+    recibidoEn: new Date(p.creadoEn).getTime(),
+    estado: p.estado === "Recibido" ? "nuevo" : "preparando",
+    yapePendiente: p.metodoPago === "Yape" && p.estadoPago === "Pendiente",
+    repartidorId: p.repartidorId,
+    items: p.detalles.map((d) => ({
+      qty: d.cantidad,
+      nombre: `${d.pizza.nombre} ${d.tamano}${d.extraQueso ? " +queso" : ""}`,
+      nota: d.nota ?? undefined,
+    })),
+  }));
 
   return {
     tickets,
-    ahora,
+    ahora: Date.now(),
     nuevos: tickets.filter((t) => t.estado === "nuevo"),
     preparando: tickets.filter((t) => t.estado === "preparando"),
-    iniciar,
-    marcarListo,
+    cargando: cola.isLoading,
+    repartidores: (equipo.data ?? []) as Repartidor[],
+    iniciar: (id: number) => avanzar.mutate({ id, a: "Preparacion" }),
+    marcarListo: (id: number) => avanzar.mutate({ id, a: "Listo" }),
+    asignar: (id: number, repartidorId: number) => asignar.mutate({ id, repartidorId }),
   };
 }
 

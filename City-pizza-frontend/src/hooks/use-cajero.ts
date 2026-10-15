@@ -1,47 +1,100 @@
 import { useState } from "react";
-import { PRODUCTOS, type Producto } from "@/lib/pizzas";
-import {
-  SIGUIENTE_ESTADO_VISTA,
-  type PedidoVista,
-} from "@/types/admin";
-
-const PEDIDOS_INICIALES: PedidoVista[] = [
-  { id: "#0127", cliente: "Rosa Quispe", items: "1× Hawaiana Familiar, 1× Gaseosa 1L", total: 45, estado: "Recibido", entrega: "Delivery", hora: "20:31" },
-  { id: "#0126", cliente: "Carlos Mendoza", items: "2× Pepperoni Personal", total: 38, estado: "En cocina", entrega: "Recojo", hora: "20:24" },
-  { id: "#0125", cliente: "María Torres", items: "1× Americana Familiar, 1× Cuatro Quesos Personal", total: 59, estado: "En camino", entrega: "Delivery", hora: "20:10" },
-];
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { PedidosService } from "@/services/pedidos.service";
+import { CatalogoService } from "@/services/catalogo.service";
+import { PromocionesService } from "@/services/promociones.service";
+import { usePizzas } from "@/hooks/use-pizzas";
+import { getErrorMessage } from "@/services/api";
+import type { EstadoPedido } from "@/types/pedido";
 
 export type TabCajero = "pedidos" | "carta" | "promo";
 
-export type PromoFlash = { id: string; titulo: string; detalle: string; venceEn: number };
+const ETIQUETA_ESTADO: Record<EstadoPedido, string> = {
+  Recibido: "Recibido",
+  Preparacion: "En cocina",
+  Listo: "Listo",
+  EnCamino: "En camino",
+  Entregado: "Entregado",
+};
 
-// Lógica de caja extraída de app/(interno)/cajero/page.tsx (mock).
-// TODO(Fase 3): GET /pedidos + PATCH estado/disponibilidad + POST /promociones.
+const SIGUIENTE: Record<EstadoPedido, EstadoPedido | null> = {
+  Recibido: "Preparacion",
+  Preparacion: "Listo",
+  Listo: "EnCamino",
+  EnCamino: "Entregado",
+  Entregado: null,
+};
+
+export function etiquetaEstado(e: EstadoPedido): string {
+  return ETIQUETA_ESTADO[e];
+}
+
+// Caja real: pedidos + carta + promo flash contra el backend.
 export function useCajero() {
+  const queryClient = useQueryClient();
+  const { productos, loading: cargandoCarta } = usePizzas();
   const [tab, setTab] = useState<TabCajero>("pedidos");
-  const [pedidos, setPedidos] = useState(PEDIDOS_INICIALES);
-  const [productos, setProductos] = useState<Producto[]>(PRODUCTOS);
-  const [promos, setPromos] = useState<PromoFlash[]>([]);
   const [titulo, setTitulo] = useState("");
   const [detalle, setDetalle] = useState("");
+  const [precio, setPrecio] = useState(38);
   const [horas, setHoras] = useState(24);
   const [errorPromo, setErrorPromo] = useState<string | null>(null);
 
-  function avanzarPedido(id: string) {
-    setPedidos((prev) =>
-      prev.map((x) =>
-        x.id === id ? { ...x, estado: SIGUIENTE_ESTADO_VISTA[x.estado]! } : x,
-      ),
-    );
+  const pedidosQ = useQuery({
+    queryKey: ["pedidos"],
+    queryFn: () => PedidosService.list(),
+    refetchInterval: 10_000,
+  });
+
+  const promosQ = useQuery({
+    queryKey: ["promos-turno"],
+    queryFn: () => PromocionesService.list(),
+  });
+
+  async function recargarPedidos() {
+    await queryClient.invalidateQueries({ queryKey: ["pedidos"] });
   }
 
-  function toggleDisponible(id: number) {
-    setProductos((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, disponible: !x.disponible } : x)),
-    );
-  }
+  const avanzar = useMutation({
+    mutationFn: ({ id, a }: { id: number; a: EstadoPedido }) =>
+      PedidosService.cambiarEstado(id, a),
+    onSuccess: () => void recargarPedidos(),
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo avanzar el pedido.")),
+  });
 
-  function crearPromo(e: React.FormEvent<HTMLFormElement>) {
+  const toggleCarta = useMutation({
+    mutationFn: ({ id, disponible }: { id: number; disponible: boolean }) =>
+      CatalogoService.setDisponibilidad(id, disponible),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["pizzas"] });
+      toast.success("Disponibilidad actualizada");
+    },
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo actualizar.")),
+  });
+
+  const crearPromo = useMutation({
+    mutationFn: () =>
+      PromocionesService.crear({
+        nombre: titulo.trim(),
+        descripcion: detalle.trim() || undefined,
+        precioPromo: precio,
+        tipo: "Flash",
+        vigenciaHoras: horas,
+      }),
+    onSuccess: () => {
+      setErrorPromo(null);
+      setTitulo("");
+      setDetalle("");
+      setPrecio(38);
+      setHoras(24);
+      toast.success("Promo flash publicada");
+      void queryClient.invalidateQueries({ queryKey: ["promos-turno"] });
+    },
+    onError: (e) => setErrorPromo(getErrorMessage(e, "No se pudo publicar la promo.")),
+  });
+
+  function onCrearPromo(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (horas > 48) {
       setErrorPromo("Las promos de caja duran máximo 48 horas.");
@@ -56,27 +109,30 @@ export function useCajero() {
       return;
     }
     setErrorPromo(null);
-    setPromos((prev) => [
-      {
-        id: `pf-${Date.now()}`,
-        titulo: titulo.trim(),
-        detalle: detalle.trim(),
-        venceEn: Date.now() + horas * 60 * 60 * 1000,
-      },
-      ...prev,
-    ]);
-    setTitulo("");
-    setDetalle("");
-    setHoras(24);
+    crearPromo.mutate();
   }
+
+  const pedidos = (pedidosQ.data ?? []).map((p) => ({
+    id: p.id,
+    codigo: p.codigo,
+    cliente: `${p.nombres} ${p.apellidos}`,
+    items: p.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre} (${d.tamano})`).join(", "),
+    total: Number(p.total),
+    estado: p.estado,
+    etiqueta: etiquetaEstado(p.estado),
+    siguiente: SIGUIENTE[p.estado],
+    entrega: p.tipoEntrega,
+    hora: new Date(p.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
+  }));
 
   return {
     tab, setTab,
-    pedidos, avanzarPedido,
-    productos, toggleDisponible,
-    promos,
-    titulo, setTitulo, detalle, setDetalle, horas, setHoras,
-    errorPromo, crearPromo,
-    siguienteEstado: SIGUIENTE_ESTADO_VISTA,
+    pedidos, cargandoPedidos: pedidosQ.isLoading,
+    avanzarPedido: (id: number, a: EstadoPedido) => avanzar.mutate({ id, a }),
+    productos, cargandoCarta, toggleDisponible: (id: number, disponible: boolean) =>
+      toggleCarta.mutate({ id, disponible }),
+    promos: promosQ.data ?? [],
+    titulo, setTitulo, detalle, setDetalle, precio, setPrecio, horas, setHoras,
+    errorPromo, crearPromo: onCrearPromo, publicando: crearPromo.isPending,
   };
 }

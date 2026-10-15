@@ -14,7 +14,7 @@ export default function DeliveryPage() {
 }
 
 function DeliveryContenido() {
-  const { activas, hechas, avanzar } = useEntregas();
+  const { activas, hechas, cargando, avanzar } = useEntregas();
 
   return (
     <StaffLayout
@@ -28,11 +28,16 @@ function DeliveryContenido() {
       }
     >
       <main className="mx-auto max-w-lg space-y-4 px-4 py-6">
+        {cargando && activas.length === 0 && (
+          <div className="card-soft py-12 text-center">
+            <p className="mt-3 font-extrabold">Cargando entregas…</p>
+          </div>
+        )}
         {activas.map((e) => (
           <DeliveryCard key={e.id} entrega={e} onAvanzar={avanzar} />
         ))}
 
-        {activas.length === 0 && (
+        {!cargando && activas.length === 0 && (
           <div className="card-soft py-12 text-center">
             <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
             <p className="mt-3 font-extrabold">¡Todo entregado!</p>
@@ -54,7 +59,7 @@ function DeliveryContenido() {
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
-                      {e.id} · {e.cliente}
+                      {e.codigo} · {e.cliente}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">{e.direccion}</p>
                   </div>

@@ -1,17 +1,22 @@
-import { Timer } from "lucide-react";
-import { minutosDesde, type TicketKds } from "@/hooks/use-cola";
+import { useState } from "react";
+import { Bike, Timer } from "lucide-react";
+import { minutosDesde, type Repartidor, type TicketKds } from "@/hooks/use-cola";
 
 interface TicketKdsProps {
   ticket: TicketKds;
   ahora: number;
-  onIniciar: (id: string) => void;
-  onListo: (id: string) => void;
+  repartidores: Repartidor[];
+  onIniciar: (id: number) => void;
+  onListo: (id: number) => void;
+  onAsignar: (id: number, repartidorId: number) => void;
 }
 
-/** Comanda del KDS (extraída de routes/cocina.tsx). */
-export function TicketKds({ ticket: t, ahora, onIniciar, onListo }: TicketKdsProps) {
+/** Comanda del KDS con datos reales del backend. */
+export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, onAsignar }: TicketKdsProps) {
   const min = minutosDesde(t.recibidoEn, ahora);
   const tarde = min >= 15;
+  const [repId, setRepId] = useState("");
+
   return (
     <article
       className={`flex flex-col rounded-3xl border-2 bg-white p-5 text-brand-black ${
@@ -20,10 +25,15 @@ export function TicketKds({ ticket: t, ahora, onIniciar, onListo }: TicketKdsPro
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-2xl font-extrabold">{t.id}</p>
+          <p className="text-2xl font-extrabold">{t.codigo}</p>
           <p className="text-sm font-semibold text-muted-foreground">
             {t.cliente} · {t.entrega}
           </p>
+          {t.yapePendiente && (
+            <span className="mt-1 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-xs font-bold text-brand-black">
+              Yape por verificar
+            </span>
+          )}
         </div>
         <span
           className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-extrabold ${
@@ -53,7 +63,33 @@ export function TicketKds({ ticket: t, ahora, onIniciar, onListo }: TicketKdsPro
         ))}
       </ul>
 
-      <div className="mt-5">
+      <div className="mt-4 flex gap-2">
+        <select
+          value={t.repartidorId ? String(t.repartidorId) : repId}
+          disabled={Boolean(t.repartidorId)}
+          onChange={(e) => setRepId(e.target.value)}
+          className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-primary disabled:opacity-60"
+          aria-label="Repartidor"
+        >
+          <option value="">Repartidor…</option>
+          {repartidores.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.nombre}
+            </option>
+          ))}
+        </select>
+        {!t.repartidorId && (
+          <button
+            onClick={() => repId && onAsignar(t.id, Number(repId))}
+            disabled={!repId}
+            className="btn-tactile inline-flex shrink-0 items-center gap-1 rounded-xl bg-brand-black px-4 text-sm text-white disabled:opacity-40"
+          >
+            <Bike className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="mt-3">
         {t.estado === "nuevo" ? (
           <button
             onClick={() => onIniciar(t.id)}
