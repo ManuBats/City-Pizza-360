@@ -4,7 +4,7 @@ import { CocinaService } from "@/services/operacion.service";
 import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
 
-export type Repartidor = { id: number; usuario: string; nombre: string };
+export type Repartidor = { id: number; usuario: string; nombre: string; activas: number };
 
 export type TicketKds = {
   id: number;

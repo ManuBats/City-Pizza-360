@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Banknote, Loader2, QrCode, Upload } from "lucide-react";
+import { Banknote, CheckCircle2, Loader2, QrCode, Upload } from "lucide-react";
 import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
 import { soles } from "@/lib/pizzas";
@@ -19,6 +19,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
   const [archivo, setArchivo] = useState<File | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recibido, setRecibido] = useState<Pedido | null>(null);
 
   async function subir() {
     if (!archivo) {
@@ -29,12 +30,32 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
     setSubiendo(true);
     try {
       const actualizado = await PedidosService.subirComprobante(pedido.id, archivo);
-      onSubido(actualizado);
+      setRecibido(actualizado);
     } catch (e) {
       setError(getErrorMessage(e, "No se pudo subir el comprobante."));
     } finally {
       setSubiendo(false);
     }
+  }
+
+  if (recibido) {
+    return (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-brand-black/70 p-4">
+        <div className="card-soft w-full max-w-sm p-6 text-center">
+          <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+          <h2 className="mt-3 text-2xl font-extrabold">¡Comprobante recibido!</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pedido {recibido.codigo} en cocina. Te avisaremos cuando esté en camino.
+          </p>
+          <button
+            onClick={() => onSubido(recibido)}
+            className="btn-tactile mt-5 w-full bg-primary text-white transition-colors hover:bg-primary/90"
+          >
+            Ver mi pedido
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

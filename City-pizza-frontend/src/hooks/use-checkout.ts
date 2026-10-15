@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
 import { COSTO_DELIVERY, resolverProducto } from "@/lib/pizzas";
 import { usePizzas } from "@/hooks/use-pizzas";
@@ -85,6 +86,11 @@ export function useCheckout() {
       });
       const resultado = { pedido, requiereYape: metodoPago === "Yape" };
       guardarUltimoPedido(pedido.codigo, pedido.celular);
+      // Coherencia de precios: el servidor manda; si el carrito tenía
+      // precios viejos, se avisa en vez de cobrar en silencio.
+      if (Math.abs(Number(pedido.total) - total) > 0.01) {
+        toast.warning("Los precios se actualizaron al confirmar. Revisa tu total en Mi pedido.");
+      }
       if (!resultado.requiereYape) {
         clear();
         await navigate({

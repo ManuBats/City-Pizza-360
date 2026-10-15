@@ -22,8 +22,8 @@ export const CocinaService = {
     return apiFetch<Pedido[]>("/cocina/cola");
   },
 
-  async repartidores(): Promise<{ id: number; usuario: string; nombre: string }[]> {
-    return apiFetch<{ id: number; usuario: string; nombre: string }[]>(
+  async repartidores(): Promise<{ id: number; usuario: string; nombre: string; activas: number }[]> {
+    return apiFetch<{ id: number; usuario: string; nombre: string; activas: number }[]>(
       "/trabajadores/repartidores",
     );
   },

@@ -6,6 +6,17 @@ import type { Comanda, LineaComanda } from "@/types/mesa";
 
 // Comanda real: POST /pedidos { tipoEntrega: Mesa } + nota por línea.
 // La nota de la comanda se replica en cada línea para que el KDS la vea.
+const COMANDAS_KEY = "citypizza360-comandas";
+
+function leerEnviadas(): Comanda[] {
+  try {
+    const raw = window.localStorage.getItem(COMANDAS_KEY);
+    return raw ? (JSON.parse(raw) as Comanda[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function useComanda() {
   const [mesa, setMesa] = useState<number | null>(null);
   const [lineas, setLineas] = useState<LineaComanda[]>([]);
@@ -13,7 +24,7 @@ export function useComanda() {
   const [nombre, setNombre] = useState("");
   const [celular, setCelular] = useState("");
   const [metodoPago, setMetodoPago] = useState<"Efectivo" | "Yape">("Efectivo");
-  const [enviadas, setEnviadas] = useState<Comanda[]>([]);
+  const [enviadas, setEnviadas] = useState<Comanda[]>(leerEnviadas);
   const [tamanoPorId, setTamanoPorId] = useState<Record<number, "Personal" | "Familiar">>({});
   const [enviando, setEnviando] = useState(false);
 
@@ -81,7 +92,15 @@ export function useComanda() {
           minute: "2-digit",
         }),
       };
-      setEnviadas((prev) => [comanda, ...prev]);
+      setEnviadas((prev) => {
+        const next = [comanda, ...prev].slice(0, 20);
+        try {
+          window.localStorage.setItem(COMANDAS_KEY, JSON.stringify(next));
+        } catch {
+          /* almacenamiento no disponible */
+        }
+        return next;
+      });
       setLineas([]);
       setNota("");
       setNombre("");

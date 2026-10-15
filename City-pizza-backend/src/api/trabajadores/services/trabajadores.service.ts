@@ -13,13 +13,21 @@ export class TrabajadoresService {
     return users.map(({ passHash: _h, ...u }) => u);
   }
 
-  /** Repartidores activos para que cocina asigne entregas. */
+  /** Repartidores activos con sus entregas en curso (para asignar en cocina). */
   async repartidores() {
     const users = await this.prisma.trabajador.findMany({
       where: { rol: 'Repartidor', activo: true },
       orderBy: { nombre: 'asc' },
     });
-    return users.map(({ passHash: _h, ...u }) => u);
+    const conteo = await this.prisma.pedido.groupBy({
+      by: ['repartidorId'],
+      where: { repartidorId: { not: null }, estado: { not: 'Entregado' } },
+      _count: { repartidorId: true },
+    });
+    return users.map(({ passHash: _h, ...u }) => ({
+      ...u,
+      activas: conteo.find((c) => c.repartidorId === u.id)?._count.repartidorId ?? 0,
+    }));
   }
 
   async crear(dto: CreateTrabajadorDto) {

@@ -74,7 +74,7 @@ export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, 
           <option value="">Repartidor…</option>
           {repartidores.map((r) => (
             <option key={r.id} value={r.id}>
-              {r.nombre}
+              {r.nombre} · {r.activas === 0 ? "libre" : `${r.activas} en curso`}
             </option>
           ))}
         </select>
