@@ -4,6 +4,7 @@ import { useCart } from "@/context/cart-context";
 import { COSTO_DELIVERY, resolverProducto } from "@/lib/pizzas";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { PedidosService } from "@/services/pedidos.service";
+import { guardarUltimoPedido } from "@/hooks/use-tracking";
 import { getErrorMessage } from "@/services/api";
 import type { Pedido } from "@/types/pedido";
 
@@ -83,6 +84,7 @@ export function useCheckout() {
         items: lineas,
       });
       const resultado = { pedido, requiereYape: metodoPago === "Yape" };
+      guardarUltimoPedido(pedido.codigo, pedido.celular);
       if (!resultado.requiereYape) {
         clear();
         await navigate({

@@ -3,6 +3,32 @@ import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
 import type { EstadoPedido } from "@/types/pedido";
 
+const ULTIMO_PEDIDO_KEY = "citypizza360-ultimo-pedido";
+
+export type ReferenciaPedido = { codigo: string; celular: string };
+
+/** Guarda el último pedido en el dispositivo para sobrevivir recargas. */
+export function guardarUltimoPedido(codigo: string, celular: string) {
+  try {
+    window.localStorage.setItem(ULTIMO_PEDIDO_KEY, JSON.stringify({ codigo, celular }));
+  } catch {
+    /* almacenamiento no disponible */
+  }
+}
+
+/** Lee el último pedido guardado (o null si nunca se pidió aquí). */
+export function leerUltimoPedido(): ReferenciaPedido | null {
+  try {
+    const raw = window.localStorage.getItem(ULTIMO_PEDIDO_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as ReferenciaPedido;
+    if (!data.codigo || !data.celular) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 const PASO_POR_ESTADO: Record<EstadoPedido, number> = {
   Recibido: 0,
   Preparacion: 2,

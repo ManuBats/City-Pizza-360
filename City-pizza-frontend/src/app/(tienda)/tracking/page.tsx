@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
-import { useTrackingReal } from "@/hooks/use-tracking";
+import { useTrackingReal, leerUltimoPedido } from "@/hooks/use-tracking";
 import { LOCAL, soles } from "@/lib/pizzas";
 
 const PASOS = [
@@ -31,7 +31,11 @@ function minutosDesde(fechaIso: string): number {
 }
 
 export function TrackingPage() {
-  const { codigo, celular } = useSearch({ from: "/tracking" });
+  const { codigo: codigoUrl, celular: celularUrl } = useSearch({ from: "/tracking" });
+  // Fallback: último pedido de este dispositivo (sobrevive recargas).
+  const guardado = !codigoUrl && !celularUrl ? leerUltimoPedido() : null;
+  const codigo = codigoUrl ?? guardado?.codigo;
+  const celular = celularUrl ?? guardado?.celular;
   const navigate = useNavigate({ from: "/tracking" });
   const { pedido, pasoActual, cargando, error, buscar } = useTrackingReal(codigo, celular);
 
@@ -86,6 +90,16 @@ export function TrackingPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Ingresa el código que recibiste al confirmar y tu celular.
             </p>
+            {guardado && (
+              <button
+                onClick={() =>
+                  navigate({ search: { codigo: guardado.codigo, celular: guardado.celular } })
+                }
+                className="btn-tactile mt-4 inline-flex items-center bg-primary px-6 text-white transition-colors hover:bg-primary/90"
+              >
+                Ver mi último pedido ({guardado.codigo})
+              </button>
+            )}
           </div>
         )}
 
@@ -104,7 +118,16 @@ export function TrackingPage() {
           <>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h1 className="text-3xl font-extrabold">Pedido {pedido.codigo}</h1>
+                <h1 className="flex flex-wrap items-center gap-2 text-3xl font-extrabold">
+                  Pedido {pedido.codigo}
+                  <button
+                    onClick={() => void navigator.clipboard?.writeText(pedido.codigo).catch(() => {})}
+                    className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
+                    title="Copiar código"
+                  >
+                    Copiar código
+                  </button>
+                </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {pedido.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre}`).join(", ")} ·{" "}
                   {soles(Number(pedido.total))}
