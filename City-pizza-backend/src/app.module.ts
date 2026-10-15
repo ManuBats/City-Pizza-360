@@ -2,25 +2,27 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { CatalogoModule } from './catalogo/catalogo.module';
-import { CocinaModule } from './cocina/cocina.module';
-import { CommonModule } from './common/common.module';
-import { InventarioModule } from './inventario/inventario.module';
-import { PedidosModule } from './pedidos/pedidos.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { ReportesModule } from './reportes/reportes.module';
-import { TrabajadoresModule } from './trabajadores/trabajadores.module';
+import { AuthModule } from './api/auth/auth.module';
+import { CatalogoModule } from './api/catalogo/catalogo.module';
+import { CocinaModule } from './api/cocina/cocina.module';
+import { MiddlewaresModule } from './middlewares/middlewares.module';
+import { InventarioModule } from './api/inventario/inventario.module';
+import { PedidosModule } from './api/pedidos/pedidos.module';
+import { PrismaModule } from './config/prisma/prisma.module';
+import { PromocionesModule } from './api/promociones/promociones.module';
+import { ReportesModule } from './api/reportes/reportes.module';
+import { TrabajadoresModule } from './api/trabajadores/trabajadores.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    CommonModule,
+    MiddlewaresModule,
     AuthModule,
     CatalogoModule,
     PedidosModule,
     CocinaModule,
+    PromocionesModule,
     InventarioModule,
     ReportesModule,
     TrabajadoresModule,

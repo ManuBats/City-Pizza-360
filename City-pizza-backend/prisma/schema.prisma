@@ -26,13 +26,34 @@ enum Rol {
   Mesero
 }
 
+enum MetodoPago {
+  Efectivo
+  Yape
+}
+
+enum EstadoPago {
+  Pendiente
+  Verificado
+  Rechazado
+}
+
+enum TipoPromocion {
+  Permanente
+  Flash
+}
+
 model Pizza {
-  id         Int            @id @default(autoincrement())
-  nombre     String         @unique
-  precio     Decimal        @db.Decimal(10, 2)
-  disponible Boolean        @default(true)
-  insumos    PizzaInsumo[]
-  detalles   DetallePedido[]
+  id             Int            @id @default(autoincrement())
+  nombre         String         @unique
+  tipo           String         @default("Pizza")
+  categoria      String         @default("Clásicas")
+  precio         Decimal        @db.Decimal(10, 2) @default(0) // legacy: usar precio* por tamaño
+  precioPersonal Decimal        @db.Decimal(10, 2) @default(0)
+  precioMediana  Decimal        @db.Decimal(10, 2) @default(0)
+  precioFamiliar Decimal        @db.Decimal(10, 2) @default(0)
+  disponible     Boolean        @default(true)
+  insumos        PizzaInsumo[]
+  detalles       DetallePedido[]
 }
 
 model Insumo {
@@ -55,37 +76,47 @@ model PizzaInsumo {
 }
 
 model Pedido {
-  id         Int            @id @default(autoincrement())
-  codigo     String         @unique
-  nombres    String
-  apellidos  String
-  celular    String         @db.Char(9)
-  direccion  String
-  referencia String?
-  estado     EstadoPedido   @default(Recibido)
-  total      Decimal        @db.Decimal(10, 2)
-  creadoEn   DateTime       @default(now())
-  detalles   DetallePedido[]
+  id             Int            @id @default(autoincrement())
+  codigo         String         @unique
+  nombres        String
+  apellidos      String
+  celular        String         @db.Char(9)
+  direccion      String
+  referencia     String?
+  tipoEntrega    String         @default("Delivery")
+  metodoPago     MetodoPago     @default(Efectivo)
+  estadoPago     EstadoPago     @default(Pendiente)
+  comprobanteUrl String?
+  repartidorId   Int?
+  mesa           Int?
+  estado         EstadoPedido   @default(Recibido)
+  total          Decimal        @db.Decimal(10, 2)
+  creadoEn       DateTime       @default(now())
+  detalles       DetallePedido[]
 }
 
 model DetallePedido {
-  id        Int     @id @default(autoincrement())
-  pedidoId  Int
-  pizzaId   Int
-  cantidad  Int
-  precioUnit Decimal @db.Decimal(10, 2)
-  pedido    Pedido  @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
-  pizza     Pizza   @relation(fields: [pizzaId], references: [id])
+  id          Int     @id @default(autoincrement())
+  pedidoId    Int
+  pizzaId     Int
+  cantidad    Int
+  tamano      String  @default("Familiar")
+  nota        String?
+  extraQueso  Boolean @default(false)
+  precioUnit  Decimal @db.Decimal(10, 2)
+  pedido      Pedido  @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  pizza       Pizza   @relation(fields: [pizzaId], references: [id])
 }
 
 model Promocion {
-  id          Int      @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   nombre      String
   descripcion String?
-  precioPromo Decimal  @db.Decimal(10, 2)
-  inicio      DateTime @default(now())
-  fin         DateTime
-  activa      Boolean  @default(true)
+  precioPromo Decimal        @db.Decimal(10, 2)
+  tipo        TipoPromocion  @default(Permanente)
+  inicio      DateTime       @default(now())
+  fin         DateTime?
+  activa      Boolean        @default(true)
 }
 
 model Trabajador {

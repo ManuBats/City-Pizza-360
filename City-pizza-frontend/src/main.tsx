@@ -1,15 +1,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Outlet,
   RouterProvider,
   createRouter,
-  createRootRoute,
+  createRootRouteWithContext,
   createRoute,
+  redirect,
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { CartProvider } from "@/lib/cart";
+import { getWorkerSession } from "@/lib/auth";
+import { puedeAcceder } from "@/lib/access-control";
 import { CATEGORIAS, type Categoria } from "@/lib/pizzas";
+import { AppShell } from "./app/shell";
 import Landing from "./routes/index";
 import MenuPage from "./routes/menu";
 import CheckoutPage from "./routes/checkout";
@@ -21,19 +23,33 @@ import CajeroPage from "./routes/cajero";
 import MesaPage from "./routes/mesa";
 import AdminPage from "./routes/admin";
 import UsuariosPage from "./routes/admin-usuarios";
-import { NotFoundComponent } from "./components/RootFeedback";
+import { NotFoundComponent } from "./app/not-found";
 import "./styles.css";
 
-// Router code-based (SPA). Migración a file-based (router.tsx + routeTree.gen
-// + start.ts de Lovable) cuando pegues el resto de routes.
-const rootRoute = createRootRoute({
-  component: () => (
-    <CartProvider>
-      <Outlet />
-    </CartProvider>
-  ),
+// Router code-based (SPA). routes/ son adaptadores finos: path + validación
+// + guard, y renderizan el page.tsx correspondiente de src/app/.
+interface RouterContext {
+  queryClient: QueryClient;
+}
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({
+  component: AppShell,
   notFoundComponent: NotFoundComponent,
 });
+
+/** Guard estilo proxy.ts de CCA: sin rol con acceso → /login. */
+function staffGuard(path: string) {
+  return async ({ context }: { context: RouterContext }) => {
+    const session = await context.queryClient.fetchQuery({
+      queryKey: ["worker-session"],
+      queryFn: () => getWorkerSession(),
+      staleTime: 30_000,
+    });
+    if (!puedeAcceder(session?.rol, path)) {
+      throw redirect({ to: "/login" });
+    }
+  };
+}
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -75,36 +91,42 @@ const loginRoute = createRoute({
 const cocinaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/cocina",
+  beforeLoad: staffGuard("/cocina"),
   component: CocinaPage,
 });
 
 const deliveryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/delivery",
+  beforeLoad: staffGuard("/delivery"),
   component: DeliveryPage,
 });
 
 const cajeroRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/cajero",
+  beforeLoad: staffGuard("/cajero"),
   component: CajeroPage,
 });
 
 const mesaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/mesa",
+  beforeLoad: staffGuard("/mesa"),
   component: MesaPage,
 });
 
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin",
+  beforeLoad: staffGuard("/admin"),
   component: AdminPage,
 });
 
 const adminUsuariosRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/usuarios",
+  beforeLoad: staffGuard("/admin/usuarios"),
   component: UsuariosPage,
 });
 
@@ -121,8 +143,8 @@ const routeTree = rootRoute.addChildren([
   adminRoute,
   adminUsuariosRoute,
 ]);
-const router = createRouter({ routeTree });
 const queryClient = new QueryClient();
+const router = createRouter({ routeTree, context: { queryClient } });
 
 declare module "@tanstack/react-router" {
   interface Register {

@@ -18,18 +18,31 @@ const INSUMOS = [
   { nombre: 'Gaseosa personal', stock: 24, stockMinimo: 12, unidad: 'unds' },
 ];
 
-const PIZZAS: { nombre: string; precio: number; insumos: string[] }[] = [
-  { nombre: 'Hawaiana', precio: 32, insumos: ['Queso mozzarella', 'Jamón', 'Piña en trozos'] },
-  { nombre: 'Americana', precio: 32, insumos: ['Queso mozzarella', 'Salame', 'Tocino', 'Jamón'] },
-  { nombre: 'Pepperoni', precio: 34, insumos: ['Queso mozzarella', 'Pepperoni'] },
-  { nombre: 'Suprema', precio: 36, insumos: ['Queso mozzarella', 'Pepperoni', 'Jamón', 'Tocino'] },
-  { nombre: 'BBQ Chicken', precio: 38, insumos: ['Queso mozzarella', 'Pollo a la brasa'] },
-  { nombre: 'Cuatro Quesos', precio: 38, insumos: ['Queso mozzarella'] },
-  { nombre: 'Vegetariana', precio: 34, insumos: ['Queso mozzarella', 'Salsa de tomate'] },
-  { nombre: 'Familiar Carnes', precio: 42, insumos: ['Queso mozzarella', 'Pepperoni', 'Salame', 'Tocino', 'Jamón'] },
-  { nombre: 'Familiar La Cantina', precio: 40, insumos: ['Queso mozzarella', 'Pepperoni'] },
-  { nombre: 'Gaseosa 1L', precio: 8, insumos: ['Gaseosa 1L'] },
-  { nombre: 'Gaseosa Personal', precio: 4, insumos: ['Gaseosa personal'] },
+const PIZZAS: {
+  nombre: string;
+  tipo: string;
+  categoria: string;
+  personal: number;
+  mediana: number;
+  familiar: number;
+  insumos: string[];
+}[] = [
+  { nombre: 'Hawaiana', tipo: 'Pizza', categoria: 'Clásicas', personal: 18, mediana: 25, familiar: 32, insumos: ['Queso mozzarella', 'Jamón', 'Piña en trozos'] },
+  { nombre: 'Americana', tipo: 'Pizza', categoria: 'Clásicas', personal: 18, mediana: 25, familiar: 32, insumos: ['Queso mozzarella', 'Salame', 'Tocino', 'Jamón'] },
+  { nombre: 'Pepperoni', tipo: 'Pizza', categoria: 'Clásicas', personal: 19, mediana: 26, familiar: 34, insumos: ['Queso mozzarella', 'Pepperoni'] },
+  { nombre: 'Suprema', tipo: 'Pizza', categoria: 'Clásicas', personal: 20, mediana: 28, familiar: 36, insumos: ['Queso mozzarella', 'Pepperoni', 'Jamón', 'Tocino'] },
+  { nombre: 'BBQ Chicken', tipo: 'Pizza', categoria: 'Especiales', personal: 22, mediana: 30, familiar: 38, insumos: ['Queso mozzarella', 'Pollo a la brasa'] },
+  { nombre: 'Cuatro Quesos', tipo: 'Pizza', categoria: 'Especiales', personal: 22, mediana: 30, familiar: 38, insumos: ['Queso mozzarella'] },
+  { nombre: 'Vegetariana', tipo: 'Pizza', categoria: 'Especiales', personal: 19, mediana: 26, familiar: 34, insumos: ['Queso mozzarella', 'Salsa de tomate'] },
+  { nombre: 'Familiar Carnes', tipo: 'Pizza', categoria: 'Familiares', personal: 24, mediana: 33, familiar: 42, insumos: ['Queso mozzarella', 'Pepperoni', 'Salame', 'Tocino', 'Jamón'] },
+  { nombre: 'Familiar La Cantina', tipo: 'Pizza', categoria: 'Familiares', personal: 23, mediana: 31, familiar: 40, insumos: ['Queso mozzarella', 'Pepperoni'] },
+  { nombre: 'Gaseosa 1L', tipo: 'Bebida', categoria: 'Bebidas', personal: 8, mediana: 8, familiar: 8, insumos: ['Gaseosa 1L'] },
+  { nombre: 'Gaseosa Personal', tipo: 'Bebida', categoria: 'Bebidas', personal: 4, mediana: 4, familiar: 4, insumos: ['Gaseosa personal'] },
+];
+
+const PROMOS = [
+  { nombre: '2×1 Martes', descripcion: '2 pizzas familiares clásicas por S/58', precioPromo: 58, tipo: 'Permanente' as const },
+  { nombre: 'Combo Familiar', descripcion: 'Familiar + Gaseosa 1L por S/45', precioPromo: 45, tipo: 'Permanente' as const },
 ];
 
 const WORKERS: { usuario: string; nombre: string; rol: Rol; password: string }[] = [
@@ -51,8 +64,23 @@ async function main() {
   for (const p of PIZZAS) {
     const pizza = await prisma.pizza.upsert({
       where: { nombre: p.nombre },
-      update: { precio: p.precio },
-      create: { nombre: p.nombre, precio: p.precio },
+      update: {
+        tipo: p.tipo,
+        categoria: p.categoria,
+        precio: p.familiar,
+        precioPersonal: p.personal,
+        precioMediana: p.mediana,
+        precioFamiliar: p.familiar,
+      },
+      create: {
+        nombre: p.nombre,
+        tipo: p.tipo,
+        categoria: p.categoria,
+        precio: p.familiar,
+        precioPersonal: p.personal,
+        precioMediana: p.mediana,
+        precioFamiliar: p.familiar,
+      },
     });
     for (const nombreInsumo of p.insumos) {
       const insumo = await prisma.insumo.findUniqueOrThrow({ where: { nombre: nombreInsumo } });
@@ -61,6 +89,12 @@ async function main() {
         update: {},
         create: { pizzaId: pizza.id, insumoId: insumo.id, cantidad: 0.15 },
       });
+    }
+  }
+  for (const promo of PROMOS) {
+    const existe = await prisma.promocion.findFirst({ where: { nombre: promo.nombre } });
+    if (!existe) {
+      await prisma.promocion.create({ data: { ...promo, tipo: promo.tipo } });
     }
   }
   for (const w of WORKERS) {
@@ -75,7 +109,7 @@ async function main() {
       },
     });
   }
-  console.log('Seed OK: pizzas, insumos y trabajadores demo');
+  console.log('Seed OK: pizzas, insumos, promos y trabajadores demo');
 }
 
 main()
