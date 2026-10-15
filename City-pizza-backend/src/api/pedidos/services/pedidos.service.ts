@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import type { EstadoPago, EstadoPedido } from '@prisma/client';
 import { precioLinea, type Tamano } from '../../../utils/precios';
+import { serializarPedido } from '../../../utils/serializar';
 import { PrismaService } from '../../../config/prisma/prisma.service';
 import { CreatePedidoDto } from '../dto/pedido.dto';
 
@@ -28,6 +29,14 @@ export class PedidosService {
 
   /** POST /pedidos (sin token). Todo o nada: pedido + detalle + stock. */
   async crear(dto: CreatePedidoDto) {
+    const tipoEntrega = dto.tipoEntrega ?? 'Delivery';
+    // Dirección obligatoria solo en Delivery; Recojo/Mesa usan valor por defecto.
+    let direccion = dto.direccion?.trim() || '';
+    if (tipoEntrega === 'Delivery' && direccion.length < 5)
+      throw new BadRequestException('La dirección es obligatoria para delivery');
+    if (!direccion)
+      direccion = tipoEntrega === 'Mesa' && dto.mesa ? `Mesa ${dto.mesa}` : 'Recojo en tienda';
+
     const pizzas = await this.prisma.pizza.findMany({
       where: { id: { in: dto.items.map((i) => i.pizzaId) } },
       include: { insumos: { include: { insumo: true } } },
@@ -67,9 +76,9 @@ export class PedidosService {
           nombres: dto.nombres.trim(),
           apellidos: dto.apellidos.trim(),
           celular: dto.celular,
-          direccion: dto.direccion.trim(),
+          direccion,
           referencia: dto.referencia?.trim() || null,
-          tipoEntrega: dto.tipoEntrega ?? 'Delivery',
+          tipoEntrega,
           metodoPago: dto.metodoPago ?? 'Efectivo',
           mesa: dto.mesa ?? null,
           total,
@@ -96,10 +105,11 @@ export class PedidosService {
           });
         }
       }
-      return tx.pedido.findUniqueOrThrow({
+      const creado = await tx.pedido.findUniqueOrThrow({
         where: { id: pedido.id },
         include: { detalles: { include: { pizza: true } } },
       });
+      return serializarPedido(creado);
     });
   }
 
@@ -111,7 +121,7 @@ export class PedidosService {
     });
     if (!pedido || pedido.celular !== celular)
       throw new NotFoundException('Pedido no encontrado');
-    return pedido;
+    return serializarPedido(pedido);
   }
 
   /** Avance de estado con máquina estricta (JWT rol). */
@@ -122,7 +132,8 @@ export class PedidosService {
       throw new BadRequestException(
         `Transición inválida: ${pedido.estado} → ${estado}`,
       );
-    return this.prisma.pedido.update({ where: { id }, data: { estado } });
+    const actualizado = await this.prisma.pedido.update({ where: { id }, data: { estado } });
+    return serializarPedido(actualizado);
   }
 
   /** Cocina asigna repartidor (solo delivery activos). */
@@ -132,16 +143,18 @@ export class PedidosService {
     const rep = await this.prisma.trabajador.findUnique({ where: { id: repartidorId } });
     if (!rep || !rep.activo || rep.rol !== 'Repartidor')
       throw new BadRequestException('Repartidor inválido o inactivo');
-    return this.prisma.pedido.update({ where: { id }, data: { repartidorId } });
+    const asignado = await this.prisma.pedido.update({ where: { id }, data: { repartidorId } });
+    return serializarPedido(asignado);
   }
 
   /** Mis entregas: solo las asignadas a mí y no entregadas. */
-  misEntregas(trabajadorId: number) {
-    return this.prisma.pedido.findMany({
+  async misEntregas(trabajadorId: number) {
+    const pedidos = await this.prisma.pedido.findMany({
       where: { repartidorId: trabajadorId, estado: { not: 'Entregado' } },
       orderBy: { creadoEn: 'asc' },
       include: { detalles: { include: { pizza: true } } },
     });
+    return pedidos.map(serializarPedido);
   }
 
   /** Cajero/Admin valida el comprobante Yape. */
@@ -150,7 +163,8 @@ export class PedidosService {
     if (!pedido) throw new NotFoundException('Pedido no encontrado');
     if (pedido.metodoPago !== 'Yape')
       throw new BadRequestException('Solo pedidos Yape requieren verificación');
-    return this.prisma.pedido.update({ where: { id }, data: { estadoPago } });
+    const verificado = await this.prisma.pedido.update({ where: { id }, data: { estadoPago } });
+    return serializarPedido(verificado);
   }
 
   /** Cliente sube comprobante Yape (imagen JPG/PNG/WebP ≤3MB). */
@@ -159,16 +173,18 @@ export class PedidosService {
     if (!pedido) throw new NotFoundException('Pedido no encontrado');
     if (pedido.metodoPago !== 'Yape' || pedido.estado !== 'Recibido')
       throw new BadRequestException('Este pedido no admite comprobante');
-    return this.prisma.pedido.update({
+    const conComprobante = await this.prisma.pedido.update({
       where: { id },
       data: { comprobanteUrl: `/uploads/comprobantes/${filename}` },
     });
+    return serializarPedido(conComprobante);
   }
 
-  findAll() {
-    return this.prisma.pedido.findMany({
+  async findAll() {
+    const pedidos = await this.prisma.pedido.findMany({
       orderBy: { creadoEn: 'desc' },
       include: { detalles: { include: { pizza: true } } },
     });
+    return pedidos.map(serializarPedido);
   }
 }

@@ -11,3 +11,6 @@ export const PROMO_FLASH_MAX_HORAS = 48;
 
 /** Tamaño máximo del comprobante Yape (3 MB). */
 export const COMPROBANTE_MAX_BYTES = 3 * 1024 * 1024;
+
+/** Tamaño máximo de la imagen de producto (2 MB). */
+export const PRODUCTO_IMG_MAX_BYTES = 2 * 1024 * 1024;

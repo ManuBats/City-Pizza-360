@@ -52,10 +52,11 @@ export class CreatePedidoDto {
   @Matches(/^9\d{8}$/, { message: 'celular debe tener 9 dígitos y empezar con 9' })
   celular!: string;
 
+  @IsOptional()
   @IsString()
   @MinLength(5)
   @MaxLength(200)
-  direccion!: string;
+  direccion?: string;
 
   @IsOptional()
   @IsString()
@@ -63,8 +64,8 @@ export class CreatePedidoDto {
   referencia?: string;
 
   @IsOptional()
-  @IsIn(['Delivery', 'Recojo'])
-  tipoEntrega?: 'Delivery' | 'Recojo';
+  @IsIn(['Delivery', 'Recojo', 'Mesa'])
+  tipoEntrega?: 'Delivery' | 'Recojo' | 'Mesa';
 
   @IsOptional()
   @IsIn(['Efectivo', 'Yape'])

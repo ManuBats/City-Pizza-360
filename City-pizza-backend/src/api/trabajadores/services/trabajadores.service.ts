@@ -13,6 +13,15 @@ export class TrabajadoresService {
     return users.map(({ passHash: _h, ...u }) => u);
   }
 
+  /** Repartidores activos para que cocina asigne entregas. */
+  async repartidores() {
+    const users = await this.prisma.trabajador.findMany({
+      where: { rol: 'Repartidor', activo: true },
+      orderBy: { nombre: 'asc' },
+    });
+    return users.map(({ passHash: _h, ...u }) => u);
+  }
+
   async crear(dto: CreateTrabajadorDto) {
     const usuario = dto.usuario.toLowerCase().trim();
     const existe = await this.prisma.trabajador.findUnique({ where: { usuario } });

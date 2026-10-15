@@ -14,4 +14,14 @@ export class ReportesController {
   resumen() {
     return this.reportes.resumen();
   }
+
+  @Get('ventas-por-dia')
+  ventasPorDia() {
+    return this.reportes.ventasPorDia();
+  }
+
+  @Get('top-productos')
+  topProductos() {
+    return this.reportes.topProductos();
+  }
 }

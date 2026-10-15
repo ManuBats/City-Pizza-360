@@ -16,6 +16,12 @@ export class TrabajadoresController {
     return this.trabajadores.findAll();
   }
 
+  @Get('repartidores')
+  @Roles('Admin', 'Cocinero')
+  repartidores() {
+    return this.trabajadores.repartidores();
+  }
+
   @Post()
   crear(@Body() dto: CreateTrabajadorDto) {
     return this.trabajadores.crear(dto);
