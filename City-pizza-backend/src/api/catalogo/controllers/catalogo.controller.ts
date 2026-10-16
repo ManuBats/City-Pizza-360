@@ -41,7 +41,10 @@ export class CatalogoController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
-  actualizar(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductoDto) {
+  actualizar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProductoDto,
+  ) {
     return this.catalogo.actualizar(id, dto);
   }
 

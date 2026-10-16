@@ -1,4 +1,11 @@
-import { a2Decimales, aNumero, serializarInsumo, serializarPedido, serializarPizza, serializarPromocion } from './serializar';
+import {
+  a2Decimales,
+  aNumero,
+  serializarInsumo,
+  serializarPedido,
+  serializarPizza,
+  serializarPromocion,
+} from './serializar';
 
 describe('Serialización Decimal → number', () => {
   it('aNumero acepta number, string y Decimal-like', () => {
@@ -11,7 +18,15 @@ describe('Serialización Decimal → number', () => {
     const out = serializarPedido({
       total: '28',
       detalles: [
-        { precioUnit: '28', pizza: { precio: '32', precioPersonal: '18', precioMediana: '25', precioFamiliar: '32' } },
+        {
+          precioUnit: '28',
+          pizza: {
+            precio: '32',
+            precioPersonal: '18',
+            precioMediana: '25',
+            precioFamiliar: '32',
+          },
+        },
       ],
     });
     expect(out.total).toBe(28);
@@ -32,7 +47,9 @@ describe('Serialización Decimal → number', () => {
   });
 
   it('serializarInsumo redondea stock y minimo', () => {
-    expect(serializarInsumo({ stock: 6.799999999999997, stockMinimo: 3 })).toEqual({
+    expect(
+      serializarInsumo({ stock: 6.799999999999997, stockMinimo: 3 }),
+    ).toEqual({
       stock: 6.8,
       stockMinimo: 3,
     });

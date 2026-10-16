@@ -14,12 +14,17 @@ export class CatalogoService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    const pizzas = await this.prisma.pizza.findMany({ orderBy: { nombre: 'asc' } });
+    const pizzas = await this.prisma.pizza.findMany({
+      orderBy: { nombre: 'asc' },
+    });
     return pizzas.map(serializarPizza);
   }
 
   async setDisponibilidad(id: number, disponible: boolean) {
-    const pizza = await this.prisma.pizza.update({ where: { id }, data: { disponible } });
+    const pizza = await this.prisma.pizza.update({
+      where: { id },
+      data: { disponible },
+    });
     return serializarPizza(pizza);
   }
 
@@ -50,7 +55,8 @@ export class CatalogoService {
     if (dto.nombre) data.nombre = dto.nombre.trim();
     if (dto.tipo) data.tipo = dto.tipo.trim();
     if (dto.categoria) data.categoria = dto.categoria.trim();
-    if (dto.precioPersonal !== undefined) data.precioPersonal = dto.precioPersonal;
+    if (dto.precioPersonal !== undefined)
+      data.precioPersonal = dto.precioPersonal;
     if (dto.precioMediana !== undefined) data.precioMediana = dto.precioMediana;
     if (dto.precioFamiliar !== undefined) {
       data.precioFamiliar = dto.precioFamiliar;

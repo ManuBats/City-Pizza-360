@@ -49,7 +49,9 @@ export class CreatePedidoDto {
   apellidos!: string;
 
   @IsString()
-  @Matches(/^9\d{8}$/, { message: 'celular debe tener 9 dígitos y empezar con 9' })
+  @Matches(/^9\d{8}$/, {
+    message: 'celular debe tener 9 dígitos y empezar con 9',
+  })
   celular!: string;
 
   @IsOptional()

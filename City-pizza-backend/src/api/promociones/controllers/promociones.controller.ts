@@ -10,7 +10,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard, type JwtPayload } from '../../../middlewares/jwt-auth.guard';
+import {
+  JwtAuthGuard,
+  type JwtPayload,
+} from '../../../middlewares/jwt-auth.guard';
 import { Roles } from '../../../middlewares/roles.decorator';
 import { RolesGuard } from '../../../middlewares/roles.guard';
 import { PromocionesService } from '../services/promociones.service';
@@ -43,7 +46,10 @@ export class PromocionesController {
   @Patch(':id/toggle')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin', 'Cajero')
-  toggle(@Param('id', ParseIntPipe) id: number, @Body() dto: TogglePromocionDto) {
+  toggle(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: TogglePromocionDto,
+  ) {
     return this.promos.toggle(id, dto.activa);
   }
 

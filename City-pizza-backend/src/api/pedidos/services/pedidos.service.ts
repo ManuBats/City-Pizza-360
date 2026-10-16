@@ -77,9 +77,14 @@ export class PedidosService {
     // Dirección obligatoria solo en Delivery; Recojo/Mesa usan valor por defecto.
     let direccion = dto.direccion?.trim() || '';
     if (tipoEntrega === 'Delivery' && direccion.length < 5)
-      throw new BadRequestException('La dirección es obligatoria para delivery');
+      throw new BadRequestException(
+        'La dirección es obligatoria para delivery',
+      );
     if (!direccion)
-      direccion = tipoEntrega === 'Mesa' && dto.mesa ? `Mesa ${dto.mesa}` : 'Recojo en tienda';
+      direccion =
+        tipoEntrega === 'Mesa' && dto.mesa
+          ? `Mesa ${dto.mesa}`
+          : 'Recojo en tienda';
 
     const pizzas = await this.prisma.pizza.findMany({
       where: { id: { in: dto.items.map((i) => i.pizzaId) } },
@@ -90,7 +95,8 @@ export class PedidosService {
 
     for (const item of dto.items) {
       const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
-      if (!pizza.disponible) throw new BadRequestException(`${pizza.nombre} está agotada`);
+      if (!pizza.disponible)
+        throw new BadRequestException(`${pizza.nombre} está agotada`);
     }
 
     // Sin stock no hay venta (todas las pizzas, presentes y futuras).
@@ -116,10 +122,16 @@ export class PedidosService {
     // El total lo calcula el servidor: líneas + fee delivery si aplica.
     const subtotal = dto.items.reduce((acc, item) => {
       const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
-      const unit = precioLinea(pizza, item.tamano as Tamano, item.extraQueso === true);
+      const unit = precioLinea(
+        pizza,
+        item.tamano as Tamano,
+        item.extraQueso === true,
+      );
       return acc + unit * item.cantidad;
     }, 0);
-    const total = subtotal + (tipoEntrega === 'Delivery' && subtotal > 0 ? COSTO_DELIVERY : 0);
+    const total =
+      subtotal +
+      (tipoEntrega === 'Delivery' && subtotal > 0 ? COSTO_DELIVERY : 0);
 
     let codigo = codigoPedido();
     for (let i = 0; i < 5; i++) {
@@ -145,7 +157,11 @@ export class PedidosService {
       });
       for (const item of dto.items) {
         const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
-        const unit = precioLinea(pizza, item.tamano as Tamano, item.extraQueso === true);
+        const unit = precioLinea(
+          pizza,
+          item.tamano as Tamano,
+          item.extraQueso === true,
+        );
         await tx.detallePedido.create({
           data: {
             pedidoId: pedido.id,
@@ -197,7 +213,10 @@ export class PedidosService {
       throw new BadRequestException(
         `Transición inválida: ${pedido.estado} → ${estado}`,
       );
-    const actualizado = await this.prisma.pedido.update({ where: { id }, data: { estado } });
+    const actualizado = await this.prisma.pedido.update({
+      where: { id },
+      data: { estado },
+    });
     return serializarPedido(actualizado);
   }
 
@@ -205,10 +224,15 @@ export class PedidosService {
   async asignarRepartidor(id: number, repartidorId: number) {
     const pedido = await this.prisma.pedido.findUnique({ where: { id } });
     if (!pedido) throw new NotFoundException('Pedido no encontrado');
-    const rep = await this.prisma.trabajador.findUnique({ where: { id: repartidorId } });
+    const rep = await this.prisma.trabajador.findUnique({
+      where: { id: repartidorId },
+    });
     if (!rep || !rep.activo || rep.rol !== 'Repartidor')
       throw new BadRequestException('Repartidor inválido o inactivo');
-    const asignado = await this.prisma.pedido.update({ where: { id }, data: { repartidorId } });
+    const asignado = await this.prisma.pedido.update({
+      where: { id },
+      data: { repartidorId },
+    });
     return serializarPedido(asignado);
   }
 
@@ -228,7 +252,10 @@ export class PedidosService {
     if (!pedido) throw new NotFoundException('Pedido no encontrado');
     if (pedido.metodoPago !== 'Yape')
       throw new BadRequestException('Solo pedidos Yape requieren verificación');
-    const verificado = await this.prisma.pedido.update({ where: { id }, data: { estadoPago } });
+    const verificado = await this.prisma.pedido.update({
+      where: { id },
+      data: { estadoPago },
+    });
     return serializarPedido(verificado);
   }
 

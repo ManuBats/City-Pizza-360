@@ -27,14 +27,17 @@ export class PromocionesService {
   }
 
   async findAll() {
-    const promos = await this.prisma.promocion.findMany({ orderBy: { inicio: 'desc' } });
+    const promos = await this.prisma.promocion.findMany({
+      orderBy: { inicio: 'desc' },
+    });
     return promos.map(serializarPromocion);
   }
 
   async crear(dto: CreatePromocionDto, rol: string) {
     // Cajero: solo Flash ≤48h, no permanentes, no elimina base ni cambia precio.
     if (rol === 'Cajero') {
-      if (dto.tipo !== 'Flash') throw new ForbiddenException('Cajero solo crea promos Flash');
+      if (dto.tipo !== 'Flash')
+        throw new ForbiddenException('Cajero solo crea promos Flash');
       const horas = dto.vigenciaHoras ?? 24;
       if (horas > PROMO_FLASH_MAX_HORAS)
         throw new BadRequestException(
@@ -57,7 +60,9 @@ export class PromocionesService {
         descripcion: dto.descripcion?.trim() || null,
         precioPromo: dto.precioPromo,
         tipo: dto.tipo as TipoPromocion,
-        fin: dto.vigenciaHoras ? new Date(Date.now() + dto.vigenciaHoras * 3_600_000) : null,
+        fin: dto.vigenciaHoras
+          ? new Date(Date.now() + dto.vigenciaHoras * 3_600_000)
+          : null,
       },
     });
     return serializarPromocion(promo);

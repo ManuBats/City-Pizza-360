@@ -13,7 +13,9 @@ export class InventarioService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    const insumos = await this.prisma.insumo.findMany({ orderBy: { nombre: 'asc' } });
+    const insumos = await this.prisma.insumo.findMany({
+      orderBy: { nombre: 'asc' },
+    });
     return insumos.map(serializarInsumo);
   }
 
@@ -57,7 +59,9 @@ export class InventarioService {
     });
     if (!insumo) throw new NotFoundException('Insumo no encontrado');
     if (insumo._count.pizzas > 0)
-      throw new ConflictException('No se puede borrar: lo usan recetas del catálogo');
+      throw new ConflictException(
+        'No se puede borrar: lo usan recetas del catálogo',
+      );
     await this.prisma.insumo.delete({ where: { id } });
     return { ok: true };
   }

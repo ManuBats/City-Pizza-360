@@ -18,19 +18,31 @@ export class AuthService {
     const user = await this.prisma.trabajador.findUnique({
       where: { usuario: dto.usuario.toLowerCase().trim() },
     });
-    if (!user || !user.activo) throw new UnauthorizedException('Credenciales inválidas');
+    if (!user || !user.activo)
+      throw new UnauthorizedException('Credenciales inválidas');
     const ok = await bcrypt.compare(dto.password, user.passHash);
     if (!ok) throw new UnauthorizedException('Credenciales inválidas');
     const token = await this.jwt.signAsync(
-      { sub: user.id, usuario: user.usuario, nombre: user.nombre, rol: user.rol },
-      { secret: this.config.getOrThrow<string>('JWT_SECRET'), expiresIn: JWT_EXPIRES_IN },
+      {
+        sub: user.id,
+        usuario: user.usuario,
+        nombre: user.nombre,
+        rol: user.rol,
+      },
+      {
+        secret: this.config.getOrThrow<string>('JWT_SECRET'),
+        expiresIn: JWT_EXPIRES_IN,
+      },
     );
     return { token, usuario: user.usuario, nombre: user.nombre, rol: user.rol };
   }
 
   async session(userId: number) {
-    const user = await this.prisma.trabajador.findUnique({ where: { id: userId } });
-    if (!user || !user.activo) throw new UnauthorizedException('Sesión inválida');
+    const user = await this.prisma.trabajador.findUnique({
+      where: { id: userId },
+    });
+    if (!user || !user.activo)
+      throw new UnauthorizedException('Sesión inválida');
     return { usuario: user.usuario, nombre: user.nombre, rol: user.rol };
   }
 }

@@ -47,5 +47,9 @@ export function serializarPromocion<T extends object>(promo: T): T {
 
 export function serializarInsumo<T extends object>(insumo: T): T {
   const i = insumo as Record<string, unknown>;
-  return { ...i, stock: a2Decimales(i.stock), stockMinimo: a2Decimales(i.stockMinimo) } as T;
+  return {
+    ...i,
+    stock: a2Decimales(i.stock),
+    stockMinimo: a2Decimales(i.stockMinimo),
+  } as T;
 }

@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../../middlewares/jwt-auth.guard';
 import { Roles } from '../../../middlewares/roles.decorator';
 import { RolesGuard } from '../../../middlewares/roles.guard';
@@ -30,7 +40,10 @@ export class InventarioController {
 
   @Patch(':id/ajustar')
   @Roles('Admin')
-  ajustar(@Param('id', ParseIntPipe) id: number, @Body() body: { delta: number }) {
+  ajustar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { delta: number },
+  ) {
     return this.inventario.ajustar(id, Number(body.delta) || 0);
   }
 

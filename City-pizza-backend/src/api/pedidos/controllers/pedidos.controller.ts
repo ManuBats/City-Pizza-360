@@ -18,7 +18,10 @@ import type { EstadoPago } from '@prisma/client';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { COMPROBANTE_MAX_BYTES } from '../../../constants/negocio.constants';
-import { JwtAuthGuard, type JwtPayload } from '../../../middlewares/jwt-auth.guard';
+import {
+  JwtAuthGuard,
+  type JwtPayload,
+} from '../../../middlewares/jwt-auth.guard';
 import { Roles } from '../../../middlewares/roles.decorator';
 import { RolesGuard } from '../../../middlewares/roles.guard';
 import {
@@ -95,7 +98,10 @@ export class PedidosController {
   @Patch(':id/asignar')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin', 'Cocinero')
-  asignar(@Param('id', ParseIntPipe) id: number, @Body() dto: AsignarRepartidorDto) {
+  asignar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AsignarRepartidorDto,
+  ) {
     return this.pedidos.asignarRepartidor(id, dto.repartidorId);
   }
 

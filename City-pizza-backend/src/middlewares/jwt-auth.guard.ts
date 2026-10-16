@@ -7,7 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
-export type JwtPayload = { sub: number; usuario: string; nombre: string; rol: string };
+export type JwtPayload = {
+  sub: number;
+  usuario: string;
+  nombre: string;
+  rol: string;
+};
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -19,7 +24,9 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const header: string | undefined = req.headers?.authorization;
-    const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : undefined;
+    const token = header?.startsWith('Bearer ')
+      ? header.slice(7).trim()
+      : undefined;
     if (!token) throw new UnauthorizedException('Falta token');
     try {
       const payload = await this.jwt.verifyAsync<JwtPayload>(token, {
