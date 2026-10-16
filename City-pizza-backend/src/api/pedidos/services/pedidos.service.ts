@@ -24,6 +24,49 @@ function codigoPedido(): string {
   return `CP360-${n}`;
 }
 
+export type RecetaInsumo = {
+  insumoId: number;
+  insumoNombre: string;
+  stock: number;
+  cantidad: number;
+};
+
+export type PizzaConReceta = {
+  id: number;
+  nombre: string;
+  insumos: RecetaInsumo[];
+};
+
+export type ItemAValidar = {
+  pizzaId: number;
+  nombrePizza: string;
+  cantidad: number;
+};
+
+/**
+ * Regla general: sin stock no hay venta. Vale para todas las pizzas,
+ * incluidas las que se creen a futuro (revisa su receta, no su nombre).
+ * Retorna el mensaje de error o null si hay stock suficiente.
+ * El caso emblema conserva su mensaje: sin queso no hay Hawaiana.
+ */
+export function faltaStock(
+  pizzas: PizzaConReceta[],
+  items: ItemAValidar[],
+): string | null {
+  for (const item of items) {
+    const pizza = pizzas.find((p) => p.id === item.pizzaId);
+    if (!pizza) continue;
+    for (const r of pizza.insumos) {
+      if (r.stock < r.cantidad * item.cantidad) {
+        if (/hawaiana/i.test(item.nombrePizza) && /queso/i.test(r.insumoNombre))
+          return 'Sin queso no hay Hawaiana';
+        return `Sin stock suficiente de ${r.insumoNombre} para ${item.nombrePizza}`;
+      }
+    }
+  }
+  return null;
+}
+
 @Injectable()
 export class PedidosService {
   constructor(private readonly prisma: PrismaService) {}
@@ -48,13 +91,27 @@ export class PedidosService {
     for (const item of dto.items) {
       const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
       if (!pizza.disponible) throw new BadRequestException(`${pizza.nombre} está agotada`);
-      // Regla negocio: sin queso no hay Hawaiana
-      if (/hawaiana/i.test(pizza.nombre)) {
-        const queso = pizza.insumos.find((pi) => /queso/i.test(pi.insumo.nombre));
-        if (queso && queso.insumo.stock < queso.cantidad * item.cantidad)
-          throw new BadRequestException('Sin queso no hay Hawaiana');
-      }
     }
+
+    // Sin stock no hay venta (todas las pizzas, presentes y futuras).
+    const errorStock = faltaStock(
+      pizzas.map((p) => ({
+        id: p.id,
+        nombre: p.nombre,
+        insumos: p.insumos.map((pi) => ({
+          insumoId: pi.insumoId,
+          insumoNombre: pi.insumo.nombre,
+          stock: pi.insumo.stock,
+          cantidad: pi.cantidad,
+        })),
+      })),
+      dto.items.map((item) => ({
+        pizzaId: item.pizzaId,
+        nombrePizza: pizzas.find((p) => p.id === item.pizzaId)!.nombre,
+        cantidad: item.cantidad,
+      })),
+    );
+    if (errorStock) throw new BadRequestException(errorStock);
 
     // El total lo calcula el servidor: líneas + fee delivery si aplica.
     const subtotal = dto.items.reduce((acc, item) => {
