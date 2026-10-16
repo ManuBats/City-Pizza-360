@@ -1,5 +1,6 @@
 import { Banknote, Bike, ChefHat, Clock, Package, Plus, Tag } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
+import { Campo } from "@/components/ui/Campo";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
 import { useCajero, etiquetaEstado } from "@/hooks/use-cajero";
@@ -130,46 +131,42 @@ function CajeroContent() {
                 Promos rápidas de turno: duran máximo 48 horas.
               </p>
               <div className="mt-4 space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Título</label>
+                <Campo titulo="Título de la promo">
                   <input
                     value={titulo}
                     onChange={(e) => setTitulo(e.target.value)}
                     placeholder="Ej. Noche de Pepperoni"
-                    className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                    className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                   />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Detalle</label>
+                </Campo>
+                <Campo titulo="Detalle">
                   <input
                     value={detalle}
                     onChange={(e) => setDetalle(e.target.value)}
                     placeholder="Ej. Pepperoni familiar + gaseosa 1L"
-                    className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                    className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                   />
-                </div>
+                </Campo>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium">Precio (S/)</label>
+                  <Campo titulo="Precio (S/)">
                     <input
                       type="number"
                       min={1}
                       value={precio}
                       onChange={(e) => setPrecio(Number(e.target.value))}
-                      className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                      className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                     />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Vigencia (h, máx 48)</label>
+                  </Campo>
+                  <Campo titulo="Vigencia en horas (máx 48)">
                     <input
                       type="number"
                       min={1}
                       max={48}
                       value={horas}
                       onChange={(e) => setHoras(Number(e.target.value))}
-                      className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                      className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                     />
-                  </div>
+                  </Campo>
                 </div>
                 {errorPromo && <p className="text-sm font-semibold text-primary">{errorPromo}</p>}
                 <button

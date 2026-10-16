@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Bike, ChefHat, Package, Plus, Star, Tag, Trash2, Upload, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { Campo } from "@/components/ui/Campo";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { RequireRole } from "@/components/worker/worker-auth";
@@ -149,50 +150,64 @@ function AdminDashboard() {
               <h2 className="font-bold">Productos</h2>
               <div className="mt-4 space-y-2 rounded-2xl border border-border p-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    value={prodNombre}
-                    onChange={(e) => setProdNombre(e.target.value)}
-                    placeholder="Nombre (ej. Carnívora)"
-                    className="col-span-2 rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    value={prodTipo}
-                    onChange={(e) => setProdTipo(e.target.value)}
-                    placeholder="Tipo (Pizza/Bebida)"
-                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    value={prodCategoria}
-                    onChange={(e) => setProdCategoria(e.target.value)}
-                    placeholder="Categoría"
-                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    type="number" min={1} value={prodPersonal}
-                    onChange={(e) => setProdPersonal(Number(e.target.value))}
-                    placeholder="S/ Personal"
-                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    type="number" min={1} value={prodMediana}
-                    onChange={(e) => setProdMediana(Number(e.target.value))}
-                    placeholder="S/ Mediana"
-                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    type="number" min={1} value={prodFamiliar}
-                    onChange={(e) => setProdFamiliar(Number(e.target.value))}
-                    placeholder="S/ Familiar"
-                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <label className="col-span-2 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-input px-3 py-2 text-sm">
-                    <Upload className="h-4 w-4 text-muted-foreground" />
-                    {prodImagen ? prodImagen.name : "Imagen (opcional)"}
+                  <Campo titulo="Nombre del producto" className="col-span-2">
                     <input
-                      type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
-                      onChange={(e) => setProdImagen(e.target.files?.[0] ?? null)}
+                      value={prodNombre}
+                      onChange={(e) => setProdNombre(e.target.value)}
+                      placeholder="Ej. Carnívora"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                     />
-                  </label>
+                  </Campo>
+                  <Campo titulo="Tipo">
+                    <input
+                      value={prodTipo}
+                      onChange={(e) => setProdTipo(e.target.value)}
+                      placeholder="Pizza / Bebida"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </Campo>
+                  <Campo titulo="Categoría">
+                    <input
+                      value={prodCategoria}
+                      onChange={(e) => setProdCategoria(e.target.value)}
+                      placeholder="Clásicas"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </Campo>
+                  <Campo titulo="Precio personal (S/)">
+                    <input
+                      type="number" min={1} value={prodPersonal}
+                      onChange={(e) => setProdPersonal(Number(e.target.value))}
+                      placeholder="18"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </Campo>
+                  <Campo titulo="Precio mediana (S/)">
+                    <input
+                      type="number" min={1} value={prodMediana}
+                      onChange={(e) => setProdMediana(Number(e.target.value))}
+                      placeholder="25"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </Campo>
+                  <Campo titulo="Precio familiar (S/)">
+                    <input
+                      type="number" min={1} value={prodFamiliar}
+                      onChange={(e) => setProdFamiliar(Number(e.target.value))}
+                      placeholder="32"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </Campo>
+                  <Campo titulo="Imagen del producto (opcional)" className="col-span-2">
+                    <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-input px-3 py-2 text-sm">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      {prodImagen ? prodImagen.name : "Subir imagen"}
+                      <input
+                        type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                        onChange={(e) => setProdImagen(e.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                  </Campo>
                 </div>
                 <button
                   onClick={crearProducto}
@@ -230,31 +245,39 @@ function AdminDashboard() {
             <div className="card-soft h-fit p-5">
               <h2 className="font-bold">Promociones permanentes</h2>
               <div className="mt-4 space-y-2 rounded-2xl border border-border p-3">
-                <input
-                  value={promoNombre}
-                  onChange={(e) => setPromoNombre(e.target.value)}
-                  placeholder="Título (ej. 2×1 Martes)"
-                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                />
-                <input
-                  value={promoDetalle}
-                  onChange={(e) => setPromoDetalle(e.target.value)}
-                  placeholder="Detalle"
-                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                />
+                <Campo titulo="Título de la promo">
+                  <input
+                    value={promoNombre}
+                    onChange={(e) => setPromoNombre(e.target.value)}
+                    placeholder="Ej. 2×1 Martes"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </Campo>
+                <Campo titulo="Detalle">
+                  <input
+                    value={promoDetalle}
+                    onChange={(e) => setPromoDetalle(e.target.value)}
+                    placeholder="Ej. 2 familiares clásicas por S/58"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </Campo>
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number" min={1} value={promoPrecio}
-                    onChange={(e) => setPromoPrecio(Number(e.target.value))}
-                    placeholder="S/"
-                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    type="number" min={0} value={promoHoras}
-                    onChange={(e) => setPromoHoras(Number(e.target.value))}
-                    placeholder="Horas (0 = siempre)"
-                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
+                  <Campo titulo="Precio promo (S/)">
+                    <input
+                      type="number" min={1} value={promoPrecio}
+                      onChange={(e) => setPromoPrecio(Number(e.target.value))}
+                      placeholder="45"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </Campo>
+                  <Campo titulo="Vigencia en horas (0 = siempre)">
+                    <input
+                      type="number" min={0} value={promoHoras}
+                      onChange={(e) => setPromoHoras(Number(e.target.value))}
+                      placeholder="0"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </Campo>
                 </div>
                 <button
                   onClick={crearPromo}
@@ -314,30 +337,38 @@ function AdminDashboard() {
             <div className="card-soft p-5">
               <h2 className="font-bold">Nuevo insumo</h2>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                <input
-                  value={insNombre}
-                  onChange={(e) => setInsNombre(e.target.value)}
-                  placeholder="Nombre"
-                  className="col-span-2 rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                />
-                <input
-                  type="number" min={0} value={insStock}
-                  onChange={(e) => setInsStock(Number(e.target.value))}
-                  placeholder="Stock"
-                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                />
-                <input
-                  type="number" min={0} value={insMinimo}
-                  onChange={(e) => setInsMinimo(Number(e.target.value))}
-                  placeholder="Mínimo"
-                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                />
-                <input
-                  value={insUnidad}
-                  onChange={(e) => setInsUnidad(e.target.value)}
-                  placeholder="Und"
-                  className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                />
+                <Campo titulo="Nombre del insumo" className="col-span-2">
+                  <input
+                    value={insNombre}
+                    onChange={(e) => setInsNombre(e.target.value)}
+                    placeholder="Ej. Queso mozzarella"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </Campo>
+                <Campo titulo="Stock inicial">
+                  <input
+                    type="number" min={0} value={insStock}
+                    onChange={(e) => setInsStock(Number(e.target.value))}
+                    placeholder="0"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </Campo>
+                <Campo titulo="Stock mínimo">
+                  <input
+                    type="number" min={0} value={insMinimo}
+                    onChange={(e) => setInsMinimo(Number(e.target.value))}
+                    placeholder="0"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </Campo>
+                <Campo titulo="Unidad">
+                  <input
+                    value={insUnidad}
+                    onChange={(e) => setInsUnidad(e.target.value)}
+                    placeholder="kg"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </Campo>
               </div>
               <button
                 onClick={crearInsumo}
