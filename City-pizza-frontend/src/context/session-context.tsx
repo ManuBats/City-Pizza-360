@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthService } from "@/services/auth.service";
 import { ApiError } from "@/services/api";
 import { toast } from "sonner";
+import { getWorkerToken } from "@/lib/worker-token";
 import type { RolUi, WorkerSession } from "@/types/trabajador";
 import { rutaInicialPorRol } from "@/lib/access-control";
 import { setWorkerToken } from "@/lib/worker-token";
@@ -35,7 +36,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const sessionQuery = useQuery({
     queryKey: ["worker-session"],
+    // Sin token no hay request: evita el 401 en loop que te devolvía a /login.
     queryFn: async () => {
+      if (!getWorkerToken()) return null;
       try {
         return await AuthService.me();
       } catch {

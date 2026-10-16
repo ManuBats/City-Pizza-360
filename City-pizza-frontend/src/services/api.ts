@@ -46,7 +46,10 @@ export async function apiFetch<T>(
       res.status,
       body,
     );
-    if (res.status === 401 && typeof window !== "undefined") {
+    // Un 401 del propio login es "clave mala", no sesión expirada:
+    // no debe desloguear ni redirigir (era otro loop hacia /login).
+    const esLogin = endpoint.startsWith("/auth/login");
+    if (res.status === 401 && !esLogin && typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("session:expired", { detail: error }));
     }
     throw error;

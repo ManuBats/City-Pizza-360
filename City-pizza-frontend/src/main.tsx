@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthService } from "@/services/auth.service";
+import { getWorkerToken } from "@/lib/worker-token";
 import { puedeAcceder } from "@/lib/access-control";
 import { CATEGORIAS, type Categoria } from "@/lib/pizzas";
 import { AppShell } from "./app/shell";
@@ -40,6 +41,10 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 /** Guard estilo proxy.ts de CCA: sin rol con acceso → /login. */
 function staffGuard(path: string) {
   return async ({ context }: { context: RouterContext }) => {
+    // Sin token ni se pregunta al backend (evita el 401 que te devolvía a /login).
+    if (!getWorkerToken()) {
+      throw redirect({ to: "/login" });
+    }
     let session = null;
     try {
       session = await context.queryClient.fetchQuery({
