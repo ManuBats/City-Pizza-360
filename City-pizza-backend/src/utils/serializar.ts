@@ -3,6 +3,11 @@ export function aNumero(v: unknown): number {
   return typeof v === 'number' ? v : Number(String(v));
 }
 
+/** Redondea a 2 decimales (evita 6.799999999999997 en stocks/pesos). */
+export function a2Decimales(v: unknown): number {
+  return Math.round(Number(String(v)) * 100) / 100;
+}
+
 export function serializarPizza<T extends object>(pizza: T): T {
   const p = pizza as Record<string, unknown>;
   return {
@@ -38,4 +43,9 @@ export function serializarPedido<T extends object>(pedido: T): T {
 export function serializarPromocion<T extends object>(promo: T): T {
   const p = promo as Record<string, unknown>;
   return { ...p, precioPromo: aNumero(p.precioPromo) } as T;
+}
+
+export function serializarInsumo<T extends object>(insumo: T): T {
+  const i = insumo as Record<string, unknown>;
+  return { ...i, stock: a2Decimales(i.stock), stockMinimo: a2Decimales(i.stockMinimo) } as T;
 }
