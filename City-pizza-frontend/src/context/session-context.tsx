@@ -52,6 +52,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(
     async (avisar = false) => {
       await queryClient.cancelQueries();
+      // null explícito + limpieza total: ningún observador puede
+      // quedarse con la sesión vieja y mostrársela al cliente.
+      queryClient.setQueryData(["worker-session"], null);
+      queryClient.removeQueries();
       queryClient.clear();
       setWorkerToken(null);
       if (avisar) toast.info("Tu sesión terminó. Ingresa de nuevo.");

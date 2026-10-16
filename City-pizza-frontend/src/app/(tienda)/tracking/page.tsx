@@ -58,48 +58,53 @@ export function TrackingPage() {
     <TiendaLayout>
       <main className="mx-auto max-w-3xl px-4 py-8">
         {/* Buscador código + celular */}
-        <form
-          onSubmit={onBuscar}
-          className="card-soft flex flex-col gap-2 p-4 sm:flex-row"
-        >
-          <input
-            value={codigoInput}
-            onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
-            placeholder="Código (ej. CP360-1234)"
-            className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-          />
-          <input
-            value={celularInput}
-            onChange={(e) => setCelularInput(e.target.value.replace(/\D/g, "").slice(0, 9))}
-            inputMode="numeric"
-            placeholder="Celular (9 dígitos)"
-            className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-          />
-          <button
-            type="submit"
-            className="btn-tactile inline-flex items-center justify-center gap-2 bg-primary px-6 text-white transition-colors hover:bg-primary/90"
+        <section className="card-soft p-5">
+          <h1 className="text-xl font-extrabold">Rastrea tu pedido</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Ingresa el código que recibiste al confirmar y tu celular.
+          </p>
+          <form
+            onSubmit={onBuscar}
+            className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
           >
-            <Search className="h-4 w-4" /> Buscar
-          </button>
-        </form>
+            <input
+              value={codigoInput}
+              onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
+              placeholder="Código (ej. CP360-1234)"
+              className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+            <input
+              value={celularInput}
+              onChange={(e) => setCelularInput(e.target.value.replace(/\D/g, "").slice(0, 9))}
+              inputMode="numeric"
+              placeholder="Celular (9 dígitos)"
+              className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+            <button
+              type="submit"
+              className="btn-tactile inline-flex items-center justify-center gap-2 bg-primary px-6 text-white transition-colors hover:bg-primary/90"
+            >
+              <Search className="h-4 w-4" /> Buscar
+            </button>
+          </form>
+          {guardado && !buscar && (
+            <button
+              onClick={() =>
+                navigate({ search: { codigo: guardado.codigo, celular: guardado.celular } })
+              }
+              className="mt-3 w-full rounded-xl bg-muted px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted/70"
+            >
+              Ver mi último pedido ({guardado.codigo}) →
+            </button>
+          )}
+        </section>
 
-        {!buscar && (
-          <div className="card-soft mt-6 p-8 text-center">
-            <Pizza className="mx-auto h-10 w-10 text-primary" />
-            <p className="mt-3 font-extrabold">Sigue tu pedido en vivo</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Ingresa el código que recibiste al confirmar y tu celular.
+        {!buscar && !guardado && (
+          <div className="card-soft mt-6 p-6 text-center">
+            <Pizza className="mx-auto h-8 w-8 text-primary" />
+            <p className="mt-2 text-sm text-muted-foreground">
+              Aquí verás el estado de tu pizza en vivo: recibida, en cocina, en camino y entregada.
             </p>
-            {guardado && (
-              <button
-                onClick={() =>
-                  navigate({ search: { codigo: guardado.codigo, celular: guardado.celular } })
-                }
-                className="btn-tactile mt-4 inline-flex items-center bg-primary px-6 text-white transition-colors hover:bg-primary/90"
-              >
-                Ver mi último pedido ({guardado.codigo})
-              </button>
-            )}
           </div>
         )}
 

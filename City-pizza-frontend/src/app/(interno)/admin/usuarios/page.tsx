@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { UsuariosTable } from "@/components/admin/UsuariosTable";
 import { UsuarioForm } from "@/components/admin/UsuarioForm";
-import { LogoutButton, RequireRole } from "@/components/worker/worker-auth";
+import { RequireRole } from "@/components/worker/worker-auth";
 import { useUsuarioForm } from "@/hooks/use-usuario-form";
 
 export default function UsuariosPage() {
@@ -35,7 +35,6 @@ function UsuariosContent() {
               Solo el admin crea cuentas. Entrega la contraseña temporal al trabajador.
             </p>
           </div>
-          <LogoutButton />
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">

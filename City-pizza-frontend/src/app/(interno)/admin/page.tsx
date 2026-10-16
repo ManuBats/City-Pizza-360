@@ -3,7 +3,7 @@ import { Bike, ChefHat, Package, Plus, Star, Tag, Trash2, Upload, Users } from "
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { LogoutButton, RequireRole } from "@/components/worker/worker-auth";
+import { RequireRole } from "@/components/worker/worker-auth";
 import { etiquetaEstadoAdmin, useAdminDashboard } from "@/hooks/use-admin-dashboard";
 import { LOCAL, soles } from "@/lib/pizzas";
 import type { TabAdmin } from "@/types/admin";
@@ -58,7 +58,6 @@ function AdminDashboard() {
             >
               <Users className="h-4 w-4" /> Usuarios
             </Link>
-            <LogoutButton />
           </div>
         </div>
 
