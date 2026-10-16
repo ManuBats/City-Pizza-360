@@ -33,9 +33,9 @@ export function FooterMarca() {
 /** Marco de páginas cliente (equivale al grupo (public)/ de CCA). */
 export function TiendaLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      {children}
+      <div className="flex-1">{children}</div>
       <FooterMarca />
     </div>
   );
