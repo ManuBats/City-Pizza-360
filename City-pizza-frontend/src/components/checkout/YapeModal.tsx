@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Banknote, CheckCircle2, Loader2, QrCode, Upload } from "lucide-react";
 import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
+import { urlPublica } from "@/lib/imagenes";
 import { soles } from "@/lib/pizzas";
 import type { Pedido } from "@/types/pedido";
 
@@ -67,8 +68,8 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
         </h2>
 
         <div className="mx-auto mt-4 grid h-52 w-52 place-items-center overflow-hidden rounded-2xl border border-border bg-muted">
-          {YAPE_QR_URL ? (
-            <img src={YAPE_QR_URL} alt="QR Yape de City Pizza" className="h-full w-full object-cover" />
+          {urlPublica(YAPE_QR_URL) ? (
+            <img src={urlPublica(YAPE_QR_URL)!} alt="QR Yape de City Pizza" className="h-full w-full object-cover" />
           ) : (
             <div className="flex flex-col items-center gap-2 p-4 text-muted-foreground">
               <QrCode className="h-12 w-12" />

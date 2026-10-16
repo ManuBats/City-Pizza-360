@@ -9,6 +9,7 @@ import {
   type Categoria,
   type Producto,
 } from "@/lib/pizzas";
+import { urlPublica } from "@/lib/imagenes";
 import type { PizzaApi } from "@/types/pizza";
 
 const IMAGEN_POR_SLUG: Record<string, string> = {
@@ -29,7 +30,7 @@ function mapear(p: PizzaApi): Producto {
     precioPersonal: Number(p.precioPersonal),
     precioMediana: Number(p.precioMediana),
     precioFamiliar: Number(p.precioFamiliar),
-    imagen: p.imagenUrl || IMAGEN_POR_SLUG[slug] || IMAGEN_GENERICA,
+    imagen: urlPublica(p.imagenUrl) || IMAGEN_POR_SLUG[slug] || IMAGEN_GENERICA,
     disponible: p.disponible,
     top: p.destacada,
     destacada: p.destacada,
