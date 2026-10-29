@@ -86,11 +86,13 @@ export class PedidosService {
           ? `Mesa ${dto.mesa}`
           : 'Recojo en tienda';
 
+    // Se consultan ids únicos: un mismo pedido puede repetir la pizza en distintos tamaños.
+    const idsUnicos = [...new Set(dto.items.map((i) => i.pizzaId))];
     const pizzas = await this.prisma.pizza.findMany({
-      where: { id: { in: dto.items.map((i) => i.pizzaId) } },
+      where: { id: { in: idsUnicos } },
       include: { insumos: { include: { insumo: true } } },
     });
-    if (pizzas.length !== dto.items.length)
+    if (pizzas.length !== idsUnicos.length)
       throw new BadRequestException('Alguna pizza no existe');
 
     for (const item of dto.items) {

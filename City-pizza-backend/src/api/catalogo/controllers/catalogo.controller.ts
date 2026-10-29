@@ -19,6 +19,7 @@ import { PRODUCTO_IMG_MAX_BYTES } from '../../../constants/negocio.constants';
 import { JwtAuthGuard } from '../../../middlewares/jwt-auth.guard';
 import { Roles } from '../../../middlewares/roles.decorator';
 import { RolesGuard } from '../../../middlewares/roles.guard';
+import { SetDisponibilidadDto } from '../dto/disponibilidad.dto';
 import { CreateProductoDto, UpdateProductoDto } from '../dto/producto.dto';
 import { CatalogoService } from '../services/catalogo.service';
 
@@ -80,9 +81,9 @@ export class CatalogoController {
   @Roles('Admin', 'Cajero')
   setDisponibilidad(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { disponible: boolean },
+    @Body() dto: SetDisponibilidadDto,
   ) {
-    return this.catalogo.setDisponibilidad(id, body.disponible === true);
+    return this.catalogo.setDisponibilidad(id, dto.disponible);
   }
 
   @Delete(':id')

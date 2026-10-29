@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Bike, ChefHat, Package, Plus, Star, Tag, Trash2, Upload, Users } from "lucide-react";
+import { Bike, ChefHat, Package, Plus, Tag, Trash2, Upload, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Campo } from "@/components/ui/Campo";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
@@ -21,7 +21,7 @@ function AdminDashboard() {
   const {
     tab, setTab,
     pedidos, cargandoPedidos, errorPedidos, reintentarPedidos, avanzarPedido,
-    productos, toggleDisponible, toggleDestacada,
+    productos,
     crearProducto, creandoProducto,
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
     prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
@@ -457,6 +457,7 @@ function AdminDashboard() {
               : "insumo"
         }
         itemName={eliminarTarget?.nombre}
+        submitting={eliminando}
         onClose={() => setEliminarTarget(null)}
         onConfirm={confirmarEliminar}
       />
