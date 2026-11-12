@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { CatalogoService } from "@/services/catalogo.service";
+import { getErrorMessage } from "@/services/api";
 import {
   CATEGORIAS,
   LOCAL,
-  PRODUCTOS,
   slugify,
   soles,
   type Categoria,
@@ -37,7 +37,7 @@ function mapear(p: PizzaApi): Producto {
   };
 }
 
-/** Catálogo real contra GET /pizzas (con fallback al mock si el backend no responde). */
+/** Catálogo real contra GET /pizzas (sin datos de respaldo locales). */
 export function usePizzas() {
   const consulta = useQuery({
     queryKey: ["pizzas"],
@@ -46,15 +46,17 @@ export function usePizzas() {
     retry: 1,
   });
 
-  const productos: Producto[] = consulta.data
-    ? consulta.data.map(mapear)
-    : PRODUCTOS;
+  const productos: Producto[] = consulta.data?.map(mapear) ?? [];
 
   return {
     productos,
     categorias: CATEGORIAS,
     local: LOCAL,
     loading: consulta.isLoading,
+    error: consulta.error
+      ? getErrorMessage(consulta.error, "No se pudo cargar el catálogo.")
+      : null,
+    refetch: () => consulta.refetch(),
     enVivo: Boolean(consulta.data),
   };
 }

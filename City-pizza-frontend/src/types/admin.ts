@@ -42,4 +42,4 @@ export type PromoVista = {
   activa: boolean;
 };
 
-export type TabAdmin = "pedidos" | "catalogo" | "inventario";
+export type TabAdmin = "pedidos" | "reportes" | "catalogo" | "inventario";

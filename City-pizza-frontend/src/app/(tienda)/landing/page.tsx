@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Clock, MapPin, Pizza, Truck, UtensilsCrossed } from "lucide-react";
 import { FloatingCart } from "@/components/cart/FloatingCart";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
 import { useCart } from "@/context/cart-context";
 import { usePizzas } from "@/hooks/use-pizzas";
@@ -15,8 +16,8 @@ const CATEGORIA_ICON: Record<string, typeof Pizza> = {
 
 export function LandingPage() {
   const { add } = useCart();
-  const { productos: PRODUCTOS } = usePizzas();
-  const top = PRODUCTOS.filter((p) => p.top);
+  const { productos, loading, error, refetch } = usePizzas();
+  const top = productos.filter((p) => p.top);
 
   return (
     <TiendaLayout>
@@ -97,6 +98,31 @@ export function LandingPage() {
           </Link>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-3">
+          {error && productos.length === 0 && (
+            <div className="sm:col-span-3">
+              <ErrorBanner mensaje={error} onReintentar={() => void refetch()} />
+            </div>
+          )}
+          {loading && productos.length === 0 && !error && (
+            <p className="py-8 text-center text-sm text-muted-foreground sm:col-span-3">
+              Cargando nuestras pizzas…
+            </p>
+          )}
+          {!loading && !error && top.length === 0 && (
+            <div className="card-soft p-6 text-center sm:col-span-3">
+              <p className="font-semibold">Aún no hay pizzas destacadas.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Mientras tanto, puedes ver la carta completa.
+              </p>
+              <Link
+                to="/menu"
+                search={{ categoria: undefined }}
+                className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+              >
+                Ver el menú completo →
+              </Link>
+            </div>
+          )}
           {top.map((p) => (
             <article key={p.id} className="card-soft overflow-hidden">
               <img

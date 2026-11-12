@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Bike, ChefHat, Package, Plus, Tag, Trash2, Upload, Users } from "lucide-react";
+import { Bike, ChefHat, Check, Package, Pencil, Plus, Tag, Trash2, Upload, Users, X } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { ReportesPanel } from "@/components/admin/ReportesPanel";
 import { Campo } from "@/components/ui/Campo";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -26,6 +27,8 @@ function AdminDashboard() {
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
     prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
     prodImagen, setProdImagen,
+    precioEdit, abrirEditorPrecios, cerrarEditorPrecios, cambiarPrecio,
+    guardarPrecios, guardandoPrecios,
     promos, togglePromo,
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
     promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
@@ -78,6 +81,7 @@ function AdminDashboard() {
           {(
             [
               ["pedidos", "Pedidos en vivo"],
+              ["reportes", "Reportes"],
               ["catalogo", "Catálogo y Promos"],
               ["inventario", `Inventario${alertas.length ? ` (${alertas.length})` : ""}`],
             ] as [TabAdmin, string][]
@@ -142,6 +146,8 @@ function AdminDashboard() {
             ))}
           </section>
         )}
+
+        {tab === "reportes" && <ReportesPanel />}
 
         {tab === "catalogo" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -221,21 +227,78 @@ function AdminDashboard() {
                 {productos.map((prod) => (
                   <li
                     key={prod.id}
-                    className="flex items-center gap-3 rounded-2xl border border-border p-3"
+                    className="rounded-2xl border border-border p-3"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">{prod.nombre}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {prod.categoria} · Pers {soles(prod.precioPersonal)} · Med {soles(prod.precioMediana)} · Fam {soles(prod.precioFamiliar)}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{prod.nombre}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {prod.categoria} · Pers {soles(prod.precioPersonal)} · Med {soles(prod.precioMediana)} · Fam {soles(prod.precioFamiliar)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => abrirEditorPrecios(prod)}
+                        className="grid h-9 w-9 place-items-center rounded-full text-primary hover:bg-primary/10"
+                        aria-label={`Editar precios de ${prod.nombre}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setEliminarTarget({ tipo: "producto", id: prod.id, nombre: prod.nombre })}
+                        className="grid h-9 w-9 place-items-center rounded-full text-primary"
+                        aria-label="Eliminar producto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setEliminarTarget({ tipo: "producto", id: prod.id, nombre: prod.nombre })}
-                      className="grid h-9 w-9 place-items-center rounded-full text-primary"
-                      aria-label="Eliminar producto"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+
+                    {precioEdit && precioEdit.id === prod.id && (
+                      <div className="mt-3 rounded-xl bg-muted/60 p-3">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                          Nuevos precios para {prod.nombre}
+                        </p>
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          <Campo titulo="Personal (S/)">
+                            <input
+                              type="number" min={1} step={1} value={precioEdit.personal}
+                              onChange={(e) => cambiarPrecio("personal", Number(e.target.value))}
+                              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                            />
+                          </Campo>
+                          <Campo titulo="Mediana (S/)">
+                            <input
+                              type="number" min={1} step={1} value={precioEdit.mediana}
+                              onChange={(e) => cambiarPrecio("mediana", Number(e.target.value))}
+                              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                            />
+                          </Campo>
+                          <Campo titulo="Familiar (S/)">
+                            <input
+                              type="number" min={1} step={1} value={precioEdit.familiar}
+                              onChange={(e) => cambiarPrecio("familiar", Number(e.target.value))}
+                              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                            />
+                          </Campo>
+                        </div>
+                        <div className="mt-3 flex justify-end gap-2">
+                          <button
+                            onClick={cerrarEditorPrecios}
+                            disabled={guardandoPrecios}
+                            className="inline-flex min-h-9 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted disabled:opacity-60"
+                          >
+                            <X className="h-4 w-4" /> Cancelar
+                          </button>
+                          <button
+                            onClick={guardarPrecios}
+                            disabled={guardandoPrecios || !preciosValidos(precioEdit)}
+                            className="inline-flex min-h-9 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                          >
+                            <Check className="h-4 w-4" />
+                            {guardandoPrecios ? "Guardando…" : "Guardar precios"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -462,5 +525,15 @@ function AdminDashboard() {
         onConfirm={confirmarEliminar}
       />
     </div>
+  );
+}
+
+function preciosValidos(p: {
+  personal: number;
+  mediana: number;
+  familiar: number;
+}): boolean {
+  return [p.personal, p.mediana, p.familiar].every(
+    (n) => Number.isInteger(n) && n > 0,
   );
 }

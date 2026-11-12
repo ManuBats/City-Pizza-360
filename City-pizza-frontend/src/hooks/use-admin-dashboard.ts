@@ -15,6 +15,7 @@ import { usePizzas } from "@/hooks/use-pizzas";
 import { getErrorMessage } from "@/services/api";
 import type { EstadoPedido } from "@/types/pedido";
 import type { TabAdmin } from "@/types/admin";
+import type { Producto } from "@/lib/pizzas";
 
 const ETIQUETA: Record<EstadoPedido, string> = {
   Recibido: "Recibido",
@@ -57,6 +58,13 @@ export function useAdminDashboard() {
   const [prodMediana, setProdMediana] = useState(25);
   const [prodFamiliar, setProdFamiliar] = useState(32);
   const [prodImagen, setProdImagen] = useState<File | null>(null);
+  const [precioEdit, setPrecioEdit] = useState<{
+    id: number;
+    nombre: string;
+    personal: number;
+    mediana: number;
+    familiar: number;
+  } | null>(null);
   const [insNombre, setInsNombre] = useState("");
   const [insStock, setInsStock] = useState(0);
   const [insMinimo, setInsMinimo] = useState(0);
@@ -111,6 +119,23 @@ export function useAdminDashboard() {
       toast.success("Destacadas actualizadas");
     },
     onError: (e) => err(e, "No se pudo actualizar."),
+  });
+
+  const guardarPrecios = useMutation({
+    mutationFn: () => {
+      if (!precioEdit) throw new Error("Sin producto seleccionado");
+      return CatalogoService.actualizar(precioEdit.id, {
+        precioPersonal: precioEdit.personal,
+        precioMediana: precioEdit.mediana,
+        precioFamiliar: precioEdit.familiar,
+      });
+    },
+    onSuccess: () => {
+      setPrecioEdit(null);
+      toast.success("Precios actualizados");
+      void recargar(["pizzas"]);
+    },
+    onError: (e) => err(e, "No se pudieron actualizar los precios."),
   });
 
   const crearPromo = useMutation({
@@ -245,6 +270,20 @@ export function useAdminDashboard() {
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
     prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
     prodImagen, setProdImagen,
+    precioEdit,
+    abrirEditorPrecios: (prod: Producto) =>
+      setPrecioEdit({
+        id: prod.id,
+        nombre: prod.nombre,
+        personal: prod.precioPersonal,
+        mediana: prod.precioMediana,
+        familiar: prod.precioFamiliar,
+      }),
+    cerrarEditorPrecios: () => setPrecioEdit(null),
+    cambiarPrecio: (campo: "personal" | "mediana" | "familiar", valor: number) =>
+      setPrecioEdit((prev) => (prev ? { ...prev, [campo]: valor } : prev)),
+    guardarPrecios: () => guardarPrecios.mutate(),
+    guardandoPrecios: guardarPrecios.isPending,
     promos: promosQ.data ?? [],
     togglePromo: (id: number, activa: boolean) => togglePromo.mutate({ id, activa }),
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
