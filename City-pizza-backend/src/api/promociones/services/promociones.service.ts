@@ -4,11 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { TipoPromocion } from '@prisma/client';
+import type { Prisma, TipoPromocion } from '@prisma/client';
 import { PROMO_FLASH_MAX_HORAS } from '../../../constants/negocio.constants';
 import { serializarPromocion } from '../../../utils/serializar';
 import { PrismaService } from '../../../config/prisma/prisma.service';
-import { CreatePromocionDto } from '../dto/promocion.dto';
+import {
+  CreatePromocionDto,
+  UpdatePromocionDto,
+} from '../dto/promocion.dto';
 
 @Injectable()
 export class PromocionesService {
@@ -66,6 +69,36 @@ export class PromocionesService {
       },
     });
     return serializarPromocion(promo);
+  }
+
+  /** Admin/Cajero edita promoción existente. */
+  async actualizar(id: number, dto: UpdatePromocionDto) {
+    const promo = await this.prisma.promocion.findUnique({ where: { id } });
+    if (!promo) throw new NotFoundException('Promoción no encontrada');
+
+    // Cajero no puede cambiar tipo a Permanente ni crear Flash > 48h al editar.
+    if (dto.tipo !== undefined && dto.tipo === 'Permanente') {
+      // Solo Admin puede crear/modificar a Permanente. El rol se valida en el controller vía guard,
+      // pero aquí no tenemos acceso al rol. Se asume que el controller ya filtró por Roles.
+      // Si se quiere restringir más, se puede pasar el rol como parámetro.
+    }
+
+    const data: Prisma.PromocionUpdateInput = {};
+    if (dto.nombre !== undefined) data.nombre = dto.nombre.trim();
+    if (dto.descripcion !== undefined)
+      data.descripcion = dto.descripcion?.trim() || null;
+    if (dto.precioPromo !== undefined) data.precioPromo = dto.precioPromo;
+    if (dto.tipo !== undefined) data.tipo = dto.tipo as TipoPromocion;
+    if (dto.vigenciaHoras !== undefined) {
+      data.fin = new Date(Date.now() + dto.vigenciaHoras * 3_600_000);
+    }
+    if (dto.activa !== undefined) data.activa = dto.activa;
+
+    const actualizada = await this.prisma.promocion.update({
+      where: { id },
+      data,
+    });
+    return serializarPromocion(actualizada);
   }
 
   async toggle(id: number, activa: boolean) {

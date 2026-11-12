@@ -44,4 +44,25 @@ export const PromocionesService = {
   async eliminar(id: number): Promise<{ ok: boolean }> {
     return apiFetch<{ ok: boolean }>(`/promociones/${id}`, { method: "DELETE" });
   },
+
+  /** Edita campos de una promoción existente. */
+  async actualizar(
+    id: number,
+    patch: Partial<
+      Pick<
+        PromocionApi,
+        | "nombre"
+        | "descripcion"
+        | "precioPromo"
+        | "tipo"
+        | "vigenciaHoras"
+        | "activa"
+      >
+    >,
+  ): Promise<PromocionApi> {
+    return apiFetch<PromocionApi>(`/promociones/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
 };
