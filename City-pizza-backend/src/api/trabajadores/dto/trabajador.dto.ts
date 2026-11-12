@@ -5,8 +5,10 @@ import {
   MaxLength,
   Matches,
   MinLength,
+  Validate,
 } from 'class-validator';
 import type { Rol } from '@prisma/client';
+import { PasswordPolicy } from '../validators/password-policy';
 
 export class CreateTrabajadorDto {
   @IsString()
@@ -22,9 +24,8 @@ export class CreateTrabajadorDto {
   @MaxLength(60)
   nombre!: string;
 
-  @IsString()
-  @MinLength(4)
-  @MaxLength(60)
+  @IsString({ message: 'La contraseña debe ser un texto.' })
+  @Validate(PasswordPolicy)
   password!: string;
 
   @IsEnum([
