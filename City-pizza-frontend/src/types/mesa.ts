@@ -1,4 +1,4 @@
-/** Tipos de la comanda del mesero (mock local hasta el rewiring).
+/** Tipos de la comanda de mesa.
  *  TODO(Fase 3): POST /pedidos con { mesa } + nota por línea.
  */
 export type LineaComanda = {

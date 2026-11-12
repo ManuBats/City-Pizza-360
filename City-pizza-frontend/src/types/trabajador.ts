@@ -1,7 +1,7 @@
 /** Espejo de Prisma: Trabajador (módulo Auth/Admin). */
-export type Rol = "Admin" | "Cajero" | "Cocinero" | "Repartidor" | "Mesero";
+export type Rol = "Admin" | "Cajero" | "Cocinero" | "Repartidor";
 
-export type RolUi = "admin" | "cajero" | "cocina" | "delivery" | "mesero";
+export type RolUi = "admin" | "cajero" | "cocina" | "delivery";
 
 export type WorkerSession = {
   usuario: string;
@@ -19,7 +19,6 @@ export const ROLES_UI: { value: RolUi; label: string }[] = [
   { value: "cajero", label: "Cajero" },
   { value: "cocina", label: "Cocina" },
   { value: "delivery", label: "Delivery" },
-  { value: "mesero", label: "Mesero" },
 ];
 
 export const ROL_LABEL_UI: Record<RolUi, string> = Object.fromEntries(

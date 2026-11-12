@@ -52,7 +52,6 @@ const WORKERS: { usuario: string; nombre: string; rol: Rol; password: string }[]
   { usuario: 'cajero', nombre: 'Caja Turno Noche', rol: 'Cajero', password: 'caja123' },
   { usuario: 'cocina', nombre: 'Cocina Principal', rol: 'Cocinero', password: 'cocina123' },
   { usuario: 'delivery', nombre: 'José Ramírez', rol: 'Repartidor', password: 'moto123' },
-  { usuario: 'mesero', nombre: 'Mesero Salón', rol: 'Mesero', password: 'mesa123' },
 ];
 
 async function main() {
