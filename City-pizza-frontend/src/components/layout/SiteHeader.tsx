@@ -12,11 +12,11 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-brand-black text-white">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" aria-label="CityPizza360, inicio" className="flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-primary">
             <Pizza className="h-5 w-5 text-white" />
           </span>
-          <span className="text-lg font-bold tracking-tight">
+          <span className={`${session ? "" : "hidden min-[480px]:inline "}text-lg font-bold tracking-tight`}>
             CityPizza<span className="text-secondary">360</span>
           </span>
         </Link>
@@ -35,13 +35,19 @@ export function SiteHeader() {
             <LogoutButton dark />
           </nav>
         ) : (
-          <nav className="flex items-center gap-1 sm:gap-2">
+          <nav aria-label="Navegación principal" className="flex items-center gap-1 sm:gap-2">
             <Link
               to="/menu"
               search={{ categoria: undefined }}
               className="rounded-full px-3 py-2 text-sm font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white [&.active]:bg-white/10 [&.active]:text-white"
             >
               Menú
+            </Link>
+            <Link
+              to="/promociones"
+              className="rounded-full px-3 py-2 text-sm font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white [&.active]:bg-white/10 [&.active]:text-white"
+            >
+              Promociones
             </Link>
             <Link
               to="/tracking"
