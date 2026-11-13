@@ -90,13 +90,13 @@ export class ReportesService {
     const where = this.filtroPorRango(dto);
     const grupos = await this.prisma.detallePedido.groupBy({
       by: ['pizzaId'],
-      where,
+      where: { ...where, pizzaId: { not: null } },
       _sum: { cantidad: true },
       orderBy: { _sum: { cantidad: 'desc' } },
       take: dto.limit ?? 5,
     });
     const pizzas = await this.prisma.pizza.findMany({
-      where: { id: { in: grupos.map((g) => g.pizzaId) } },
+      where: { id: { in: grupos.flatMap((g) => g.pizzaId == null ? [] : [g.pizzaId]) } },
     });
     return grupos.map((g) => ({
       pizzaId: g.pizzaId,

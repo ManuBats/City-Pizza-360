@@ -10,7 +10,6 @@ import { CATEGORIAS, LOCAL, soles } from "@/lib/pizzas";
 const CATEGORIA_ICON: Record<string, typeof Pizza> = {
   Clásicas: Pizza,
   Especiales: UtensilsCrossed,
-  Familiares: Pizza,
   Bebidas: Truck,
 };
 
@@ -136,9 +135,12 @@ export function LandingPage() {
               <div className="p-5">
                 <h3 className="text-lg font-bold">{p.nombre}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{p.ingredientes}</p>
-                <div className="mt-3 flex items-center justify-between text-sm">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
                   <span>
                     Familiar <strong className="text-primary">{soles(p.precioFamiliar)}</strong>
+                  </span>
+                  <span className="text-muted-foreground">
+                    Mediana {soles(p.precioMediana)}
                   </span>
                   <span className="text-muted-foreground">
                     Personal {soles(p.precioPersonal)}

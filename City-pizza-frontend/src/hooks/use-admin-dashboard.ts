@@ -50,8 +50,8 @@ export function useAdminDashboard() {
   const [promoNombre, setPromoNombre] = useState("");
   const [promoDetalle, setPromoDetalle] = useState("");
   const [promoPrecio, setPromoPrecio] = useState(45);
-  const [promoPizza, setPromoPizza] = useState<number | null>(null);
-  const [promoTamano, setPromoTamano] = useState<NonNullable<PromocionApi["tamano"]>>("Familiar");
+  const [promoOnline, setPromoOnline] = useState(false);
+  const [promoImagen, setPromoImagen] = useState<File | null>(null);
   const [promoHoras, setPromoHoras] = useState(0);
   const [prodNombre, setProdNombre] = useState("");
   const [prodTipo, setProdTipo] = useState("Pizza");
@@ -69,8 +69,7 @@ export function useAdminDashboard() {
     familiar: number;
   } | null>(null);
   const [precioEditPromo, setPrecioEditPromo] = useState<{
-    pizzaId: number | null;
-    tamano: NonNullable<PromocionApi["tamano"]>;
+    pedidoOnline: boolean;
     id: number;
     nombre: string;
     precioPromo: number;
@@ -162,23 +161,37 @@ export function useAdminDashboard() {
   });
 
   const crearPromo = useMutation({
-    mutationFn: () =>
-      PromocionesService.crear({
+    mutationFn: async () => {
+      if (promoImagen && (promoImagen.size > 2 * 1024 * 1024 ||
+        !["image/jpeg", "image/png", "image/webp"].includes(promoImagen.type))) {
+        throw new Error("La imagen debe ser JPG, PNG o WebP y pesar hasta 2 MB.");
+      }
+      const promocion = await PromocionesService.crear({
         nombre: promoNombre.trim(),
         descripcion: promoDetalle.trim() || undefined,
         precioPromo: promoPrecio,
-        pizzaId: promoPizza ?? undefined,
-        tamano: promoPizza ? promoTamano : undefined,
+        pedidoOnline: promoOnline,
         tipo: "Permanente",
         vigenciaHoras: promoHoras > 0 ? promoHoras : undefined,
-      }),
-    onSuccess: () => {
+      });
+      if (promoImagen) {
+        try {
+          await PromocionesService.subirImagen(promocion.id, promoImagen);
+        } catch {
+          return { imagenPendiente: true };
+        }
+      }
+      return { imagenPendiente: false };
+    },
+    onSuccess: ({ imagenPendiente }) => {
       setPromoNombre("");
       setPromoDetalle("");
       setPromoPrecio(45);
       setPromoHoras(0);
-      setPromoPizza(null);
-      toast.success("Promoción creada");
+      setPromoOnline(false);
+      setPromoImagen(null);
+      if (imagenPendiente) toast.warning("Promoción creada. Vuelve a subir la imagen desde su tarjeta.");
+      else toast.success("Promoción creada");
       void recargarPromos();
     },
     onError: (e) => err(e, "No se pudo crear la promo."),
@@ -267,8 +280,7 @@ export function useAdminDashboard() {
       if (!precioEditPromo) throw new Error("Sin promoción seleccionada");
       return PromocionesService.actualizar(precioEditPromo.id, {
         precioPromo: precioEditPromo.precioPromo,
-        pizzaId: precioEditPromo.pizzaId,
-        tamano: precioEditPromo.pizzaId ? precioEditPromo.tamano : null,
+        pedidoOnline: precioEditPromo.pedidoOnline,
       });
     },
     onSuccess: () => {
@@ -294,7 +306,7 @@ export function useAdminDashboard() {
     id: p.id,
     codigo: p.codigo,
     cliente: `${p.nombres} ${p.apellidos}${p.celular ? ` · ${p.celular}` : ""}`,
-    items: p.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre} (${d.tamano})`).join(", "),
+    items: p.detalles.map((d) => `${d.cantidad}× ${d.promocionNombre ?? d.pizza?.nombre}${d.tamano ? ` (${d.tamano})` : ""}`).join(", "),
     total: Number(p.total),
     estado: p.estado,
     etiqueta: etiquetaEstadoAdmin(p.estado),
@@ -349,7 +361,7 @@ export function useAdminDashboard() {
     guardandoImagenProducto: guardarImagenProducto.isPending,
     precioEditPromo, setPrecioEditPromo,
     abrirEditorPrecioPromo: (promo: PromocionApi) =>
-      setPrecioEditPromo({ id: promo.id, nombre: promo.nombre, precioPromo: promo.precioPromo, pizzaId: promo.pizzaId ?? null, tamano: promo.tamano ?? "Familiar" }),
+      setPrecioEditPromo({ id: promo.id, nombre: promo.nombre, precioPromo: promo.precioPromo, pedidoOnline: promo.pedidoOnline === true }),
     cerrarEditorPrecioPromo: () => setPrecioEditPromo(null),
     cambiarPrecioPromo: (valor: number) =>
       setPrecioEditPromo((prev) => (prev ? { ...prev, precioPromo: valor } : prev)),
@@ -361,7 +373,8 @@ export function useAdminDashboard() {
     togglePromo: (id: number, activa: boolean) => togglePromo.mutate({ id, activa }),
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
     promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
-    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
+    promoOnline, setPromoOnline,
+    promoImagen, setPromoImagen,
     crearPromo: () => crearPromo.mutate(), creandoPromo: crearPromo.isPending,
     inventario, cargandoInventario: inventarioQ.isLoading, alertas,
     ajustar: (id: number, delta: number) => ajustar.mutate({ id, delta }),

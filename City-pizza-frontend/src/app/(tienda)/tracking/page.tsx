@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   ChefHat,
@@ -13,9 +13,10 @@ import {
 } from "lucide-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
-import { useTrackingReal, leerUltimoPedido } from "@/hooks/use-tracking";
+import { useTrackingReal, leerUltimoPedido, olvidarUltimoPedido } from "@/hooks/use-tracking";
 import { LOCAL, soles } from "@/lib/pizzas";
 import { YapeModal } from "@/components/checkout/YapeModal";
+import { AccionesSeguimiento } from "@/components/checkout/AccionesSeguimiento";
 
 const PASOS = [
   { id: "recibido", label: "Recibido", icon: ClipboardCheck },
@@ -33,18 +34,34 @@ function minutosDesde(fechaIso: string): number {
 
 export function TrackingPage() {
   const { codigo: codigoUrl, celular: celularUrl } = useSearch({ from: "/tracking" });
-  // Fallback: último pedido de este dispositivo (sobrevive recargas).
-  const guardado = !codigoUrl && !celularUrl ? leerUltimoPedido() : null;
-  const codigo = codigoUrl ?? guardado?.codigo;
-  const celular = celularUrl ?? guardado?.celular;
+  const [ultimoPedido, setUltimoPedido] = useState(leerUltimoPedido);
+  const guardado = !codigoUrl && !celularUrl ? ultimoPedido : null;
   const navigate = useNavigate({ from: "/tracking" });
-  const { pedido, pasoActual, cargando, error, buscar } = useTrackingReal(codigo, celular);
+  const { pedido, pasoActual, cargando, error, buscar, noEncontrado } = useTrackingReal(codigoUrl, celularUrl);
+  const seguimientoGuardado = useTrackingReal(guardado?.codigo, guardado?.celular);
 
-  const [codigoInput, setCodigoInput] = useState(codigo ?? "");
-  const [celularInput, setCelularInput] = useState(celular ?? "");
+  const [codigoInput, setCodigoInput] = useState("");
+  const [celularInput, setCelularInput] = useState("");
   const [adjuntar, setAdjuntar] = useState(false);
   const pasos = pedido?.tipoEntrega === "Delivery" ? PASOS : PASOS.filter((paso) => paso.id !== "camino");
   const indice = pasos.findIndex((paso) => paso.id === PASOS[pasoActual]?.id);
+
+  useEffect(() => {
+    const referenciaBorrada = seguimientoGuardado.noEncontrado ? guardado
+      : noEncontrado && ultimoPedido?.codigo === codigoUrl && ultimoPedido?.celular === celularUrl
+        ? ultimoPedido : null;
+    if (referenciaBorrada) {
+      olvidarUltimoPedido(referenciaBorrada);
+      const actual = leerUltimoPedido();
+      setUltimoPedido(actual?.codigo === referenciaBorrada.codigo && actual.celular === referenciaBorrada.celular ? null : actual);
+    }
+  }, [seguimientoGuardado.noEncontrado, guardado, noEncontrado, ultimoPedido, codigoUrl, celularUrl]);
+
+  useEffect(() => {
+    const actualizar = () => setUltimoPedido(leerUltimoPedido());
+    window.addEventListener("storage", actualizar);
+    return () => window.removeEventListener("storage", actualizar);
+  }, []);
 
   function onBuscar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -72,12 +89,17 @@ export function TrackingPage() {
             className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
           >
             <input
+              required
+              aria-label="Código del pedido"
               value={codigoInput}
               onChange={(e) => setCodigoInput(e.target.value.toUpperCase())}
               placeholder="Código (ej. CP360-1234)"
               className="rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
             <input
+              required
+              pattern="9[0-9]{8}"
+              aria-label="Celular del pedido"
               value={celularInput}
               onChange={(e) => setCelularInput(e.target.value.replace(/\D/g, "").slice(0, 9))}
               inputMode="numeric"
@@ -91,16 +113,20 @@ export function TrackingPage() {
               <Search className="h-4 w-4" /> Buscar
             </button>
           </form>
-          {guardado && !buscar && (
+          {guardado && seguimientoGuardado.pedido && !seguimientoGuardado.noEncontrado && (
             <button
               onClick={() =>
                 navigate({ search: { codigo: guardado.codigo, celular: guardado.celular } })
               }
               className="mt-3 w-full rounded-xl bg-muted px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted/70"
             >
-              Ver mi último pedido ({guardado.codigo}) →
+              Continuar seguimiento
             </button>
           )}
+          <p className="mt-3 text-sm text-muted-foreground">
+            ¿Perdiste el código y el enlace? Llama al local al{" "}
+            <a className="font-semibold underline" href={`tel:+51${LOCAL.telefono.replace(/\D/g, "")}`}>{LOCAL.telefono}</a>.
+          </p>
         </section>
 
         {!buscar && !guardado && (
@@ -123,24 +149,18 @@ export function TrackingPage() {
           </p>
         )}
 
-        {pedido && (
+        {pedido && !noEncontrado && (
           <>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h1 className="flex flex-wrap items-center gap-2 text-3xl font-extrabold">
                   Pedido {pedido.codigo}
-                  <button
-                    onClick={() => void navigator.clipboard?.writeText(pedido.codigo).catch(() => {})}
-                    className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
-                    title="Copiar código"
-                  >
-                    Copiar código
-                  </button>
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {pedido.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre}`).join(", ")} ·{" "}
+                  {pedido.detalles.map((d) => `${d.cantidad}× ${d.promocionNombre ?? d.pizza?.nombre}`).join(", ")} ·{" "}
                   {soles(Number(pedido.total))}
                 </p>
+                <AccionesSeguimiento pedido={pedido} />
               </div>
               <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-bold text-brand-black">
                 <Clock className="h-4 w-4" /> Hace {minutosDesde(pedido.creadoEn)} min

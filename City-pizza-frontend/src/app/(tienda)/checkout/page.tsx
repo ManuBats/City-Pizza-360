@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Banknote, Minus, Phone, Plus, QrCode, Trash2 } from "lucide-react";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
 import { YapeModal, yapeConfigurado } from "@/components/checkout/YapeModal";
+import { AccionesSeguimiento } from "@/components/checkout/AccionesSeguimiento";
 import { useCheckout } from "@/hooks/use-checkout";
 import { COSTO_DELIVERY, soles } from "@/lib/pizzas";
 
@@ -15,6 +16,25 @@ export function CheckoutPage() {
     setQty, setNota, setExtraQueso, remove, confirmar, irATracking,
   } = useCheckout();
   const esYape = metodoPago === "Yape";
+
+  if (confirmado && !confirmado.requiereYape) {
+    const { pedido } = confirmado;
+    return (
+      <TiendaLayout>
+        <main className="mx-auto max-w-xl px-4 py-8">
+          <section className="card-soft p-6 text-center">
+            <h1 className="text-2xl font-extrabold">Pedido confirmado</h1>
+            <p className="mt-2 font-bold">{pedido.codigo}</p>
+            <p className="text-sm text-muted-foreground">Guarda el código o el enlace para consultar tu pedido.</p>
+            <AccionesSeguimiento pedido={pedido} />
+            <button type="button" className="btn-tactile mt-4 bg-primary px-6 text-white" onClick={() => void irATracking(pedido)}>
+              Ver mi pedido
+            </button>
+          </section>
+        </main>
+      </TiendaLayout>
+    );
+  }
 
   return (
     <TiendaLayout>
@@ -55,7 +75,7 @@ export function CheckoutPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">{item.nombre}</p>
                         <p className="text-xs text-muted-foreground">
-                          {item.tamano} · {soles(item.precio)} c/u
+                          {item.tamano ? `${item.tamano} · ` : ""} {soles(item.precio)} c/u
                           {item.extraQueso ? " · +queso" : ""}
                         </p>
                       </div>
@@ -91,11 +111,11 @@ export function CheckoutPage() {
                       <input
                         value={item.nota ?? ""}
                         onChange={(e) => setNota(item.key, e.target.value)}
-                        placeholder="Nota para esta pizza (ej. sin aceitunas)"
+                        placeholder="Nota para cocina"
                         maxLength={200}
                         className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2 text-xs outline-none focus:border-primary"
                       />
-                      <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-semibold">
+                      {item.promocionId == null && <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-semibold">
                         <input
                           type="checkbox"
                           checked={item.extraQueso === true}
@@ -103,7 +123,7 @@ export function CheckoutPage() {
                           className="h-4 w-4 accent-primary"
                         />
                         Extra queso (+S/3)
-                      </label>
+                      </label>}
                     </div>
                   </li>
                 ))}

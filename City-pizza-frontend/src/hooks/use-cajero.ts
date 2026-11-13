@@ -37,8 +37,7 @@ export function useCajero() {
   const [tab, setTab] = useState<TabCajero>("pedidos");
   const [titulo, setTitulo] = useState("");
   const [detalle, setDetalle] = useState("");
-  const [promoPizza, setPromoPizza] = useState<number | null>(null);
-  const [promoTamano, setPromoTamano] = useState<NonNullable<PromocionApi["tamano"]>>("Familiar");
+  const [promoOnline, setPromoOnline] = useState(false);
   const [precio, setPrecio] = useState(38);
   const [horas, setHoras] = useState(24);
   const [errorPromo, setErrorPromo] = useState<string | null>(null);
@@ -98,8 +97,7 @@ export function useCajero() {
         nombre: titulo.trim(),
         descripcion: detalle.trim() || undefined,
         precioPromo: precio,
-        pizzaId: promoPizza ?? undefined,
-        tamano: promoPizza ? promoTamano : undefined,
+        pedidoOnline: promoOnline,
         tipo: "Flash",
         vigenciaHoras: horas,
       }),
@@ -108,7 +106,7 @@ export function useCajero() {
       setTitulo("");
       setDetalle("");
       setPrecio(38);
-      setPromoPizza(null);
+      setPromoOnline(false);
       void queryClient.invalidateQueries({ queryKey: ["promociones-visibles"] });
       setHoras(24);
       toast.success("Promo flash publicada");
@@ -139,7 +137,7 @@ export function useCajero() {
     id: p.id,
     codigo: p.codigo,
     cliente: `${p.nombres} ${p.apellidos}`,
-    items: p.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre} (${d.tamano})`).join(", "),
+    items: p.detalles.map((d) => `${d.cantidad}× ${d.promocionNombre ?? d.pizza?.nombre}${d.tamano ? ` (${d.tamano})` : ""}`).join(", "),
     total: Number(p.total),
     estado: p.estado,
     etiqueta: etiquetaEstado(p.estado),
@@ -166,7 +164,7 @@ export function useCajero() {
       toggleCarta.mutate({ id, disponible }),
     promos: promosQ.data ?? [],
     titulo, setTitulo, detalle, setDetalle, precio, setPrecio, horas, setHoras,
-    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
+    promoOnline, setPromoOnline,
     errorPromo, crearPromo: onCrearPromo, publicando: crearPromo.isPending,
   };
 }

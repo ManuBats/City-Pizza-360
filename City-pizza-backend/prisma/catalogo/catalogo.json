@@ -1,0 +1,1322 @@
+{
+  "version": 1,
+  "productos": [
+    {
+      "nombre": "Agua Cielo 0,6 L",
+      "descripcion": "Agua Cielo 0,6 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "1.5",
+      "precioPersonal": "1.5",
+      "precioMediana": "1.5",
+      "precioFamiliar": "1.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "3daf734d801f071ba7b099957f3e550247587961c7b75b93682ad2c26f627d96.png",
+      "receta": [
+        {
+          "insumo": "Agua Cielo 0,6 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Alemana",
+      "descripcion": "Pizza suprema Alemana",
+      "tipo": "Pizza",
+      "categoria": "Supremas",
+      "precio": "21",
+      "precioPersonal": "12.5",
+      "precioMediana": "16.5",
+      "precioFamiliar": "21",
+      "destacada": false,
+      "disponible": true,
+      "foto": "8f8272510aaac549f2a2907af2a008dd7b5cd1ccc2472c073288999f1321e33a.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Salchicha",
+          "cantidad": 0.08
+        }
+      ]
+    },
+    {
+      "nombre": "Alitas BBQ · 16 piezas",
+      "descripcion": "Porción familiar de 16 alitas",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "23",
+      "precioPersonal": "23",
+      "precioMediana": "23",
+      "precioFamiliar": "23",
+      "destacada": false,
+      "disponible": true,
+      "foto": "3fe10b70abda4c1874b6c517566a1d0fd4cb89e527a61050688f9e8e3b086f72.jpeg",
+      "receta": [
+        {
+          "insumo": "Salsa BBQ",
+          "cantidad": 0.16
+        },
+        {
+          "insumo": "Alita de pollo",
+          "cantidad": 16
+        }
+      ]
+    },
+    {
+      "nombre": "Alitas BBQ · 8 piezas",
+      "descripcion": "Porción mediana de 8 alitas",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "12",
+      "precioPersonal": "12",
+      "precioMediana": "12",
+      "precioFamiliar": "12",
+      "destacada": false,
+      "disponible": true,
+      "foto": "7de2f8d211f4a76aca53f71bc7ec02f173b314d46c757ea5760354bd252c80ef.jpeg",
+      "receta": [
+        {
+          "insumo": "Salsa BBQ",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Alita de pollo",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "nombre": "Alitas crocantes · 16 piezas",
+      "descripcion": "Porción familiar de 16 alitas",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "23",
+      "precioPersonal": "23",
+      "precioMediana": "23",
+      "precioFamiliar": "23",
+      "destacada": false,
+      "disponible": true,
+      "foto": "8e974b877c39ad086553d2a34d591b23762905d6b0e17cbef0f0ea1e75cefab8.jpeg",
+      "receta": [
+        {
+          "insumo": "Alita de pollo",
+          "cantidad": 16
+        }
+      ]
+    },
+    {
+      "nombre": "Alitas crocantes · 8 piezas",
+      "descripcion": "Porción mediana de 8 alitas",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "12",
+      "precioPersonal": "12",
+      "precioMediana": "12",
+      "precioFamiliar": "12",
+      "destacada": false,
+      "disponible": true,
+      "foto": "43b38c5371cd21e005901677012f32d672aac79c95f4f8f9898b5c781fa6d7f5.jpeg",
+      "receta": [
+        {
+          "insumo": "Alita de pollo",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "nombre": "Alitas picantes · 16 piezas",
+      "descripcion": "Porción familiar de 16 alitas",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "23",
+      "precioPersonal": "23",
+      "precioMediana": "23",
+      "precioFamiliar": "23",
+      "destacada": false,
+      "disponible": true,
+      "foto": "fd7466e88676189e06e08d688e97b7166d2ede823fbdc942e3a395d9941970b5.jpeg",
+      "receta": [
+        {
+          "insumo": "Salsa picante",
+          "cantidad": 0.128
+        },
+        {
+          "insumo": "Alita de pollo",
+          "cantidad": 16
+        }
+      ]
+    },
+    {
+      "nombre": "Alitas picantes · 8 piezas",
+      "descripcion": "Porción mediana de 8 alitas",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "12",
+      "precioPersonal": "12",
+      "precioMediana": "12",
+      "precioFamiliar": "12",
+      "destacada": false,
+      "disponible": true,
+      "foto": "fd7466e88676189e06e08d688e97b7166d2ede823fbdc942e3a395d9941970b5.jpeg",
+      "receta": [
+        {
+          "insumo": "Salsa picante",
+          "cantidad": 0.064
+        },
+        {
+          "insumo": "Alita de pollo",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "nombre": "Americana",
+      "descripcion": "Jamón, queso y salsa de tomate",
+      "tipo": "Pizza",
+      "categoria": "Clásicas",
+      "precio": "17",
+      "precioPersonal": "10",
+      "precioMediana": "14",
+      "precioFamiliar": "17",
+      "destacada": false,
+      "disponible": true,
+      "foto": "b46555ccba77b0edcb4a35ffd590d927af9e9dcbfb9c42d41f470ec2ca8e6e16.png",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Jamón",
+          "cantidad": 0.08
+        }
+      ]
+    },
+    {
+      "nombre": "Brownie · 1 unidad",
+      "descripcion": "Porción de 1 unidad",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "3.5",
+      "precioPersonal": "3.5",
+      "precioMediana": "3.5",
+      "precioFamiliar": "3.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "24db7055bee703c19e91c802a5373f7e830414ab430516bcc39da2e19a396e37.jpeg",
+      "receta": [
+        {
+          "insumo": "Brownie (pieza)",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Brownie · 4 unidades",
+      "descripcion": "Porción de 4 unidades",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "12",
+      "precioPersonal": "12",
+      "precioMediana": "12",
+      "precioFamiliar": "12",
+      "destacada": false,
+      "disponible": true,
+      "foto": "330e12414274907bbe67037159444c3711fb98133c769260747153a834b4aa59.jpeg",
+      "receta": [
+        {
+          "insumo": "Brownie (pieza)",
+          "cantidad": 4
+        }
+      ]
+    },
+    {
+      "nombre": "Campeón",
+      "descripcion": "Queso adicional, salame, jamón, carne molida, tocino, pollo frito y salsa de tomate",
+      "tipo": "Pizza",
+      "categoria": "Supremas",
+      "precio": "21",
+      "precioPersonal": "12.5",
+      "precioMediana": "16.5",
+      "precioFamiliar": "21",
+      "destacada": false,
+      "disponible": true,
+      "foto": "b6e9d70acf4bc337ad73202c89fd807f9eeaf6b0b766073908f7567cb587bca9.png",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.18
+        },
+        {
+          "insumo": "Carne molida",
+          "cantidad": 0.05
+        },
+        {
+          "insumo": "Salame",
+          "cantidad": 0.04
+        },
+        {
+          "insumo": "Jamón",
+          "cantidad": 0.04
+        },
+        {
+          "insumo": "Tocino",
+          "cantidad": 0.03
+        },
+        {
+          "insumo": "Pollo",
+          "cantidad": 0.05
+        }
+      ]
+    },
+    {
+      "nombre": "Carbonara",
+      "descripcion": "Jamón, tocino, champiñones, queso y salsa blanca",
+      "tipo": "Pizza",
+      "categoria": "Especiales",
+      "precio": "18.5",
+      "precioPersonal": "11",
+      "precioMediana": "15",
+      "precioFamiliar": "18.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "ea2a4231c1a5d19d3f85a8ab70f3fdeb443729b00d58d223cb5d0be5df5cfad7.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Jamón",
+          "cantidad": 0.04
+        },
+        {
+          "insumo": "Tocino",
+          "cantidad": 0.04
+        },
+        {
+          "insumo": "Champiñones",
+          "cantidad": 0.05
+        },
+        {
+          "insumo": "Salsa blanca",
+          "cantidad": 0.08
+        }
+      ]
+    },
+    {
+      "nombre": "Carnívora",
+      "descripcion": "Salame, carne molida y queso",
+      "tipo": "Pizza",
+      "categoria": "Especiales",
+      "precio": "18.5",
+      "precioPersonal": "11",
+      "precioMediana": "15",
+      "precioFamiliar": "18.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "afd81eac41e2daba492aadd45041c7b0dae3750bd72d28161fc4a4badaf6fefc.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Carne molida",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Salame",
+          "cantidad": 0.06
+        }
+      ]
+    },
+    {
+      "nombre": "Coca-Cola 0,6 L",
+      "descripcion": "Coca-Cola 0,6 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "3",
+      "precioPersonal": "3",
+      "precioMediana": "3",
+      "precioFamiliar": "3",
+      "destacada": false,
+      "disponible": true,
+      "foto": "669128039585fd9a7fe6b263bba79a66d8cc9b509fe87addb6e369d4a043c809.jpg",
+      "receta": [
+        {
+          "insumo": "Coca-Cola 0,6 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Coca-Cola 1 L",
+      "descripcion": "Coca-Cola 1 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "5.5",
+      "precioPersonal": "5.5",
+      "precioMediana": "5.5",
+      "precioFamiliar": "5.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "9a2a871f623214e0c24d8559495ff7adb83ff497669ca82abf2822a0aeae15ff.png",
+      "receta": [
+        {
+          "insumo": "Coca-Cola 1 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Coca-Cola 1,5 L",
+      "descripcion": "Coca-Cola 1,5 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "7",
+      "precioPersonal": "7",
+      "precioMediana": "7",
+      "precioFamiliar": "7",
+      "destacada": false,
+      "disponible": true,
+      "foto": "3e2d07615fb8c3911f463a90fa4bd7faa1fc388ae9b3751d40d8dfad21f0214f.webp",
+      "receta": [
+        {
+          "insumo": "Coca-Cola 1,5 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Deditos de queso mozzarella · 4 unidades",
+      "descripcion": "Porción de 4 unidades",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "5.5",
+      "precioPersonal": "5.5",
+      "precioMediana": "5.5",
+      "precioFamiliar": "5.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "3a0d20c1f765e2d13a084e6aff9fa601cecf0d72e230f0166ae87bf8c06f408a.jpeg",
+      "receta": [
+        {
+          "insumo": "Deditos de queso mozzarella (pieza)",
+          "cantidad": 4
+        }
+      ]
+    },
+    {
+      "nombre": "Deditos de queso mozzarella · 8 unidades",
+      "descripcion": "Porción de 8 unidades",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "10",
+      "precioPersonal": "10",
+      "precioMediana": "10",
+      "precioFamiliar": "10",
+      "destacada": false,
+      "disponible": true,
+      "foto": "2afd86a973e6325d0e5f3cff176589d0080ffacab88db01ffc98ea6b6be78f6f.jpeg",
+      "receta": [
+        {
+          "insumo": "Deditos de queso mozzarella (pieza)",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "nombre": "Fanta Naranja 0,5 L",
+      "descripcion": "Fanta Naranja 0,5 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "2.5",
+      "precioPersonal": "2.5",
+      "precioMediana": "2.5",
+      "precioFamiliar": "2.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "c094183f32f3073d7ba3dd8044596f7ea5e34dbf81490d21952e898d5fcdf525.png",
+      "receta": [
+        {
+          "insumo": "Fanta Naranja 0,5 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Frugos 1 L",
+      "descripcion": "Frugos 1 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "4.5",
+      "precioPersonal": "4.5",
+      "precioMediana": "4.5",
+      "precioFamiliar": "4.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "a0a34a85b5c2404491329233ffcdce991cd742ac4327658ef418e379b0f4172b.webp",
+      "receta": [
+        {
+          "insumo": "Frugos 1 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Frugos Durazno 0,3 L",
+      "descripcion": "Frugos Durazno 0,3 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "3",
+      "precioPersonal": "3",
+      "precioMediana": "3",
+      "precioFamiliar": "3",
+      "destacada": false,
+      "disponible": true,
+      "foto": "3c4cd66f82634b879bba8d3b77e7a8fe8062a0c4a4b7de4dfc35b205788c96aa.jpg",
+      "receta": [
+        {
+          "insumo": "Frugos Durazno 0,3 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Full Mozzarella",
+      "descripcion": "Queso adicional, rodajas de tomate y salsa de tomate",
+      "tipo": "Pizza",
+      "categoria": "Clásicas",
+      "precio": "17",
+      "precioPersonal": "10",
+      "precioMediana": "14",
+      "precioFamiliar": "17",
+      "destacada": false,
+      "disponible": true,
+      "foto": "2a39a91bd38cb35bf0008b8a90c7407284c0cbdddff53baba59a09fd183a5c84.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.2
+        },
+        {
+          "insumo": "Tomate",
+          "cantidad": 0.07
+        }
+      ]
+    },
+    {
+      "nombre": "Hawaiana",
+      "descripcion": "Jamón, piña, queso y salsa de tomate",
+      "tipo": "Pizza",
+      "categoria": "Clásicas",
+      "precio": "17",
+      "precioPersonal": "10",
+      "precioMediana": "14",
+      "precioFamiliar": "17",
+      "destacada": false,
+      "disponible": true,
+      "foto": "5d9e1d296275e7466c14ddea86bd0d24506a9d5c6384b2fbe047ca34cc6430f6.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Jamón",
+          "cantidad": 0.07
+        },
+        {
+          "insumo": "Piña",
+          "cantidad": 0.08
+        }
+      ]
+    },
+    {
+      "nombre": "Lasaña · Familiar",
+      "descripcion": "Porción familiar",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "21",
+      "precioPersonal": "21",
+      "precioMediana": "21",
+      "precioFamiliar": "21",
+      "destacada": false,
+      "disponible": true,
+      "foto": "f7b503f62c175ad1b3185b4ee999e61dea6911b2e0333d9f00fb0adffc65ef1a.jpeg",
+      "receta": [
+        {
+          "insumo": "Lasaña · Familiar (porción)",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Lasaña · Mediana",
+      "descripcion": "Porción mediana",
+      "tipo": "Porción",
+      "categoria": "Otros platos",
+      "precio": "16.5",
+      "precioPersonal": "16.5",
+      "precioMediana": "16.5",
+      "precioFamiliar": "16.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "9699a2df65364e9a240eadac15a469b69dde6aadf6f1f71235335b66a2d6ec01.jpeg",
+      "receta": [
+        {
+          "insumo": "Lasaña · Mediana (porción)",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Mexicana",
+      "descripcion": "Tocino, carne molida, pimentón y queso",
+      "tipo": "Pizza",
+      "categoria": "Especiales",
+      "precio": "18.5",
+      "precioPersonal": "11",
+      "precioMediana": "15",
+      "precioFamiliar": "18.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "f6de98b2dca8b91ad8672e14fc2d1f249dadad1339bc41fa7119bd2c3e847b9a.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Carne molida",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Tocino",
+          "cantidad": 0.035
+        },
+        {
+          "insumo": "Pimentón",
+          "cantidad": 0.03
+        }
+      ]
+    },
+    {
+      "nombre": "Pan al ajo · 4 unidades",
+      "descripcion": "Porción de 4 unidades",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "4",
+      "precioPersonal": "4",
+      "precioMediana": "4",
+      "precioFamiliar": "4",
+      "destacada": false,
+      "disponible": true,
+      "foto": "dbca87c9605df6a98acdbc1814bd20f7257a2c17217c95638f70d9b4271129ac.webp",
+      "receta": [
+        {
+          "insumo": "Pan al ajo (pieza)",
+          "cantidad": 4
+        }
+      ]
+    },
+    {
+      "nombre": "Pan al ajo · 8 unidades",
+      "descripcion": "Porción de 8 unidades",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "6.5",
+      "precioPersonal": "6.5",
+      "precioMediana": "6.5",
+      "precioFamiliar": "6.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "67fc6559890ec7403584e7ff7e2b984fa43337bd1f660001e5ae00e8279ef2b4.jpg",
+      "receta": [
+        {
+          "insumo": "Pan al ajo (pieza)",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "nombre": "Pan al ajo con mozzarella · 4 unidades",
+      "descripcion": "Porción de 4 unidades",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "5.5",
+      "precioPersonal": "5.5",
+      "precioMediana": "5.5",
+      "precioFamiliar": "5.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "6429e7d241ab4f7f929fcfbd13f9a69078ec8e7a80dc03efa0e14a77e63d8ec1.png",
+      "receta": [
+        {
+          "insumo": "Pan al ajo con mozzarella (pieza)",
+          "cantidad": 4
+        }
+      ]
+    },
+    {
+      "nombre": "Pan al ajo con mozzarella · 8 unidades",
+      "descripcion": "Porción de 8 unidades",
+      "tipo": "Porción",
+      "categoria": "Acompañantes",
+      "precio": "10",
+      "precioPersonal": "10",
+      "precioMediana": "10",
+      "precioFamiliar": "10",
+      "destacada": false,
+      "disponible": true,
+      "foto": "1b2ce4b0bb442170257287c163eb4da54cd8e45a902e3ae7cbd62e78f71c27f5.jpeg",
+      "receta": [
+        {
+          "insumo": "Pan al ajo con mozzarella (pieza)",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "nombre": "Pepperoni",
+      "descripcion": "Salame, queso y salsa de tomate",
+      "tipo": "Pizza",
+      "categoria": "Clásicas",
+      "precio": "17",
+      "precioPersonal": "10",
+      "precioMediana": "14",
+      "precioFamiliar": "17",
+      "destacada": false,
+      "disponible": true,
+      "foto": "40a179d89876a8225785daacb40eaa3f8d9846cf301631c87ac9ce3dd54fe5e2.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Salame",
+          "cantidad": 0.08
+        }
+      ]
+    },
+    {
+      "nombre": "Pepsi 0,5 L",
+      "descripcion": "Pepsi 0,5 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "2",
+      "precioPersonal": "2",
+      "precioMediana": "2",
+      "precioFamiliar": "2",
+      "destacada": false,
+      "disponible": true,
+      "foto": "ff9e84d284a04b428478120ee21bc5549c54d4118f6996c61251d4f111f2203e.png",
+      "receta": [
+        {
+          "insumo": "Pepsi 0,5 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Pepsi 0,75 L",
+      "descripcion": "Pepsi 0,75 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "2.5",
+      "precioPersonal": "2.5",
+      "precioMediana": "2.5",
+      "precioFamiliar": "2.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "e810994498bb755109ab9820648a73caa11452aa0cea6582f6dcabeb82092666.png",
+      "receta": [
+        {
+          "insumo": "Pepsi 0,75 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Pepsi 1 L",
+      "descripcion": "Pepsi 1 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "3.5",
+      "precioPersonal": "3.5",
+      "precioMediana": "3.5",
+      "precioFamiliar": "3.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "9b9d756baa1890443ad5833b01fcf48072d9553e00c9ce531b9072b89f01c3c9.jpeg",
+      "receta": [
+        {
+          "insumo": "Pepsi 1 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Pepsi 2 L",
+      "descripcion": "Pepsi 2 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "5",
+      "precioPersonal": "5",
+      "precioMediana": "5",
+      "precioFamiliar": "5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "c23e41691f50fc2eb44efb99ca4bf403d795ad8df75a4a9d1caeeb56b1492698.jpeg",
+      "receta": [
+        {
+          "insumo": "Pepsi 2 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Pollo BBQ",
+      "descripcion": "Pollo BBQ y queso",
+      "tipo": "Pizza",
+      "categoria": "Especiales",
+      "precio": "18.5",
+      "precioPersonal": "11",
+      "precioMediana": "15",
+      "precioFamiliar": "18.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "9ff0d929654e8590029a6366bb519d5992b8b2eabcc42b9a7975809bba7d6355.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Pollo",
+          "cantidad": 0.09
+        },
+        {
+          "insumo": "Salsa BBQ",
+          "cantidad": 0.03
+        }
+      ]
+    },
+    {
+      "nombre": "Pollo Nuggets",
+      "descripcion": "Pollo nuggets, tocino y queso",
+      "tipo": "Pizza",
+      "categoria": "Especiales",
+      "precio": "18.5",
+      "precioPersonal": "11",
+      "precioMediana": "15",
+      "precioFamiliar": "18.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "81a5a6654b1bb33e4bfc0b001bed47f61f27ae13d016d822eb00a0e655649eb1.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Tocino",
+          "cantidad": 0.035
+        },
+        {
+          "insumo": "Nuggets de pollo",
+          "cantidad": 0.09
+        }
+      ]
+    },
+    {
+      "nombre": "Pollo Picante",
+      "descripcion": "Pizza de pollo picante",
+      "tipo": "Pizza",
+      "categoria": "Supremas",
+      "precio": "21",
+      "precioPersonal": "12.5",
+      "precioMediana": "16.5",
+      "precioFamiliar": "21",
+      "destacada": false,
+      "disponible": true,
+      "foto": "c0f92aaf241d99f340a52b2c6ea34b6992d75c448f2912c59f9b9dd9039ed012.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Pollo",
+          "cantidad": 0.09
+        },
+        {
+          "insumo": "Salsa picante",
+          "cantidad": 0.025
+        }
+      ]
+    },
+    {
+      "nombre": "Pollo Tropicale",
+      "descripcion": "Pizza de pollo tropical",
+      "tipo": "Pizza",
+      "categoria": "Supremas",
+      "precio": "21",
+      "precioPersonal": "12.5",
+      "precioMediana": "16.5",
+      "precioFamiliar": "21",
+      "destacada": false,
+      "disponible": true,
+      "foto": "c0f92aaf241d99f340a52b2c6ea34b6992d75c448f2912c59f9b9dd9039ed012.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Pollo",
+          "cantidad": 0.09
+        },
+        {
+          "insumo": "Piña",
+          "cantidad": 0.07
+        }
+      ]
+    },
+    {
+      "nombre": "Sprite 0,5 L",
+      "descripcion": "Sprite 0,5 L",
+      "tipo": "Bebida",
+      "categoria": "Bebidas",
+      "precio": "2.5",
+      "precioPersonal": "2.5",
+      "precioMediana": "2.5",
+      "precioFamiliar": "2.5",
+      "destacada": false,
+      "disponible": true,
+      "foto": "532402eb4b4f506566c1d7d31cea03b082c3ff8d47e93864cb4b9368328d40e4.jpeg",
+      "receta": [
+        {
+          "insumo": "Sprite 0,5 L",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "nombre": "Vegetariana",
+      "descripcion": "Pimentón, cebolla, queso fresco, mozzarella, aceitunas y champiñones",
+      "tipo": "Pizza",
+      "categoria": "Clásicas",
+      "precio": "17",
+      "precioPersonal": "10",
+      "precioMediana": "14",
+      "precioFamiliar": "17",
+      "destacada": false,
+      "disponible": true,
+      "foto": "49bf5f34982a7c8ae6ce0d0e88bc2eed920ddc0a7aa2befa4ab69560b4f267cc.jpeg",
+      "receta": [
+        {
+          "insumo": "Masa de pizza",
+          "cantidad": 1
+        },
+        {
+          "insumo": "Salsa de tomate",
+          "cantidad": 0.08
+        },
+        {
+          "insumo": "Queso mozzarella",
+          "cantidad": 0.14
+        },
+        {
+          "insumo": "Champiñones",
+          "cantidad": 0.05
+        },
+        {
+          "insumo": "Cebolla",
+          "cantidad": 0.03
+        },
+        {
+          "insumo": "Pimentón",
+          "cantidad": 0.03
+        },
+        {
+          "insumo": "Aceitunas",
+          "cantidad": 0.025
+        },
+        {
+          "insumo": "Queso fresco",
+          "cantidad": 0.04
+        }
+      ]
+    }
+  ],
+  "promociones": [
+    {
+      "nombre": "Promo Familiar Pizza & Alitas Mixx",
+      "descripcion": "1 pizza familiar clásica, 6 alitas y 1 Pepsi de 1 L.",
+      "tamano": null,
+      "precioPromo": "28",
+      "tipo": "Permanente",
+      "inicio": "2026-11-13T03:33:46.949Z",
+      "fin": null,
+      "activa": true,
+      "producto": null,
+      "foto": null
+    },
+    {
+      "nombre": "Promo Toys Heroes",
+      "descripcion": "1 pizza familiar clásica, 1 Pepsi de 1 L y 1 set de figura de héroe.",
+      "tamano": null,
+      "precioPromo": "25",
+      "tipo": "Permanente",
+      "inicio": "2026-11-13T03:33:46.964Z",
+      "fin": null,
+      "activa": true,
+      "producto": null,
+      "foto": null
+    },
+    {
+      "nombre": "Promo Mediana Pizza & Alitas Mixx",
+      "descripcion": "1 pizza mediana clásica, 4 alitas y 1 Pepsi de 0,75 L.",
+      "tamano": null,
+      "precioPromo": "22",
+      "tipo": "Permanente",
+      "inicio": "2026-11-13T03:33:46.966Z",
+      "fin": null,
+      "activa": true,
+      "producto": null,
+      "foto": null
+    },
+    {
+      "nombre": "Promo Familiar Clásica",
+      "descripcion": "1 pizza familiar Americana o Pepperoni, 4 piezas de pan al ajo y 1 Pepsi de 1,5 L.",
+      "tamano": null,
+      "precioPromo": "24",
+      "tipo": "Permanente",
+      "inicio": "2026-11-13T03:33:46.968Z",
+      "fin": null,
+      "activa": true,
+      "producto": null,
+      "foto": null
+    },
+    {
+      "nombre": "Promo Personal",
+      "descripcion": "1 pizza personal clásica, 1 brownie caliente y 1 Pepsi de 0,5 L.",
+      "tamano": null,
+      "precioPromo": "14",
+      "tipo": "Permanente",
+      "inicio": "2026-11-13T03:33:46.970Z",
+      "fin": null,
+      "activa": true,
+      "producto": null,
+      "foto": null
+    }
+  ],
+  "insumos": [
+    {
+      "nombre": "Agua Cielo 0,6 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Masa de pizza",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Salsa de tomate",
+      "stockMinimo": 1,
+      "unidad": "L"
+    },
+    {
+      "nombre": "Queso mozzarella",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Salchicha",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Salsa BBQ",
+      "stockMinimo": 1,
+      "unidad": "L"
+    },
+    {
+      "nombre": "Alita de pollo",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Salsa picante",
+      "stockMinimo": 1,
+      "unidad": "L"
+    },
+    {
+      "nombre": "Jamón",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Brownie (pieza)",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Carne molida",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Salame",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Tocino",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Pollo",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Champiñones",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Salsa blanca",
+      "stockMinimo": 1,
+      "unidad": "L"
+    },
+    {
+      "nombre": "Coca-Cola 0,6 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Coca-Cola 1 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Coca-Cola 1,5 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Deditos de queso mozzarella (pieza)",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Fanta Naranja 0,5 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Frugos 1 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Frugos Durazno 0,3 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Tomate",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Piña",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Lasaña · Familiar (porción)",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Lasaña · Mediana (porción)",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Pimentón",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Pan al ajo (pieza)",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Pan al ajo con mozzarella (pieza)",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Pepsi 0,5 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Pepsi 0,75 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Pepsi 1 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Pepsi 2 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Nuggets de pollo",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Sprite 0,5 L",
+      "stockMinimo": 8,
+      "unidad": "u"
+    },
+    {
+      "nombre": "Cebolla",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Aceitunas",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Queso fresco",
+      "stockMinimo": 1,
+      "unidad": "kg"
+    }
+  ]
+}

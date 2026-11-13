@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { useCart } from "@/context/cart-context";
-import { soles, type Producto } from "@/lib/pizzas";
+import { soles, tieneTamanoDePizza, type Producto } from "@/lib/pizzas";
 
 /** Tarjeta de producto del menú (extraída de routes/menu.tsx). */
 export function PizzaCard({ producto }: { producto: Producto }) {
   const { add } = useCart();
-  const [tamano, setTamano] = useState<"Personal" | "Mediana" | "Familiar">("Familiar");
+  const [tamanoElegido, setTamano] = useState<"Personal" | "Mediana" | "Familiar">("Familiar");
   const [qty, setQty] = useState(1);
-  const esBebida = producto.categoria === "Bebidas";
+  const tieneTamanos = tieneTamanoDePizza(producto.categoria);
+  const tamano = tieneTamanos ? tamanoElegido : "Personal";
   const precio =
     tamano === "Personal"
       ? producto.precioPersonal
@@ -44,7 +45,7 @@ export function PizzaCard({ producto }: { producto: Producto }) {
           {producto.ingredientes}
         </p>
 
-        {!esBebida && (
+        {tieneTamanos && (
           <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
             {(["Personal", "Mediana", "Familiar"] as const).map((t) => (
               <button

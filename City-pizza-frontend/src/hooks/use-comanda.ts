@@ -25,7 +25,7 @@ export function useComanda() {
   const [celular, setCelular] = useState("");
   const [metodoPago, setMetodoPago] = useState<"Efectivo" | "Yape">("Efectivo");
   const [enviadas, setEnviadas] = useState<Comanda[]>(leerEnviadas);
-  const [tamanoPorId, setTamanoPorId] = useState<Record<number, "Personal" | "Familiar">>({});
+  const [tamanoPorId, setTamanoPorId] = useState<Record<number, LineaComanda["tamano"]>>({});
   const [enviando, setEnviando] = useState(false);
   const intento = useRef<{ actual?: { body: string; clave: string } }>({});
   const enCurso = useRef(false);
@@ -33,9 +33,7 @@ export function useComanda() {
   const total = useMemo(() => lineas.reduce((acc, l) => acc + l.precio * l.qty, 0), [lineas]);
   const celularValido = useMemo(() => /^9\d{8}$/.test(celular), [celular]);
 
-  function agregar(productoId: number, nombreProd: string, precioPersonal: number, precioFamiliar: number, esBebida: boolean) {
-    const tamano = esBebida ? "Personal" : (tamanoPorId[productoId] ?? "Familiar");
-    const precio = tamano === "Personal" ? precioPersonal : precioFamiliar;
+  function agregar(productoId: number, nombreProd: string, tamano: LineaComanda["tamano"], precio: number) {
     setLineas((prev) => {
       const i = prev.findIndex((l) => l.productoId === productoId && l.tamano === tamano);
       if (i >= 0) return prev.map((l, j) => (j === i ? { ...l, qty: l.qty + 1 } : l));
@@ -51,7 +49,7 @@ export function useComanda() {
     );
   }
 
-  function setTamano(productoId: number, tamano: "Personal" | "Familiar") {
+  function setTamano(productoId: number, tamano: LineaComanda["tamano"]) {
     setTamanoPorId((prev) => ({ ...prev, [productoId]: tamano }));
   }
 

@@ -4,6 +4,7 @@ import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
 import { soles } from "@/lib/pizzas";
 import type { Pedido } from "@/types/pedido";
+import { AccionesSeguimiento } from "@/components/checkout/AccionesSeguimiento";
 
 interface YapeModalProps {
   pedido: Pedido;
@@ -70,6 +71,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
           <p className="mt-1 text-sm text-muted-foreground">
             Caja revisará el comprobante del pedido {recibido.codigo} antes de que cocina lo prepare.
           </p>
+          <AccionesSeguimiento pedido={recibido} />
           <button
             onClick={() => onSubido(recibido)}
             className="btn-tactile mt-5 w-full bg-primary text-white transition-colors hover:bg-primary/90"
@@ -82,9 +84,10 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-brand-black/70 p-4">
+    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-brand-black/70 p-4">
       <div className="card-soft w-full max-w-sm p-6 text-center">
         <p className="text-sm font-semibold text-muted-foreground">Pedido {pedido.codigo}</p>
+        <AccionesSeguimiento pedido={pedido} />
         <h2 className="mt-1 text-2xl font-extrabold">
           Paga {soles(Number(pedido.total))} por Yape
         </h2>

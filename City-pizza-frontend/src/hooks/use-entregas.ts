@@ -46,7 +46,7 @@ export function useEntregas() {
     celular: p.celular,
     direccion: p.direccion,
     referencia: p.referencia ?? undefined,
-    resumen: p.detalles.map((d) => `${d.cantidad}× ${d.pizza.nombre} (${d.tamano})`).join(" + "),
+    resumen: p.detalles.map((d) => `${d.cantidad}× ${d.promocionNombre ?? d.pizza?.nombre}${d.tamano ? ` (${d.tamano})` : ""}`).join(" + "),
     estado: p.estado === "EnCamino" ? "en-camino" : "pendiente",
   }));
 

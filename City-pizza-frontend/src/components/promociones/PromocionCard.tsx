@@ -1,10 +1,17 @@
 import { Clock, Tag } from "lucide-react";
 import type { PromocionApi } from "@/services/promociones.service";
 import { fechaPromocion } from "@/lib/promociones";
-import { soles } from "@/lib/pizzas";
+import { soles, type Producto } from "@/lib/pizzas";
 import { urlPublica } from "@/lib/imagenes";
+import { useCart } from "@/context/cart-context";
+import { toast } from "sonner";
 
-export function PromocionCard({ promocion }: { promocion: PromocionApi }) {
+export function PromocionCard({ promocion, producto }: { promocion: PromocionApi; producto?: Producto }) {
+  const { add } = useCart();
+  const { tamano } = promocion;
+  const precioBase = tamano === "Personal" ? producto?.precioPersonal
+    : tamano === "Mediana" ? producto?.precioMediana : producto?.precioFamiliar;
+  const precio = promocion.pedidoOnline ? promocion.precioPromo : Math.min(promocion.precioPromo, precioBase ?? promocion.precioPromo);
   return (
     <article className="card-soft flex h-full min-w-0 flex-col overflow-hidden">
       {promocion.imagenUrl && <img src={urlPublica(promocion.imagenUrl) ?? undefined} alt="" className="aspect-video w-full object-cover" />}
@@ -19,7 +26,7 @@ export function PromocionCard({ promocion }: { promocion: PromocionApi }) {
         <p className="whitespace-pre-line break-words text-sm text-muted-foreground">
           {promocion.descripcion || "Consulta las condiciones de esta promoción en tienda."}
         </p>
-        <p className="text-3xl font-extrabold text-primary">{soles(promocion.precioPromo)}</p>
+        <p className="text-3xl font-extrabold text-primary">{soles(precio)}</p>
         {promocion.pizzaId && promocion.tamano && (
           <p className="text-sm text-muted-foreground">Tamaño {promocion.tamano.toLowerCase()}. Se aplica en el carrito.</p>
         )}
@@ -29,6 +36,16 @@ export function PromocionCard({ promocion }: { promocion: PromocionApi }) {
             <span>Vence <time dateTime={promocion.fin}>{fechaPromocion(promocion.fin)}</time> (hora de Lima)</span>
           ) : "Sin fecha de vencimiento"}
         </p>
+        {promocion.pedidoOnline ? (
+          <button type="button" className="btn-tactile bg-primary px-4 text-white" onClick={() => {
+            add({ promocionId: promocion.id, nombre: promocion.nombre, precio });
+            toast.success("Agregado al carrito");
+          }}>Agregar al carrito</button>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {promocion.pizzaId && tamano ? "Pide el producto desde el menú." : "Consulta esta oferta en el local."}
+          </p>
+        )}
       </div>
     </article>
   );

@@ -7,8 +7,8 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { etiquetaEstadoAdmin, useAdminDashboard } from "@/hooks/use-admin-dashboard";
-import { LOCAL, soles } from "@/lib/pizzas";
-import { ProductoPromocion } from "@/components/promociones/ProductoPromocion";
+import { CATEGORIAS, LOCAL, soles } from "@/lib/pizzas";
+import { PedidoOnlinePromocion } from "@/components/promociones/ProductoPromocion";
 import { urlPublica } from "@/lib/imagenes";
 import type { TabAdmin } from "@/types/admin";
 
@@ -38,7 +38,8 @@ function AdminDashboard() {
     guardarPrecioPromo, guardandoPrecioPromo,
     promos, togglePromo,
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
-    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
+    promoOnline, setPromoOnline,
+    promoImagen, setPromoImagen,
     promoPrecio, setPromoPrecio, promoHoras, setPromoHoras, subirImagenPromo, subiendoImagenPromo,
     crearPromo, creandoPromo,
     inventario, alertas,
@@ -181,12 +182,15 @@ function AdminDashboard() {
                     />
                   </Campo>
                   <Campo titulo="Categoría">
-                    <input
+                    <select
                       value={prodCategoria}
                       onChange={(e) => setProdCategoria(e.target.value)}
-                      placeholder="Clásicas"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                    />
+                    >
+                      {Array.from(new Set([...CATEGORIAS, ...productos.map((producto) => producto.categoria)])).map((categoria) => (
+                        <option key={categoria} value={categoria}>{categoria}</option>
+                      ))}
+                    </select>
                   </Campo>
                   <Campo titulo="Precio personal (S/)">
                     <input
@@ -370,7 +374,7 @@ function AdminDashboard() {
                     className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                 </Campo>
-                <ProductoPromocion productos={productos} pizzaId={promoPizza} tamano={promoTamano} onProducto={setPromoPizza} onTamano={setPromoTamano} />
+                <PedidoOnlinePromocion checked={promoOnline} onChange={setPromoOnline} />
                 <div className="grid grid-cols-2 gap-2">
                   <Campo titulo="Precio promo (S/)">
                     <input
@@ -389,6 +393,17 @@ function AdminDashboard() {
                     />
                   </Campo>
                 </div>
+                <Campo titulo="Imagen de la promoción (opcional)">
+                  <input
+                    key={promoImagen ? "seleccionada" : "vacia"}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={creandoPromo}
+                    onChange={(e) => setPromoImagen(e.target.files?.[0] ?? null)}
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+                  />
+                  {promoImagen && <span className="text-xs text-muted-foreground">{promoImagen.name} · <button type="button" onClick={() => setPromoImagen(null)}>Quitar</button></span>}
+                </Campo>
                 <button
                   onClick={crearPromo}
                   disabled={creandoPromo}
@@ -450,7 +465,7 @@ function AdminDashboard() {
                               <button
                                 onClick={() => abrirEditorPrecioPromo(promo)}
                                 className="grid h-9 w-9 place-items-center rounded-full text-secondary hover:bg-secondary/10"
-                                aria-label="Editar precio"
+                                aria-label="Editar promoción"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -467,9 +482,8 @@ function AdminDashboard() {
                             }} />
                         </label>
                         {editando && precioEditPromo && (
-                          <ProductoPromocion productos={productos} pizzaId={precioEditPromo.pizzaId} tamano={precioEditPromo.tamano}
-                            onProducto={(pizzaId) => setPrecioEditPromo({ ...precioEditPromo, pizzaId })}
-                            onTamano={(tamano) => setPrecioEditPromo({ ...precioEditPromo, tamano })} />
+                          <PedidoOnlinePromocion checked={precioEditPromo.pedidoOnline}
+                            onChange={(pedidoOnline) => setPrecioEditPromo((prev) => prev && { ...prev, pedidoOnline })} />
                         )}
                         {editando && (
                           <div className="flex flex-col sm:flex-row sm:items-end gap-2">
@@ -504,7 +518,7 @@ function AdminDashboard() {
                                 <Check className="h-4 w-4" />
                                 {guardandoPrecioPromo
                                   ? "Guardando…"
-                                  : "Guardar precio"}
+                                  : "Guardar cambios"}
                               </button>
                             </div>
                           </div>

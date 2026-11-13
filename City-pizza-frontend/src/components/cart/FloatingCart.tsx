@@ -63,7 +63,7 @@ export function FloatingCart() {
                           {item.nombre}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {item.tamano} · {soles(item.precio)}
+                          {item.tamano ? `${item.tamano} · ` : ""} {soles(item.precio)}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">

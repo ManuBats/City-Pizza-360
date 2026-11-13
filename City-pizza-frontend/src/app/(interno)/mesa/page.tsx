@@ -3,7 +3,7 @@ import { ArrowLeft, CheckCircle2, Minus, Plus, Send, UtensilsCrossed } from "luc
 import { RequireRole } from "@/components/worker/worker-auth";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
 import { useComanda } from "@/hooks/use-comanda";
-import { soles } from "@/lib/pizzas";
+import { soles, tieneTamanoDePizza } from "@/lib/pizzas";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { MESAS } from "@/types/mesa";
 
@@ -25,7 +25,8 @@ function MesaContent() {
     total,
     agregar, cambiarQty, enviarACocina,
   } = useComanda();
-  const { productos: carta } = usePizzas();
+  const { productos: carta, loading, error } = usePizzas();
+  const disponibles = carta.filter((producto) => producto.disponible);
 
   return (
     <StaffLayout
@@ -64,11 +65,15 @@ function MesaContent() {
           {/* Carta */}
           <section>
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Carta</h2>
+            {!loading && !error && disponibles.length === 0 && (
+              <p className="mt-2 text-sm text-muted-foreground">Aún no hay productos disponibles en la carta.</p>
+            )}
             <div className="mt-2 grid gap-3 sm:grid-cols-2">
-              {carta.filter((p) => p.disponible).map((p) => {
-                const esBebida = p.categoria === "Bebidas";
-                const tamano = tamanoPorId[p.id] ?? "Familiar";
-                const precio = esBebida || tamano === "Personal" ? p.precioPersonal : p.precioFamiliar;
+              {disponibles.map((p) => {
+                const tieneTamanos = tieneTamanoDePizza(p.categoria);
+                const tamano = tieneTamanos ? (tamanoPorId[p.id] ?? "Familiar") : "Personal";
+                const precios = { Personal: p.precioPersonal, Mediana: p.precioMediana, Familiar: p.precioFamiliar };
+                const precio = precios[tamano];
                 return (
                   <div key={p.id} className="card-soft p-4">
                     <div className="flex items-start justify-between gap-2">
@@ -77,11 +82,12 @@ function MesaContent() {
                         {soles(precio)}
                       </span>
                     </div>
-                    {!esBebida && (
-                      <div className="mt-2 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
-                        {(["Personal", "Familiar"] as const).map((t) => (
+                    {tieneTamanos && (
+                      <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+                        {(["Personal", "Mediana", "Familiar"] as const).map((t) => (
                           <button
                             key={t}
+                            aria-pressed={tamano === t}
                             onClick={() => setTamano(p.id, t)}
                             className={`rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                               tamano === t ? "bg-primary text-white" : "text-muted-foreground"
@@ -93,7 +99,7 @@ function MesaContent() {
                       </div>
                     )}
                     <button
-                      onClick={() => agregar(p.id, p.nombre, p.precioPersonal, p.precioFamiliar, esBebida)}
+                      onClick={() => agregar(p.id, p.nombre, tamano, precio)}
                       className="btn-tactile mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 bg-brand-black text-sm text-white transition-colors hover:bg-brand-black/90"
                     >
                       <Plus className="h-4 w-4" /> Agregar

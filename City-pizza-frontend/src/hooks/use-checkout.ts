@@ -63,7 +63,15 @@ export function useCheckout() {
     // Resuelve cada línea contra el catálogo (slug histórico o id real).
     const lineas = [];
     for (const item of items) {
-      const prod = resolverProducto(productos, item.productoId);
+      if (item.promocionId != null) {
+        lineas.push({
+          promocionId: item.promocionId,
+          cantidad: item.qty,
+          nota: item.nota?.trim() || undefined,
+        });
+        continue;
+      }
+      const prod = item.productoId == null ? undefined : resolverProducto(productos, item.productoId);
       if (!prod || !prod.disponible) {
         setErrores({ items: `“${item.nombre}” ya no está disponible. Quítala del carrito.` });
         return null;
@@ -98,16 +106,9 @@ export function useCheckout() {
       if (Math.abs(Number(pedido.total) - total) > 0.01) {
         toast.warning("Los precios se actualizaron al confirmar. Revisa tu total en Mi pedido.");
       }
-      if (!resultado.requiereYape) {
-        intento.current = {};
-        clear();
-        await navigate({
-          to: "/tracking",
-          search: { codigo: pedido.codigo, celular: pedido.celular },
-        });
-        return null;
-      }
       setConfirmado(resultado);
+      intento.current = {};
+      clear();
       return resultado;
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {

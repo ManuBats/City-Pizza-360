@@ -64,7 +64,7 @@ export function useCola() {
     repartidorId: p.repartidorId,
     items: p.detalles.map((d) => ({
       qty: d.cantidad,
-      nombre: `${d.pizza.nombre} ${d.tamano}${d.extraQueso ? " +queso" : ""}`,
+      nombre: `${d.promocionNombre ?? d.pizza?.nombre}${d.tamano ? ` ${d.tamano}` : ""}${d.promocionDescripcion ? ` · ${d.promocionDescripcion}` : ""}${d.extraQueso ? " +queso" : ""}`,
       nota: d.nota ?? undefined,
     })),
   }));

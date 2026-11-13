@@ -17,6 +17,7 @@ describe('Pedidos con PostgreSQL aislado', () => {
   let clave: string;
   const trabajadores: number[] = [];
   const archivos: string[] = [];
+  const promociones: number[] = [];
 
   beforeAll(async () => {
     const modulo = await Test.createTestingModule({
@@ -54,7 +55,7 @@ describe('Pedidos con PostgreSQL aislado', () => {
       await db.detallePedido.deleteMany({ where: { pizzaId: { in: pizzas } } });
       await db.pedido.deleteMany({ where: { id: { in: pedidos } } });
       await db.trabajador.deleteMany({ where: { id: { in: trabajadores } } });
-      await db.promocion.deleteMany({ where: { pizzaId: { in: pizzas } } });
+      await db.promocion.deleteMany({ where: { OR: [{ pizzaId: { in: pizzas } }, { id: { in: promociones } }] } });
       await Promise.all(
         archivos.map((archivo) =>
           rm(join(process.cwd(), 'uploads-private', 'comprobantes', archivo), {
@@ -78,6 +79,23 @@ describe('Pedidos con PostgreSQL aislado', () => {
   });
   const stock = async () =>
     (await db.insumo.findUniqueOrThrow({ where: { id: insumo } })).stock;
+
+  it('compra una promoción online por su precio y rechaza el pedido al desactivarla', async () => {
+    const promo = await db.promocion.create({
+      data: { nombre: 'Combo de prueba', descripcion: 'Pizza y bebida', precioPromo: 24, pedidoOnline: true },
+    });
+    promociones.push(promo.id);
+    const compra = { ...body(), totalEsperado: 48, items: [{ promocionId: promo.id, cantidad: 2 }] };
+    const http = request(app.getHttpServer());
+    const resultado = await http.post('/pedidos').send(compra).expect(201);
+    pedidos.push(resultado.body.id);
+    expect(resultado.body.total).toBe(48);
+    expect(resultado.body.detalles[0]).toMatchObject({
+      pizzaId: null, promocionNombre: promo.nombre, promocionDescripcion: promo.descripcion, precioUnit: 24,
+    });
+    await db.promocion.update({ where: { id: promo.id }, data: { pedidoOnline: false } });
+    await http.post('/pedidos').send(compra).expect(409);
+  });
 
   it('rechaza el consumo acumulado sin descontar stock y protege el alta de salón', async () => {
     await request(app.getHttpServer())

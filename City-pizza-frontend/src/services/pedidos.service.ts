@@ -15,6 +15,7 @@ function toWriteBody(payload: CrearPedidoPayload) {
     mesa: payload.mesa,
     items: payload.items.map((i) => ({
       pizzaId: i.pizzaId,
+      promocionId: i.promocionId,
       cantidad: i.cantidad,
       tamano: i.tamano,
       nota: i.nota?.trim() || undefined,

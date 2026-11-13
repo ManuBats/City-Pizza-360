@@ -161,7 +161,19 @@ export class PedidosService {
           : 'Recojo en tienda';
 
     // Se consultan ids únicos: un mismo pedido puede repetir la pizza en distintos tamaños.
-    const idsUnicos = [...new Set(dto.items.map((i) => i.pizzaId))];
+    for (const item of dto.items) {
+      if (item.promocionId != null) {
+        if (item.pizzaId != null || item.tamano != null || item.extraQueso || tipoEntrega === 'Mesa')
+          throw new BadRequestException('La promoción solo se puede pedir online como combo');
+      } else if (item.pizzaId == null || item.tamano == null) {
+        throw new BadRequestException('Indica un producto y su tamaño');
+      }
+    }
+    const itemsPizza = dto.items.flatMap((item) =>
+      item.pizzaId == null ? [] : [{ ...item, pizzaId: item.pizzaId }],
+    );
+    const idsUnicos = [...new Set(itemsPizza.map((i) => i.pizzaId))];
+    const idsPromocion = dto.items.flatMap((i) => i.promocionId == null ? [] : [i.promocionId]);
     const pizzas = await this.prisma.pizza.findMany({
       where: { id: { in: idsUnicos } },
       include: { insumos: { include: { insumo: true } } },
@@ -169,7 +181,7 @@ export class PedidosService {
     if (pizzas.length !== idsUnicos.length)
       throw new BadRequestException('Alguna pizza no existe');
 
-    for (const item of dto.items) {
+    for (const item of itemsPizza) {
       const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
       if (!pizza.disponible)
         throw new BadRequestException(`${pizza.nombre} está agotada`);
@@ -187,7 +199,7 @@ export class PedidosService {
           cantidad: pi.cantidad,
         })),
       })),
-      dto.items.map((item) => ({
+      itemsPizza.map((item) => ({
         pizzaId: item.pizzaId,
         nombrePizza: pizzas.find((p) => p.id === item.pizzaId)!.nombre,
         cantidad: item.cantidad,
@@ -199,7 +211,7 @@ export class PedidosService {
       throw new BadRequestException(errorStock);
     }
     const consumos = new Map<number, Prisma.Decimal>();
-    for (const item of dto.items) {
+    for (const item of itemsPizza) {
       for (const insumo of pizzas.find((p) => p.id === item.pizzaId)!.insumos) {
         const anterior = consumos.get(insumo.insumoId) ?? new Prisma.Decimal(0);
         consumos.set(
@@ -224,16 +236,27 @@ export class PedidosService {
         const ahora = new Date();
         const ofertas = tipoEntrega === 'Mesa' ? [] : await tx.promocion.findMany({
           where: {
-            pizzaId: { in: idsUnicos }, activa: true, inicio: { lte: ahora },
-            OR: [{ fin: null }, { fin: { gt: ahora } }],
+            activa: true,
+            inicio: { lte: ahora },
+            OR: [
+              { pizzaId: { in: idsUnicos } },
+              { id: { in: idsPromocion }, pedidoOnline: true },
+            ],
+            AND: [{ OR: [{ fin: null }, { fin: { gt: ahora } }] }],
           },
         });
         const lineas = dto.items.map((item) => {
+          if (item.promocionId != null) {
+            const promocion = ofertas.find((oferta) => oferta.id === item.promocionId && oferta.pedidoOnline);
+            if (!promocion)
+              throw new ConflictException('La promoción ya no se puede pedir online. Quítala del carrito.');
+            return { item, precioUnit: Math.round(Number(promocion.precioPromo) * 100), promocion };
+          }
           const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
           const base = ofertas.reduce((precio, oferta) =>
             oferta.pizzaId === item.pizzaId && oferta.tamano === item.tamano
               ? Math.min(precio, Number(oferta.precioPromo)) : precio,
-          precioPorTamano(pizza, item.tamano));
+          precioPorTamano(pizza, item.tamano!));
           const precioUnit = Math.round(base * 100) + (item.extraQueso ? EXTRA_QUESO_PRECIO * 100 : 0);
           return { item, precioUnit };
         });
@@ -268,13 +291,15 @@ export class PedidosService {
               'Sin stock suficiente para completar el pedido',
             );
         }
-        for (const { item, precioUnit } of lineas) {
+        for (const { item, precioUnit, promocion } of lineas) {
           await tx.detallePedido.create({
             data: {
               pedidoId: pedido.id,
-              pizzaId: item.pizzaId,
+              pizzaId: promocion ? null : item.pizzaId,
+              promocionNombre: promocion?.nombre,
+              promocionDescripcion: promocion?.descripcion,
               cantidad: item.cantidad,
-              tamano: item.tamano,
+              tamano: promocion ? '' : item.tamano,
               nota: item.nota?.trim() || null,
               extraQueso: item.extraQueso === true,
               precioUnit: precioUnit / 100,

@@ -7,6 +7,7 @@ export type PromocionApi = {
   descripcion: string | null;
   imagenUrl?: string | null;
   precioPromo: number;
+  pedidoOnline?: boolean;
   pizzaId?: number | null;
   tamano?: "Personal" | "Mediana" | "Familiar" | null;
   tipo: "Permanente" | "Flash";
@@ -42,6 +43,7 @@ export const PromocionesService = {
     nombre: string;
     descripcion?: string;
     precioPromo: number;
+    pedidoOnline?: boolean;
     pizzaId?: number;
     tamano?: NonNullable<PromocionApi["tamano"]>;
     tipo: "Permanente" | "Flash";
@@ -73,6 +75,7 @@ export const PromocionesService = {
         | "nombre"
         | "descripcion"
         | "precioPromo"
+        | "pedidoOnline"
         | "pizzaId"
         | "tamano"
         | "tipo"

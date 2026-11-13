@@ -1,7 +1,7 @@
 // Tipos y utilidades de la carta. El catálogo real viene de GET /pizzas
 // (módulo Catálogo); no hay productos hardcodeados en el frontend.
 
-export type Categoria = "Clásicas" | "Especiales" | "Familiares" | "Bebidas";
+export type Categoria = (typeof CATEGORIAS)[number];
 
 export type Producto = {
   id: number;
@@ -39,7 +39,11 @@ export function resolverProducto(
   return productos.find((p) => slugify(p.nombre) === slugify(String(productoId)));
 }
 
-export const CATEGORIAS: Categoria[] = ["Clásicas", "Especiales", "Familiares", "Bebidas"];
+export const CATEGORIAS = ["Clásicas", "Especiales", "Supremas", "Acompañantes", "Otros platos", "Bebidas"] as const;
+
+export function tieneTamanoDePizza(categoria: Categoria): boolean {
+  return !["Bebidas", "Acompañantes", "Otros platos"].includes(categoria);
+}
 
 export const LOCAL = {
   nombre: "City Pizza Center",

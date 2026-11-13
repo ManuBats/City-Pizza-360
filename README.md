@@ -62,6 +62,22 @@ npm run dev
 
 El seed base crea solo la cuenta de administrador. Configura `ADMIN_USUARIO`, `ADMIN_NOMBRE` y `ADMIN_PASSWORD` antes de ejecutarlo. El seed de demostración añade catálogo, insumos, promociones y trabajadores ficticios.
 
+### Importar la carta compartida
+
+Desde `City-pizza-backend`, con `DATABASE_URL` apuntando a tu base de desarrollo, ejecuta:
+
+```powershell
+npx prisma migrate deploy
+npm run prisma:generate
+npm run catalogo:importar
+```
+
+El paquete en `prisma/catalogo/` contiene la carta y sus fotos. La importación copia las imágenes a `uploads/productos/` y actualiza los productos que ya existen por nombre, incluidos sus precios y las fotos incluidas en el paquete. Si hay recetas, añade o actualiza sus insumos vinculados y conserva las existencias locales. Las promociones conservan sus fechas de vigencia. El paquete se limita a datos del catálogo.
+
+Para compartir productos, fotos o promociones que hayas añadido en tu equipo, ejecuta `npm run catalogo:exportar` desde `City-pizza-backend`. Incluye en el commit el manifiesto `prisma/catalogo/catalogo.json` y las imágenes que referencia en `prisma/catalogo/fotos/`. Sube ese commit a GitHub. Tus compañeros pueden traerlo y ejecutar los tres comandos anteriores para tener la carta y sus fotos en su entorno local.
+
+El manifiesto también guarda las recetas, los insumos vinculados y la configuración de las promociones, incluida la opción de pedido online al volver a exportar. Las existencias, los pedidos, las cuentas y la configuración de Yape son propios de cada entorno.
+
 ### Frontend
 
 ```powershell
@@ -77,7 +93,14 @@ Con `npm run dev`, si las tres variables de Yape están vacías, el checkout usa
 
 Los gráficos de ventas y productos vendidos cuentan pedidos con pago verificado. El efectivo se registra al marcar el pedido como entregado.
 
-Administración y Caja pueden vincular una promoción a un producto y un tamaño. En el carrito web, se aplica automáticamente el menor precio vigente para cada línea. Si una promoción vence o cambia mientras se confirma el pedido, el checkout actualiza el total y pide confirmarlo de nuevo. Administración puede vincular las promociones ya existentes desde su editor.
+## Promociones online
+
+1. Actualiza tu copia del repositorio. Desde `City-pizza-backend`, ejecuta `npx prisma migrate deploy` y `npm run prisma:generate`. Reinicia el backend si estaba en ejecución.
+2. En **Administración → Promociones permanentes**, crea una promoción o abre el editor de una existente. En **Caja**, la casilla está disponible al crear una promoción Flash.
+3. Indica el precio del combo y describe qué incluye. Marca **Se puede pedir online** y guarda. Con la casilla desmarcada, la promoción sigue visible en la vitrina mientras esté activa y vigente.
+4. En la tienda, abre **Promociones**, pulsa **Agregar al carrito** y verifica el precio antes de confirmar. Cocina recibe el nombre y la descripción del combo. El descuento automático de insumos por cada componente del combo sigue pendiente.
+
+Las promociones existentes tienen la casilla desmarcada por defecto tras la migración. Si una promoción vence o se deshabilita mientras está en el carrito, retírala para continuar. Si cambia el precio, revisa el total actualizado y vuelve a confirmar.
 
 ## API y verificación
 

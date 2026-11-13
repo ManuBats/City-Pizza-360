@@ -74,7 +74,7 @@ const menuRoute = createRoute({
   validateSearch: (search: Record<string, unknown>): { categoria?: Categoria | undefined } => ({
     categoria:
       typeof search.categoria === "string" &&
-      (CATEGORIAS as string[]).includes(search.categoria)
+      (CATEGORIAS as readonly string[]).includes(search.categoria)
         ? (search.categoria as Categoria)
         : undefined,
   }),

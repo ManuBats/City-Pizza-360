@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { PedidosService } from "@/services/pedidos.service";
-import { getErrorMessage } from "@/services/api";
+import { ApiError, getErrorMessage } from "@/services/api";
 import type { EstadoPedido } from "@/types/pedido";
 
 const ULTIMO_PEDIDO_KEY = "citypizza360-ultimo-pedido";
@@ -29,6 +29,17 @@ export function leerUltimoPedido(): ReferenciaPedido | null {
   }
 }
 
+export function olvidarUltimoPedido(referencia: ReferenciaPedido) {
+  try {
+    const guardado = leerUltimoPedido();
+    if (guardado?.codigo === referencia.codigo && guardado.celular === referencia.celular) {
+      window.localStorage.removeItem(ULTIMO_PEDIDO_KEY);
+    }
+  } catch {
+    /* almacenamiento no disponible */
+  }
+}
+
 const PASO_POR_ESTADO: Record<EstadoPedido, number> = {
   Recibido: 0,
   Preparacion: 2,
@@ -52,6 +63,7 @@ export function useTrackingReal(codigo?: string, celular?: string) {
     pasoActual: consulta.data ? (PASO_POR_ESTADO[consulta.data.estado] ?? 0) : 0,
     cargando: consulta.isLoading,
     error: consulta.error ? getErrorMessage(consulta.error, "No encontramos ese pedido.") : null,
+    noEncontrado: consulta.error instanceof ApiError && consulta.error.status === 404,
     buscar: Boolean(codigo && celular),
   };
 }

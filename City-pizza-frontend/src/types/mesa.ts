@@ -4,7 +4,7 @@
 export type LineaComanda = {
   productoId: number;
   nombre: string;
-  tamano: "Personal" | "Familiar";
+  tamano: "Personal" | "Mediana" | "Familiar";
   precio: number;
   qty: number;
 };

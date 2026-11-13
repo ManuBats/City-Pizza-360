@@ -9,13 +9,15 @@ export type EstadoPedido =
 export type PedidoDetalle = {
   id: number;
   pedidoId: number;
-  pizzaId: number;
+  pizzaId: number | null;
   cantidad: number;
   tamano: string;
   nota: string | null;
   extraQueso: boolean;
   precioUnit: number;
-  pizza: { id: number; nombre: string };
+  pizza: { id: number; nombre: string } | null;
+  promocionNombre?: string | null;
+  promocionDescripcion?: string | null;
 };
 
 export type Pedido = {
@@ -51,9 +53,10 @@ export type CrearPedidoPayload = {
   metodoPago?: "Efectivo" | "Yape";
   mesa?: number;
   items: {
-    pizzaId: number;
+    pizzaId?: number;
+    promocionId?: number;
     cantidad: number;
-    tamano: "Personal" | "Mediana" | "Familiar";
+    tamano?: "Personal" | "Mediana" | "Familiar";
     nota?: string;
     extraQueso?: boolean;
   }[];

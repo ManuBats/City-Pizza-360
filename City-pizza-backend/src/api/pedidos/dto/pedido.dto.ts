@@ -18,16 +18,23 @@ import {
 } from 'class-validator';
 
 export class PedidoItemDto {
+  @IsOptional()
   @IsInt()
   @Min(1)
-  pizzaId!: number;
+  pizzaId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  promocionId?: number;
 
   @IsInt()
   @Min(1)
   cantidad!: number;
 
+  @IsOptional()
   @IsIn(['Personal', 'Mediana', 'Familiar'])
-  tamano!: 'Personal' | 'Mediana' | 'Familiar';
+  tamano?: 'Personal' | 'Mediana' | 'Familiar';
 
   @IsOptional()
   @IsString()

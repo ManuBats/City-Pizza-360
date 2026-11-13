@@ -94,6 +94,7 @@ export class PromocionesService {
           nombre: dto.nombre.trim(),
           descripcion: dto.descripcion?.trim() || null,
           precioPromo: dto.precioPromo,
+          pedidoOnline: dto.pedidoOnline ?? false,
           pizzaId: dto.pizzaId,
           tamano: dto.tamano,
           tipo: 'Flash' as TipoPromocion,
@@ -107,6 +108,7 @@ export class PromocionesService {
         nombre: dto.nombre.trim(),
         descripcion: dto.descripcion?.trim() || null,
         precioPromo: dto.precioPromo,
+        pedidoOnline: dto.pedidoOnline ?? false,
         pizzaId: dto.pizzaId,
         tamano: dto.tamano,
         tipo: dto.tipo as TipoPromocion,
@@ -131,6 +133,7 @@ export class PromocionesService {
       data.pizza = pizzaId ? { connect: { id: pizzaId } } : { disconnect: true };
       data.tamano = tamano;
     }
+    if (dto.pedidoOnline != null) data.pedidoOnline = dto.pedidoOnline;
     if (dto.nombre !== undefined) data.nombre = dto.nombre.trim();
     if (dto.descripcion !== undefined)
       data.descripcion = dto.descripcion?.trim() || null;

@@ -15,4 +15,4 @@ export type PizzaApi = {
   disponible: boolean;
 };
 
-export type Categoria = "Clásicas" | "Especiales" | "Familiares" | "Bebidas";
+export type { Categoria } from "@/lib/pizzas";

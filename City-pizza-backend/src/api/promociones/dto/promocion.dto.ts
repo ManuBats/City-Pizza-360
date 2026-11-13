@@ -14,6 +14,10 @@ import {
 
 export class CreatePromocionDto {
   @IsOptional()
+  @IsBoolean()
+  pedidoOnline?: boolean;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   pizzaId?: number;
@@ -54,6 +58,10 @@ export class TogglePromocionDto {
 }
 
 export class UpdatePromocionDto {
+  @IsOptional()
+  @IsBoolean()
+  pedidoOnline?: boolean;
+
   @IsOptional()
   @IsInt()
   @Min(1)

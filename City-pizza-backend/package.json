@@ -19,7 +19,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:seed:demo": "ts-node prisma/seed-demo.ts"
+    "prisma:seed:demo": "ts-node prisma/seed-demo.ts",
+    "catalogo:exportar": "node prisma/catalogo.cjs exportar",
+    "catalogo:importar": "node prisma/catalogo.cjs importar"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.22",

@@ -3,19 +3,18 @@ import { TiendaLayout } from "@/app/layouts/TiendaLayout";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { PromocionCard } from "@/components/promociones/PromocionCard";
 import { usePromociones } from "@/hooks/use-promociones";
+import { usePizzas } from "@/hooks/use-pizzas";
 import { getErrorMessage } from "@/services/api";
 
 export function PromocionesPage() {
   const { promociones, isPending, isError, error, refetch } = usePromociones();
+  const { productos } = usePizzas();
 
   return (
     <TiendaLayout>
       <main className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-3xl font-extrabold">Promociones</h1>
         <p className="mt-2 text-muted-foreground">Descubre las ofertas disponibles de CityPizza360.</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Consulta las condiciones en tienda. Estas ofertas aún no se pueden agregar al carrito ni se aplican automáticamente a los pedidos web.
-        </p>
         <div className="mt-6">
           {isPending ? (
             <p role="status" className="flex items-center gap-2 py-10 text-muted-foreground">
@@ -37,7 +36,9 @@ export function PromocionesPage() {
             </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {promociones.map((promocion) => <PromocionCard key={promocion.id} promocion={promocion} />)}
+              {promociones.map((promocion) => (
+                <PromocionCard key={promocion.id} promocion={promocion} producto={productos.find((producto) => producto.id === promocion.pizzaId)} />
+              ))}
             </div>
           )}
         </div>

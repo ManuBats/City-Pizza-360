@@ -13,9 +13,10 @@ import { resolverProducto } from "@/lib/pizzas";
 
 export type CartItem = {
   key: string;
-  productoId: number;
+  productoId?: number;
+  promocionId?: number;
   nombre: string;
-  tamano: "Personal" | "Mediana" | "Familiar";
+  tamano?: "Personal" | "Mediana" | "Familiar";
   precio: number;
   qty: number;
   nota?: string;
@@ -44,7 +45,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { productos } = usePizzas();
   const { promociones } = usePromociones();
   const items = guardados.map((item) => {
-    const producto = resolverProducto(productos, item.productoId);
+    if (item.promocionId != null) {
+      const promo = promociones.find((p) => p.id === item.promocionId && p.pedidoOnline);
+      return promo ? { ...item, nombre: promo.nombre, precio: promo.precioPromo } : item;
+    }
+    const producto = item.productoId == null ? undefined : resolverProducto(productos, item.productoId);
     if (!producto) return item;
     const base = item.tamano === "Personal" ? producto.precioPersonal :
       item.tamano === "Mediana" ? producto.precioMediana : producto.precioFamiliar;
@@ -74,7 +79,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [guardados, hydrated]);
 
   const add = useCallback((item: Omit<CartItem, "key" | "qty">, qty = 1) => {
-    const key = `${item.productoId}-${item.tamano}`;
+    const key = item.promocionId != null ? `promo-${item.promocionId}` : `${item.productoId}-${item.tamano}`;
     setItems((prev) => {
       const existing = prev.find((i) => i.key === key);
       if (existing) {
@@ -99,7 +104,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const setExtraQueso = useCallback((key: string, extra: boolean) => {
     setItems((prev) =>
       prev.map((i) =>
-        i.key === key && Boolean(i.extraQueso) !== extra
+        i.key === key && i.promocionId == null && Boolean(i.extraQueso) !== extra
           ? { ...i, extraQueso: extra, precio: i.precio + (extra ? 3 : -3) }
           : i,
       ),
