@@ -33,7 +33,6 @@ export class CreateTrabajadorDto {
     'Cajero',
     'Cocinero',
     'Repartidor',
-    'Mesero',
   ] as unknown as Record<string, Rol>)
   rol!: Rol;
 }

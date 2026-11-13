@@ -23,7 +23,6 @@ enum Rol {
   Cajero
   Cocinero
   Repartidor
-  Mesero
 }
 
 enum MetodoPago {

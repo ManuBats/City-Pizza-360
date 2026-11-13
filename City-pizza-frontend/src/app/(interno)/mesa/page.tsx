@@ -1,4 +1,5 @@
-import { CheckCircle2, Minus, Plus, Send, UtensilsCrossed } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowLeft, CheckCircle2, Minus, Plus, Send, UtensilsCrossed } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
 import { useComanda } from "@/hooks/use-comanda";
@@ -8,7 +9,7 @@ import { MESAS } from "@/types/mesa";
 
 export default function MesaPage() {
   return (
-    <RequireRole roles={["mesero", "admin"]}>
+    <RequireRole roles={["cajero", "admin"]}>
       <MesaContent />
     </RequireRole>
   );
@@ -31,6 +32,14 @@ function MesaContent() {
       icon={<UtensilsCrossed className="h-5 w-5 text-white" />}
       title="Tomar pedido en mesa"
       subtitle="Salón"
+      badge={
+        <Link
+          to="/cajero"
+          className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-xs font-bold text-white/85 transition-colors hover:bg-white/20 hover:text-white"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Volver a caja
+        </Link>
+      }
     >
       <main className="mx-auto max-w-6xl px-4 py-6">
         {/* Selector de mesa */}

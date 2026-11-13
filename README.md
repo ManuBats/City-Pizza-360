@@ -4,7 +4,7 @@ CityPizza360 es el sistema de pedidos y operación de City Pizza Center, en San 
 
 ## Cómo funciona
 
-1. El cliente consulta la carta y realiza un pedido como invitado para delivery o recojo en tienda. El mesero registra las comandas de mesa desde el panel interno.
+1. El cliente consulta la carta y realiza un pedido como invitado para delivery o recojo en tienda. El cajero registra las comandas de mesa desde el panel interno.
 2. La API calcula el total, comprueba la disponibilidad de las pizzas y valida el stock según sus recetas. Registra el pedido, sus líneas y el descuento de insumos en una transacción.
 3. Cocina consulta la cola de preparación. En el flujo de reparto, cocina puede asignar un repartidor y este consulta sus entregas asignadas. La secuencia de estados de la API es **Recibido → En preparación → Listo → En camino → Entregado**.
 4. El cliente consulta el estado en `/tracking` con su código de pedido y celular. La pantalla de cocina actualiza sus datos cada 3 segundos y el seguimiento público cada 10 segundos.
@@ -18,10 +18,9 @@ El personal ingresa por `/login`. La API usa JWT y permisos por rol en los endpo
 | Rol | Panel | Funciones principales |
 | --- | --- | --- |
 | Administrador | `/admin`, `/admin/usuarios` | Gestionar catálogo, inventario, promociones y personal, y consultar reportes. También puede acceder a los demás paneles. |
-| Cajero | `/cajero` | Consultar pedidos, revisar pagos Yape, cambiar la disponibilidad de la carta y publicar promociones flash. |
+| Cajero | `/cajero` | Consultar pedidos, revisar pagos Yape, cambiar la disponibilidad de la carta y publicar promociones flash y registrar comandas en `/mesa`. |
 | Cocinero | `/cocina` | Consultar la cola de preparación, actualizar pedidos y asignar repartidores. |
 | Repartidor | `/delivery` | Consultar entregas asignadas y actualizar su estado. |
-| Mesero | `/mesa` | Registrar comandas de mesa con notas por producto. |
 
 ## Arquitectura
 

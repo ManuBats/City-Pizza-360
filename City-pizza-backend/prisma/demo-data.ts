@@ -181,9 +181,9 @@ export const TRABAJADORES_DEMO: {
     password: 'moto123',
   },
   {
-    usuario: 'mesero',
-    nombre: 'Mesero Salón',
-    rol: 'Mesero',
+    usuario: 'cajero-salon',
+    nombre: 'Caja Salón',
+    rol: 'Cajero',
     password: 'mesa123',
   },
 ];

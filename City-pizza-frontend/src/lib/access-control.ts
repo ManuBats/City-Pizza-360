@@ -9,7 +9,6 @@ const RUTAS_POR_ROL: Record<RolUi, string> = {
   cajero: "/cajero",
   cocina: "/cocina",
   delivery: "/delivery",
-  mesero: "/mesa",
 };
 
 const RUTAS_POR_MODULO: { modulo: string; match: (pathname: string) => boolean }[] = [
@@ -22,10 +21,9 @@ const RUTAS_POR_MODULO: { modulo: string; match: (pathname: string) => boolean }
 
 const ACCESO_POR_ROL: Record<RolUi, string[]> = {
   admin: ["admin", "cajero", "cocina", "delivery", "mesa"],
-  cajero: ["cajero"],
+  cajero: ["cajero", "mesa"],
   cocina: ["cocina"],
   delivery: ["delivery"],
-  mesero: ["mesa"],
 };
 
 const RUTAS_PUBLICAS = ["/", "/menu", "/checkout", "/tracking", "/login"];
