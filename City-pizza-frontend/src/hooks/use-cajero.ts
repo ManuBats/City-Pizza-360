@@ -63,6 +63,23 @@ export function useCajero() {
     onError: (e) => toast.error(getErrorMessage(e, "No se pudo avanzar el pedido.")),
   });
 
+  const pago = useMutation({
+    mutationFn: ({ id, estado }: { id: number; estado: "Verificado" | "Rechazado" }) =>
+      PedidosService.verificarPago(id, estado),
+    onSuccess: () => void recargarPedidos(),
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo revisar el pago.")),
+  });
+
+  async function verComprobante(id: number) {
+    try {
+      const url = URL.createObjectURL(await PedidosService.leerComprobante(id));
+      return url;
+    } catch (e) {
+      toast.error(getErrorMessage(e, "No se pudo abrir el comprobante."));
+      return null;
+    }
+  }
+
   const toggleCarta = useMutation({
     mutationFn: ({ id, disponible }: { id: number; disponible: boolean }) =>
       CatalogoService.setDisponibilidad(id, disponible),
@@ -120,7 +137,13 @@ export function useCajero() {
     total: Number(p.total),
     estado: p.estado,
     etiqueta: etiquetaEstado(p.estado),
-    siguiente: SIGUIENTE[p.estado],
+    siguiente: p.estado === "Recibido" && p.tipoEntrega !== "Mesa" && p.metodoPago === "Yape" && p.estadoPago !== "Verificado"
+      ? null
+      : p.estado === "Listo"
+        ? p.tipoEntrega === "Delivery" ? null : "Entregado" as const
+        : p.tipoEntrega === "Delivery" && p.estado === "EnCamino" ? null : SIGUIENTE[p.estado],
+    comprobante: Boolean(p.comprobanteUrl),
+    revisarPago: Boolean(p.comprobanteUrl) && p.estadoPago === "Pendiente" && p.estado === "Recibido",
     entrega: p.tipoEntrega,
     hora: new Date(p.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
   }));
@@ -131,6 +154,8 @@ export function useCajero() {
     errorPedidos: pedidosQ.error ? getErrorMessage(pedidosQ.error, "No se pudieron cargar los pedidos.") : null,
     reintentarPedidos: () => queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
     avanzarPedido: (id: number, a: EstadoPedido) => avanzar.mutate({ id, a }),
+    verComprobante,
+    revisarPago: (id: number, estado: "Verificado" | "Rechazado") => pago.mutate({ id, estado }),
     productos, cargandoCarta, toggleDisponible: (id: number, disponible: boolean) =>
       toggleCarta.mutate({ id, disponible }),
     promos: promosQ.data ?? [],

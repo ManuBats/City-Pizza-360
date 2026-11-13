@@ -2,10 +2,12 @@ import { Clock, Tag } from "lucide-react";
 import type { PromocionApi } from "@/services/promociones.service";
 import { fechaPromocion } from "@/lib/promociones";
 import { soles } from "@/lib/pizzas";
+import { urlPublica } from "@/lib/imagenes";
 
 export function PromocionCard({ promocion }: { promocion: PromocionApi }) {
   return (
     <article className="card-soft flex h-full min-w-0 flex-col overflow-hidden">
+      {promocion.imagenUrl && <img src={urlPublica(promocion.imagenUrl) ?? undefined} alt="" className="aspect-video w-full object-cover" />}
       <div className="flex items-center justify-between gap-3 bg-brand-black p-5 text-white">
         <Tag aria-hidden="true" className="h-6 w-6 shrink-0 text-secondary" />
         <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold text-brand-black">

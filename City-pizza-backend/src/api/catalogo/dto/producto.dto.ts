@@ -1,6 +1,6 @@
 import {
   IsBoolean,
-  IsInt,
+  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
@@ -24,15 +24,15 @@ export class CreateProductoDto {
   @MaxLength(30)
   categoria?: string;
 
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioPersonal!: number;
 
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioMediana!: number;
 
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioFamiliar!: number;
 }
@@ -55,17 +55,17 @@ export class UpdateProductoDto {
   categoria?: string;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioPersonal?: number;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioMediana?: number;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioFamiliar?: number;
 

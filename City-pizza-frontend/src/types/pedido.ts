@@ -30,6 +30,7 @@ export type Pedido = {
   metodoPago: "Efectivo" | "Yape";
   estadoPago: "Pendiente" | "Verificado" | "Rechazado";
   comprobanteUrl: string | null;
+  comprobanteToken?: string;
   repartidorId: number | null;
   repartidor: { nombre: string; usuario: string } | null;
   mesa: number | null;

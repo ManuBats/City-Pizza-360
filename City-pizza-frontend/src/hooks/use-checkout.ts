@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
@@ -39,12 +39,15 @@ export function useCheckout() {
   const [errores, setErrores] = useState<CheckoutErrores>({});
   const [enviando, setEnviando] = useState(false);
   const [confirmado, setConfirmado] = useState<PedidoConfirmado | null>(null);
+  const intento = useRef<{ actual?: { body: string; clave: string } }>({});
+  const enCurso = useRef(false);
 
   const esDelivery = entrega === "delivery";
   const total = subtotal + (esDelivery && subtotal > 0 ? COSTO_DELIVERY : 0);
   const celularValido = useMemo(() => /^9\d{8}$/.test(celular), [celular]);
 
   async function confirmar(): Promise<PedidoConfirmado | null> {
+    if (enCurso.current || confirmado) return null;
     const errs: CheckoutErrores = {};
     if (items.length === 0) errs.items = "Tu carrito está vacío.";
     if (nombres.trim().length < 2) errs.nombres = "Ingresa tus nombres.";
@@ -72,6 +75,7 @@ export function useCheckout() {
       });
     }
 
+    enCurso.current = true;
     setEnviando(true);
     try {
       const pedido = await PedidosService.crear({
@@ -83,7 +87,7 @@ export function useCheckout() {
         tipoEntrega: esDelivery ? "Delivery" : "Recojo",
         metodoPago,
         items: lineas,
-      });
+      }, intento.current);
       const resultado = { pedido, requiereYape: metodoPago === "Yape" };
       guardarUltimoPedido(pedido.codigo, pedido.celular);
       // Coherencia de precios: el servidor manda; si el carrito tenía
@@ -92,6 +96,7 @@ export function useCheckout() {
         toast.warning("Los precios se actualizaron al confirmar. Revisa tu total en Mi pedido.");
       }
       if (!resultado.requiereYape) {
+        intento.current = {};
         clear();
         await navigate({
           to: "/tracking",
@@ -105,12 +110,14 @@ export function useCheckout() {
       setErrores({ items: getErrorMessage(error, "No se pudo confirmar el pedido.") });
       return null;
     } finally {
+      enCurso.current = false;
       setEnviando(false);
     }
   }
 
   /** Tras subir el comprobante Yape: limpia y va al tracking con código. */
   async function irATracking(pedido: Pedido) {
+    intento.current = {};
     clear();
     setConfirmado(null);
     await navigate({

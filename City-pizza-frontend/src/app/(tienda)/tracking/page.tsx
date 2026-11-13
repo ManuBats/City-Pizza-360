@@ -15,6 +15,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
 import { useTrackingReal, leerUltimoPedido } from "@/hooks/use-tracking";
 import { LOCAL, soles } from "@/lib/pizzas";
+import { YapeModal } from "@/components/checkout/YapeModal";
 
 const PASOS = [
   { id: "recibido", label: "Recibido", icon: ClipboardCheck },
@@ -41,6 +42,9 @@ export function TrackingPage() {
 
   const [codigoInput, setCodigoInput] = useState(codigo ?? "");
   const [celularInput, setCelularInput] = useState(celular ?? "");
+  const [adjuntar, setAdjuntar] = useState(false);
+  const pasos = pedido?.tipoEntrega === "Delivery" ? PASOS : PASOS.filter((paso) => paso.id !== "camino");
+  const indice = pasos.findIndex((paso) => paso.id === PASOS[pasoActual]?.id);
 
   function onBuscar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -143,16 +147,27 @@ export function TrackingPage() {
               </span>
             </div>
 
+            {pedido.metodoPago === "Yape" && pedido.estadoPago === "Pendiente" && pedido.comprobanteUrl && (
+              <p className="card-soft mt-4 p-4 text-sm">Caja está revisando tu comprobante Yape.</p>
+            )}
+            {pedido.comprobanteToken && (
+              <button className="btn-tactile mt-4 bg-primary px-4 text-white" onClick={() => setAdjuntar(true)}>
+                {pedido.estadoPago === "Rechazado" ? "Reemplazar comprobante rechazado" : "Adjuntar comprobante Yape"}
+              </button>
+            )}
+            {adjuntar && pedido.comprobanteToken && (
+              <YapeModal pedido={pedido} onSubido={() => setAdjuntar(false)} onOmitir={() => setAdjuntar(false)} />
+            )}
             {/* Timeline */}
             <section className="card-soft mt-6 p-6">
               <ol className="space-y-0">
-                {PASOS.map((paso, i) => {
+                {pasos.map((paso, i) => {
                   const Icon = paso.icon;
-                  const done = i < pasoActual;
-                  const active = i === pasoActual;
+                  const done = i < indice;
+                  const active = i === indice;
                   return (
                     <li key={paso.id} className="relative flex gap-4 pb-8 last:pb-0">
-                      {i < PASOS.length - 1 && (
+                      {i < pasos.length - 1 && (
                         <span
                           className={`absolute left-5 top-10 h-full w-0.5 ${
                             done ? "bg-primary" : "bg-border"
@@ -191,7 +206,7 @@ export function TrackingPage() {
             </section>
 
             {/* Repartidor real o pendiente de asignación */}
-            <section className="card-soft mt-6 flex items-center gap-4 p-5">
+            {pedido.tipoEntrega === "Delivery" && <section className="card-soft mt-6 flex items-center gap-4 p-5">
               <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-black text-lg font-bold text-secondary">
                 {pedido.repartidor
                   ? pedido.repartidor.nombre
@@ -217,7 +232,7 @@ export function TrackingPage() {
                   </>
                 )}
               </div>
-            </section>
+            </section>}
 
             {/* Mapa referencial */}
             <section className="card-soft mt-6 overflow-hidden">

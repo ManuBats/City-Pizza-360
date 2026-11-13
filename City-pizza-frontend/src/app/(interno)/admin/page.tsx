@@ -37,7 +37,7 @@ function AdminDashboard() {
     guardarPrecioPromo, guardandoPrecioPromo,
     promos, togglePromo,
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
-    promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
+    promoPrecio, setPromoPrecio, promoHoras, setPromoHoras, subirImagenPromo, subiendoImagenPromo,
     crearPromo, creandoPromo,
     inventario, alertas,
     ajustar,
@@ -188,7 +188,7 @@ function AdminDashboard() {
                   </Campo>
                   <Campo titulo="Precio personal (S/)">
                     <input
-                      type="number" min={1} value={prodPersonal}
+                      type="number" min={0.01} step={0.01} value={prodPersonal}
                       onChange={(e) => setProdPersonal(Number(e.target.value))}
                       placeholder="18"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -196,7 +196,7 @@ function AdminDashboard() {
                   </Campo>
                   <Campo titulo="Precio mediana (S/)">
                     <input
-                      type="number" min={1} value={prodMediana}
+                      type="number" min={0.01} step={0.01} value={prodMediana}
                       onChange={(e) => setProdMediana(Number(e.target.value))}
                       placeholder="25"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -204,7 +204,7 @@ function AdminDashboard() {
                   </Campo>
                   <Campo titulo="Precio familiar (S/)">
                     <input
-                      type="number" min={1} value={prodFamiliar}
+                      type="number" min={0.01} step={0.01} value={prodFamiliar}
                       onChange={(e) => setProdFamiliar(Number(e.target.value))}
                       placeholder="32"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -237,7 +237,7 @@ function AdminDashboard() {
                   >
                     <div className="flex items-center gap-3">
                       <img
-                        src={urlPublica(prod.imagen)}
+                        src={urlPublica(prod.imagen) ?? undefined}
                         alt={prod.nombre}
                         className="w-16 h-16 rounded-lg object-cover bg-muted"
                       />
@@ -271,21 +271,21 @@ function AdminDashboard() {
                         <div className="mt-2 grid grid-cols-3 gap-2">
                           <Campo titulo="Personal (S/)">
                             <input
-                              type="number" min={1} step={1} value={precioEdit.personal}
+                              type="number" min={0.01} step={0.01} value={precioEdit.personal}
                               onChange={(e) => cambiarPrecio("personal", Number(e.target.value))}
                               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                             />
                           </Campo>
                           <Campo titulo="Mediana (S/)">
                             <input
-                              type="number" min={1} step={1} value={precioEdit.mediana}
+                              type="number" min={0.01} step={0.01} value={precioEdit.mediana}
                               onChange={(e) => cambiarPrecio("mediana", Number(e.target.value))}
                               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                             />
                           </Campo>
                           <Campo titulo="Familiar (S/)">
                             <input
-                              type="number" min={1} step={1} value={precioEdit.familiar}
+                              type="number" min={0.01} step={0.01} value={precioEdit.familiar}
                               onChange={(e) => cambiarPrecio("familiar", Number(e.target.value))}
                               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                             />
@@ -371,7 +371,7 @@ function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-2">
                   <Campo titulo="Precio promo (S/)">
                     <input
-                      type="number" min={1} value={promoPrecio}
+                      type="number" min={0.01} step={0.01} value={promoPrecio}
                       onChange={(e) => setPromoPrecio(Number(e.target.value))}
                       placeholder="45"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -454,6 +454,15 @@ function AdminDashboard() {
                             </>
                           )}
                         </div>
+                        <label className="flex flex-wrap items-center gap-2 text-sm">
+                          Imagen de la promoción
+                          <input type="file" accept="image/jpeg,image/png,image/webp" disabled={subiendoImagenPromo}
+                            onChange={(e) => {
+                              const archivo = e.target.files?.[0];
+                              if (archivo) subirImagenPromo(promo.id, archivo);
+                              e.target.value = "";
+                            }} />
+                        </label>
                         {editando && (
                           <div className="flex flex-col sm:flex-row sm:items-end gap-2">
                             <Campo
@@ -462,7 +471,8 @@ function AdminDashboard() {
                             >
                               <input
                                 type="number"
-                                min={1}
+                                min={0.01}
+                                step={0.01}
                                 value={precioEditPromo?.precioPromo ?? 0}
                                 onChange={(e) =>
                                   cambiarPrecioPromo(Number(e.target.value))

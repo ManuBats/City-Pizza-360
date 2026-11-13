@@ -95,6 +95,15 @@ export function useAdminDashboard() {
   });
 
   const recargar = (key: string[]) => queryClient.invalidateQueries({ queryKey: key });
+
+  const imagenPromo = useMutation({
+    mutationFn: ({ id, archivo }: { id: number; archivo: File }) => PromocionesService.subirImagen(id, archivo),
+    onSuccess: () => {
+      void queryClient.invalidateQueries();
+      toast.success("Imagen de promoción actualizada.");
+    },
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo subir la imagen.")),
+  });
   const err = (e: unknown, fb: string) => toast.error(getErrorMessage(e, fb));
 
   const avanzar = useMutation({
@@ -276,7 +285,10 @@ export function useAdminDashboard() {
     total: Number(p.total),
     estado: p.estado,
     etiqueta: etiquetaEstadoAdmin(p.estado),
-    siguiente: SIGUIENTE[p.estado],
+    siguiente: p.estado === "Recibido" && p.tipoEntrega !== "Mesa" && p.metodoPago === "Yape" && p.estadoPago !== "Verificado"
+      ? null
+      : p.estado === "Listo" && p.tipoEntrega !== "Delivery" ? "Entregado" as const
+      : p.estado === "Listo" && !p.repartidorId ? null : SIGUIENTE[p.estado],
     entrega: p.tipoEntrega,
     hora: new Date(p.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
   }));
@@ -330,6 +342,8 @@ export function useAdminDashboard() {
       setPrecioEditPromo((prev) => (prev ? { ...prev, precioPromo: valor } : prev)),
     guardarPrecioPromo: () => guardarPrecioPromo.mutate(),
     guardandoPrecioPromo: guardarPrecioPromo.isPending,
+    subirImagenPromo: (id: number, archivo: File) => imagenPromo.mutate({ id, archivo }),
+    subiendoImagenPromo: imagenPromo.isPending,
     promos: promosQ.data ?? [],
     togglePromo: (id: number, activa: boolean) => togglePromo.mutate({ id, activa }),
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,

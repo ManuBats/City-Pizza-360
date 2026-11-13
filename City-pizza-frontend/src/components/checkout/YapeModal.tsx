@@ -11,10 +11,11 @@ interface YapeModalProps {
   onOmitir: () => void;
 }
 
-const YAPE_TITULAR = "City Pizza Center";
-const YAPE_NUMERO = "959 787 947";
-const YAPE_NUMERO_LIMPIO = "959787947";
-const YAPE_QR_URL = "/images/yape-qr.png";
+const YAPE_TITULAR = import.meta.env.VITE_YAPE_TITULAR;
+const YAPE_NUMERO = import.meta.env.VITE_YAPE_NUMERO;
+const YAPE_NUMERO_LIMPIO = YAPE_NUMERO?.replace(/\s/g, "");
+const YAPE_QR_URL = import.meta.env.VITE_YAPE_QR_URL;
+export const yapeConfigurado = Boolean(YAPE_TITULAR && /^9\d{8}$/.test(YAPE_NUMERO_LIMPIO ?? "") && YAPE_QR_URL);
 
 /** Modal de pago Yape: muestra QR + titular y sube el comprobante. */
 export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
@@ -25,6 +26,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
   const [copiado, setCopiado] = useState(false);
 
   async function copiarNumero() {
+    if (!YAPE_NUMERO_LIMPIO) return;
     try {
       await navigator.clipboard.writeText(YAPE_NUMERO_LIMPIO);
       setCopiado(true);
@@ -42,7 +44,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
     setError(null);
     setSubiendo(true);
     try {
-      const actualizado = await PedidosService.subirComprobante(pedido.id, archivo);
+      const actualizado = await PedidosService.subirComprobante(pedido, archivo);
       setRecibido(actualizado);
     } catch (e) {
       setError(getErrorMessage(e, "No se pudo subir el comprobante."));
@@ -58,7 +60,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
           <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
           <h2 className="mt-3 text-2xl font-extrabold">¡Comprobante recibido!</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pedido {recibido.codigo} en cocina. Te avisaremos cuando esté en camino.
+            Caja revisará el comprobante del pedido {recibido.codigo} antes de que cocina lo prepare.
           </p>
           <button
             onClick={() => onSubido(recibido)}
@@ -139,7 +141,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
           onClick={onOmitir}
           className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
         >
-          <Banknote className="h-3.5 w-3.5" /> Seguir sin comprobante (pagaré en tienda)
+          <Banknote className="h-3.5 w-3.5" /> Adjuntar comprobante más tarde
         </button>
       </div>
     </div>

@@ -31,7 +31,7 @@ export class ReportesService {
             lt: finDiaLimaExclusivo(hoy),
           },
         },
-        select: { total: true },
+        select: { total: true, estadoPago: true },
       }),
       this.prisma.pedido.count({ where: { estado: { not: 'Entregado' } } }),
       this.prisma.insumo.findMany(),
@@ -39,7 +39,9 @@ export class ReportesService {
     return {
       pedidosHoy: pedidosHoy.length,
       enCurso,
-      ventasHoy: pedidosHoy.reduce((acc, p) => acc + Number(p.total), 0),
+      ventasHoy: pedidosHoy
+        .filter((p) => p.estadoPago === 'Verificado')
+        .reduce((acc, p) => acc + Number(p.total), 0),
       alertasStock: insumos.filter((i) => i.stock <= i.stockMinimo).length,
     };
   }
@@ -49,6 +51,7 @@ export class ReportesService {
     const rango = this.resolverRango(dto.desde, dto.hasta);
     const pedidos = await this.prisma.pedido.findMany({
       where: {
+        estadoPago: 'Verificado',
         creadoEn: {
           gte: inicioDiaLima(rango.desde),
           lt: finDiaLimaExclusivo(rango.hasta),
@@ -105,10 +108,12 @@ export class ReportesService {
   private filtroPorRango(
     dto: RangoFechasDto,
   ): Prisma.DetallePedidoWhereInput | undefined {
-    if (!dto.desde && !dto.hasta) return undefined;
+    if (!dto.desde && !dto.hasta)
+      return { pedido: { estadoPago: 'Verificado' } };
     const rango = this.resolverRango(dto.desde, dto.hasta);
     return {
       pedido: {
+        estadoPago: 'Verificado',
         creadoEn: {
           gte: inicioDiaLima(rango.desde),
           lt: finDiaLimaExclusivo(rango.hasta),

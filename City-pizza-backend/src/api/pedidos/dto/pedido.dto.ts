@@ -7,6 +7,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -38,6 +39,10 @@ export class PedidoItemDto {
 }
 
 export class CreatePedidoDto {
+  @IsOptional()
+  @IsUUID('4')
+  claveSolicitud?: string;
+
   @IsString()
   @MinLength(2)
   @MaxLength(60)

@@ -5,13 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Prisma, TipoPromocion } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
+import { unlink, writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { PROMO_FLASH_MAX_HORAS } from '../../../constants/negocio.constants';
 import { serializarPromocion } from '../../../utils/serializar';
 import { PrismaService } from '../../../config/prisma/prisma.service';
-import {
-  CreatePromocionDto,
-  UpdatePromocionDto,
-} from '../dto/promocion.dto';
+import { CreatePromocionDto, UpdatePromocionDto } from '../dto/promocion.dto';
 
 @Injectable()
 export class PromocionesService {
@@ -22,6 +22,7 @@ export class PromocionesService {
     const promos = await this.prisma.promocion.findMany({
       where: {
         activa: true,
+        inicio: { lte: new Date() },
         OR: [{ fin: null }, { fin: { gt: new Date() } }],
       },
       orderBy: { inicio: 'desc' },
@@ -34,6 +35,40 @@ export class PromocionesService {
       orderBy: { inicio: 'desc' },
     });
     return promos.map(serializarPromocion);
+  }
+
+  async subirImagen(id: number, bytes: Buffer) {
+    const promo = await this.prisma.promocion.findUnique({ where: { id } });
+    if (!promo) throw new NotFoundException('Promoción no encontrada');
+    const extension = bytes.subarray(0, 3).equals(Buffer.from([255, 216, 255]))
+      ? 'jpg'
+      : bytes
+            .subarray(0, 8)
+            .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+        ? 'png'
+        : bytes.toString('ascii', 0, 4) === 'RIFF' &&
+            bytes.toString('ascii', 8, 12) === 'WEBP'
+          ? 'webp'
+          : null;
+    if (!extension) throw new BadRequestException('Solo imágenes JPG/PNG/WebP');
+    const nombre = `promo-${randomUUID()}.${extension}`;
+    const carpeta = join(process.cwd(), 'uploads', 'productos');
+    const ruta = join(carpeta, nombre);
+    await writeFile(ruta, bytes, { flag: 'wx' });
+    try {
+      const actualizada = await this.prisma.promocion.update({
+        where: { id, imagenUrl: promo.imagenUrl },
+        data: { imagenUrl: `/uploads/productos/${nombre}` },
+      });
+      if (promo.imagenUrl?.startsWith('/uploads/productos/promo-'))
+        await unlink(join(carpeta, basename(promo.imagenUrl))).catch(
+          () => undefined,
+        );
+      return serializarPromocion(actualizada);
+    } catch (error) {
+      await unlink(ruta).catch(() => undefined);
+      throw error;
+    }
   }
 
   async crear(dto: CreatePromocionDto, rol: string) {
@@ -71,17 +106,10 @@ export class PromocionesService {
     return serializarPromocion(promo);
   }
 
-  /** Admin/Cajero edita promoción existente. */
+  /** Administración edita una promoción existente. */
   async actualizar(id: number, dto: UpdatePromocionDto) {
     const promo = await this.prisma.promocion.findUnique({ where: { id } });
     if (!promo) throw new NotFoundException('Promoción no encontrada');
-
-    // Cajero no puede cambiar tipo a Permanente ni crear Flash > 48h al editar.
-    if (dto.tipo !== undefined && dto.tipo === 'Permanente') {
-      // Solo Admin puede crear/modificar a Permanente. El rol se valida en el controller vía guard,
-      // pero aquí no tenemos acceso al rol. Se asume que el controller ya filtró por Roles.
-      // Si se quiere restringir más, se puede pasar el rol como parámetro.
-    }
 
     const data: Prisma.PromocionUpdateInput = {};
     if (dto.nombre !== undefined) data.nombre = dto.nombre.trim();

@@ -23,8 +23,10 @@ export function serializarPedido<T extends object>(pedido: T): T {
   const p = pedido as Record<string, unknown> & {
     detalles?: Array<Record<string, unknown>>;
   };
+  const { claveSolicitud: _clave, huellaSolicitud: _huella, ...publico } = p;
   return {
-    ...p,
+    ...publico,
+    ...(p.comprobanteUrl ? { comprobanteUrl: `/pedidos/${p.id}/comprobante` } : {}),
     total: aNumero(p.total),
     ...(Array.isArray(p.detalles)
       ? {

@@ -9,7 +9,7 @@ CityPizza360 es el sistema de pedidos y operación de City Pizza Center, en San 
 3. Cocina consulta la cola de preparación. En el flujo de reparto, cocina puede asignar un repartidor y este consulta sus entregas asignadas. La secuencia de estados de la API es **Recibido → En preparación → Listo → En camino → Entregado**.
 4. El cliente consulta el estado en `/tracking` con su código de pedido y celular. La pantalla de cocina actualiza sus datos cada 3 segundos y el seguimiento público cada 10 segundos.
 
-El sistema admite efectivo y Yape. Para pedidos web con Yape, el cliente puede adjuntar un comprobante y caja o administración lo verifica manualmente. El QR real de Yape está pendiente de configuración. Los comprobantes y las imágenes de productos subidas se guardan en el directorio local `uploads/` del backend.
+El sistema admite efectivo y Yape. En pedidos web con Yape, caja o administración debe aprobar el comprobante antes de que cocina pueda iniciar la preparación. El cliente puede adjuntarlo o reemplazarlo desde seguimiento. Los comprobantes nuevos se guardan en `uploads-private/comprobantes/` y se consultan por la API con sesión de caja o administración. Las fotos públicas de catálogo y promociones se guardan en `uploads/productos/`. Conserva ambos directorios entre reinicios y despliegues.
 
 ### Acceso del personal
 
@@ -72,6 +72,10 @@ npm run dev
 ```
 
 `VITE_API_URL` apunta a la API y viene configurada como `http://localhost:3000` en el ejemplo. Si cambias el puerto de la API, actualiza esa variable antes de iniciar Vite. Abre `http://localhost:5173` para acceder a la tienda.
+
+Yape se habilita en el checkout cuando se configuran `VITE_YAPE_TITULAR`, `VITE_YAPE_NUMERO` y `VITE_YAPE_QR_URL`. Usa datos ficticios durante las pruebas y confirma los tres valores con el negocio antes de habilitar el medio de pago real.
+
+Los gráficos de ventas y productos vendidos cuentan pedidos con pago verificado. El efectivo se registra al marcar el pedido como entregado.
 
 ## API y verificación
 

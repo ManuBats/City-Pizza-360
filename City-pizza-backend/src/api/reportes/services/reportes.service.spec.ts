@@ -36,6 +36,7 @@ describe('ReportesService', () => {
     expect(pedidoFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
+          estadoPago: 'Verificado',
           creadoEn: {
             gte: new Date('2026-11-10T05:00:00.000Z'),
             lt: new Date('2026-11-12T05:00:00.000Z'),

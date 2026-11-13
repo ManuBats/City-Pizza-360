@@ -3,20 +3,23 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Param,
   ParseIntPipe,
   Patch,
   Post,
   Query,
   Req,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { EstadoPago } from '@prisma/client';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
+import type { Response } from 'express';
 import { COMPROBANTE_MAX_BYTES } from '../../../constants/negocio.constants';
 import {
   JwtAuthGuard,
@@ -41,6 +44,13 @@ export class PedidosController {
     return this.pedidos.crear(dto);
   }
 
+  @Post('mesa')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Cajero')
+  crearMesa(@Body() dto: CreatePedidoDto, @Req() req: { user: JwtPayload }) {
+    return this.pedidos.crear({ ...dto, tipoEntrega: 'Mesa' }, req.user);
+  }
+
   @Get('tracking')
   tracking(@Query('codigo') codigo: string, @Query('celular') celular: string) {
     return this.pedidos.tracking(codigo, celular);
@@ -49,13 +59,7 @@ export class PedidosController {
   @Post(':id/comprobante')
   @UseInterceptors(
     FileInterceptor('comprobante', {
-      storage: diskStorage({
-        destination: './uploads/comprobantes',
-        filename: (_req, file, cb) => {
-          const name = `cp-${Date.now()}-${Math.round(Math.random() * 1e6)}${extname(file.originalname)}`;
-          cb(null, name);
-        },
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: COMPROBANTE_MAX_BYTES },
       fileFilter: (_req, file, cb) => {
         if (/^image\/(jpe?g|png|webp)$/.test(file.mimetype)) cb(null, true);
@@ -65,10 +69,24 @@ export class PedidosController {
   )
   subirComprobante(
     @Param('id', ParseIntPipe) id: number,
+    @Headers('x-comprobante-token') token: string | undefined,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('Falta la imagen del comprobante');
-    return this.pedidos.subirComprobante(id, file.filename);
+    return this.pedidos.subirComprobante(id, token, file.buffer);
+  }
+
+  @Get(':id/comprobante')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Cajero')
+  async leerComprobante(
+    @Param('id', ParseIntPipe) id: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const archivo = await this.pedidos.leerComprobante(id);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return new StreamableFile(archivo.bytes, { type: archivo.tipo });
   }
 
   @Get('mis-entregas')
@@ -91,8 +109,9 @@ export class PedidosController {
   cambiarEstado(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateEstadoDto,
+    @Req() req: { user: JwtPayload },
   ) {
-    return this.pedidos.cambiarEstado(id, dto.estado);
+    return this.pedidos.cambiarEstado(id, dto.estado, req.user);
   }
 
   @Patch(':id/asignar')

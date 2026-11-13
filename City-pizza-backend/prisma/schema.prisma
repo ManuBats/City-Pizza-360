@@ -80,6 +80,8 @@ model PizzaInsumo {
 model Pedido {
   id             Int            @id @default(autoincrement())
   codigo         String         @unique
+  claveSolicitud String?        @unique
+  huellaSolicitud String?
   nombres        String
   apellidos      String
   celular        String         @db.Char(9)
@@ -114,6 +116,7 @@ model Promocion {
   id          Int            @id @default(autoincrement())
   nombre      String
   descripcion String?
+  imagenUrl   String?
   precioPromo Decimal        @db.Decimal(10, 2)
   tipo        TipoPromocion  @default(Permanente)
   inicio      DateTime       @default(now())

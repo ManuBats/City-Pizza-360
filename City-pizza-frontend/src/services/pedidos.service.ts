@@ -31,21 +31,28 @@ function baseUrl(): string {
 /** Módulo Pedidos: checkout invitado + tracking + cambio de estado. */
 export const PedidosService = {
   /** POST /pedidos (sin token). */
-  async crear(payload: CrearPedidoPayload): Promise<Pedido> {
-    return apiFetch<Pedido>("/pedidos", {
+  async crear(payload: CrearPedidoPayload, intento: { actual?: { body: string; clave: string } }): Promise<Pedido> {
+    const path = payload.tipoEntrega === "Mesa" ? "/pedidos/mesa" : "/pedidos";
+    const body = toWriteBody(payload);
+    const key = JSON.stringify(body);
+    if (intento.actual?.body !== key)
+      intento.actual = { body: key, clave: crypto.randomUUID() };
+    return apiFetch<Pedido>(path, {
       method: "POST",
-      body: JSON.stringify(toWriteBody(payload)),
+      body: JSON.stringify({ ...body, claveSolicitud: intento.actual.clave }),
     });
   },
 
   /** Sube el comprobante Yape (multipart, sin header JSON). */
-  async subirComprobante(pedidoId: number, archivo: File): Promise<Pedido> {
+  async subirComprobante(pedido: Pedido, archivo: File): Promise<Pedido> {
     const form = new FormData();
     form.append("comprobante", archivo);
-    const token = getWorkerToken();
-    const res = await fetch(`${baseUrl()}/pedidos/${pedidoId}/comprobante`, {
+    const token = pedido.comprobanteToken ??
+      (await this.tracking(pedido.codigo, pedido.celular)).comprobanteToken;
+    if (!token) throw new Error("Este pedido no admite comprobantes.");
+    const res = await fetch(`${baseUrl()}/pedidos/${pedido.id}/comprobante`, {
       method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { "X-Comprobante-Token": token },
       body: form,
     });
     if (!res.ok) {
@@ -55,6 +62,21 @@ export const PedidosService = {
       );
     }
     return res.json() as Promise<Pedido>;
+  },
+
+  async leerComprobante(id: number): Promise<Blob> {
+    const res = await fetch(`${baseUrl()}/pedidos/${id}/comprobante`, {
+      headers: { Authorization: `Bearer ${getWorkerToken() ?? ""}` },
+    });
+    if (!res.ok) throw new Error("No se pudo abrir el comprobante.");
+    return res.blob();
+  },
+
+  verificarPago(id: number, estadoPago: "Verificado" | "Rechazado") {
+    return apiFetch<Pedido>(`/pedidos/${id}/pago`, {
+      method: "PATCH",
+      body: JSON.stringify({ estadoPago }),
+    });
   },
 
   /** Tracking invitado por código + celular. */

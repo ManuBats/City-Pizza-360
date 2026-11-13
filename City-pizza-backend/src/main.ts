@@ -17,12 +17,10 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   });
-  // Comprobantes Yape e imágenes de productos (migrable a Supabase Storage).
-  // multer escribe en uploads/{comprobantes,productos}: se crean en arranques limpios (no se versionan).
+  // Solo las imágenes del catálogo y las promociones tienen acceso público.
   const uploadsDir = join(process.cwd(), 'uploads');
-  mkdirSync(join(uploadsDir, 'comprobantes'), { recursive: true });
   mkdirSync(join(uploadsDir, 'productos'), { recursive: true });
-  app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
+  app.useStaticAssets(join(uploadsDir, 'productos'), { prefix: '/uploads/productos/' });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

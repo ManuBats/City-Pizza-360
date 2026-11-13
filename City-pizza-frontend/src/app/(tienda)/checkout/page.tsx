@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Banknote, Minus, Phone, Plus, QrCode, Trash2 } from "lucide-react";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
-import { YapeModal } from "@/components/checkout/YapeModal";
+import { YapeModal, yapeConfigurado } from "@/components/checkout/YapeModal";
 import { useCheckout } from "@/hooks/use-checkout";
 import { COSTO_DELIVERY, soles } from "@/lib/pizzas";
 
@@ -222,6 +222,8 @@ export function CheckoutPage() {
                     <Banknote className="h-4 w-4" /> Efectivo
                   </button>
                   <button
+                    disabled={!yapeConfigurado}
+                    title={!yapeConfigurado ? "Yape aún no está disponible" : undefined}
                     onClick={() => setMetodoPago("Yape")}
                     className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
                       esYape ? "bg-primary text-white" : "text-muted-foreground"

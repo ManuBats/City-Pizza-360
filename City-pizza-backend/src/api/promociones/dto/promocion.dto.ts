@@ -2,6 +2,7 @@ import {
   IsBoolean,
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
@@ -22,7 +23,7 @@ export class CreatePromocionDto {
   @MaxLength(200)
   descripcion?: string;
 
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioPromo!: number;
 
@@ -56,7 +57,7 @@ export class UpdatePromocionDto {
   descripcion?: string;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   precioPromo?: number;
 

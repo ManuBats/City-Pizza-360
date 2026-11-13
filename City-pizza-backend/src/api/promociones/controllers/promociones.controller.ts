@@ -1,5 +1,6 @@
 import {
   Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -8,8 +9,12 @@ import {
   Patch,
   Post,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { PRODUCTO_IMG_MAX_BYTES } from '../../../constants/negocio.constants';
 import {
   JwtAuthGuard,
   type JwtPayload,
@@ -59,12 +64,28 @@ export class PromocionesController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin', 'Cajero')
+  @Roles('Admin')
   actualizar(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePromocionDto,
   ) {
     return this.promos.actualizar(id, dto);
+  }
+
+  @Post(':id/imagen')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin')
+  @UseInterceptors(
+    FileInterceptor('imagen', {
+      limits: { fileSize: PRODUCTO_IMG_MAX_BYTES, files: 1 },
+    }),
+  )
+  subirImagen(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('Falta la imagen de la promoción');
+    return this.promos.subirImagen(id, file.buffer);
   }
 
   @Delete(':id')

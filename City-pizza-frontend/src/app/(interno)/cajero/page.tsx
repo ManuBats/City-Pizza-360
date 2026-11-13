@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Banknote, Bike, ChefHat, Clock, Package, Plus, Tag, UtensilsCrossed } from "lucide-react";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { Campo } from "@/components/ui/Campo";
@@ -19,11 +20,14 @@ function CajeroContent() {
   const {
     tab, setTab,
     pedidos, cargandoPedidos, errorPedidos, reintentarPedidos, avanzarPedido,
+    verComprobante, revisarPago,
     productos, toggleDisponible,
     promos,
     titulo, setTitulo, detalle, setDetalle, precio, setPrecio, horas, setHoras,
     errorPromo, crearPromo, publicando,
   } = useCajero();
+  const [comprobante, setComprobante] = useState<string | null>(null);
+  useEffect(() => () => { if (comprobante) URL.revokeObjectURL(comprobante); }, [comprobante]);
 
   return (
     <StaffLayout
@@ -62,6 +66,12 @@ function CajeroContent() {
 
         {tab === "pedidos" && (
           <section className="mt-6 space-y-3">
+            {comprobante && (
+              <div className="card-soft p-4">
+                <button type="button" className="font-bold" onClick={() => setComprobante(null)}>Cerrar comprobante</button>
+                <img className="mt-3 max-h-96 w-full object-contain" src={comprobante} alt="Comprobante Yape" />
+              </div>
+            )}
             {errorPedidos && pedidos.length === 0 && (
               <ErrorBanner mensaje={errorPedidos} onReintentar={() => void reintentarPedidos()} />
             )}
@@ -91,6 +101,15 @@ function CajeroContent() {
                   </div>
                   <p className="mt-1 text-sm font-semibold">{p.cliente}</p>
                   <p className="text-sm text-muted-foreground">{p.items}</p>
+                  {p.comprobante && (
+                    <div className="mt-2 flex flex-wrap gap-3 text-sm font-semibold">
+                      <button type="button" onClick={async () => setComprobante(await verComprobante(p.id))}>Ver comprobante</button>
+                      {p.revisarPago && <>
+                        <button type="button" onClick={() => revisarPago(p.id, "Verificado")}>Aprobar pago</button>
+                        <button type="button" onClick={() => revisarPago(p.id, "Rechazado")}>Rechazar pago</button>
+                      </>}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-extrabold text-primary">{soles(p.total)}</span>

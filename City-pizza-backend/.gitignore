@@ -3,4 +3,5 @@ dist/
 coverage/
 .env
 uploads/
+uploads-private/
 dev.log
