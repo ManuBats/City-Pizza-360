@@ -1,17 +1,18 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { FloatingCart } from "@/components/cart/FloatingCart";
 import { PizzaCard } from "@/components/menu/PizzaCard";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { TiendaLayout } from "@/app/layouts/TiendaLayout";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { CATEGORIAS } from "@/lib/pizzas";
 
 export function MenuPage() {
-  const { productos: PRODUCTOS } = usePizzas();
+  const { productos, loading, error, refetch } = usePizzas();
   const { categoria } = useSearch({ from: "/menu" });
   const navigate = useNavigate({ from: "/menu" });
   const filtrados = categoria
-    ? PRODUCTOS.filter((p) => p.categoria === categoria)
-    : PRODUCTOS;
+    ? productos.filter((p) => p.categoria === categoria)
+    : productos;
 
   return (
     <TiendaLayout>
@@ -51,6 +52,30 @@ export function MenuPage() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {error && productos.length === 0 && (
+            <div className="sm:col-span-2 lg:col-span-3">
+              <ErrorBanner mensaje={error} onReintentar={() => void refetch()} />
+            </div>
+          )}
+          {loading && productos.length === 0 && !error && (
+            <p className="py-8 text-center text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
+              Cargando la carta…
+            </p>
+          )}
+          {!loading && !error && filtrados.length === 0 && (
+            <div className="card-soft p-8 text-center sm:col-span-2 lg:col-span-3">
+              <p className="font-semibold">
+                {categoria
+                  ? `No hay productos en ${categoria}.`
+                  : "Todavía no hay productos en la carta."}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {categoria
+                  ? "Prueba con otra categoría o revisa todo el menú."
+                  : "El administrador puede agregarlos desde el panel de catálogo."}
+              </p>
+            </div>
+          )}
           {filtrados.map((p) => (
             <PizzaCard key={p.id} producto={p} />
           ))}

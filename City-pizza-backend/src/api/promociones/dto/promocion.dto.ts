@@ -42,3 +42,36 @@ export class TogglePromocionDto {
   @IsBoolean()
   activa!: boolean;
 }
+
+export class UpdatePromocionDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(80)
+  nombre?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  descripcion?: string;
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  precioPromo?: number;
+
+  @IsOptional()
+  @IsIn(['Permanente', 'Flash'])
+  tipo?: 'Permanente' | 'Flash';
+
+  /** Vigencia en horas (Flash de cajero: máx 48). */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(720)
+  vigenciaHoras?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  activa?: boolean;
+}

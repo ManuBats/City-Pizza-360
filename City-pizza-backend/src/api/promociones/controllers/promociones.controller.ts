@@ -17,7 +17,11 @@ import {
 import { Roles } from '../../../middlewares/roles.decorator';
 import { RolesGuard } from '../../../middlewares/roles.guard';
 import { PromocionesService } from '../services/promociones.service';
-import { CreatePromocionDto, TogglePromocionDto } from '../dto/promocion.dto';
+import {
+  CreatePromocionDto,
+  TogglePromocionDto,
+  UpdatePromocionDto,
+} from '../dto/promocion.dto';
 
 @Controller('promociones')
 export class PromocionesController {
@@ -51,6 +55,16 @@ export class PromocionesController {
     @Body() dto: TogglePromocionDto,
   ) {
     return this.promos.toggle(id, dto.activa);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Cajero')
+  actualizar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePromocionDto,
+  ) {
+    return this.promos.actualizar(id, dto);
   }
 
   @Delete(':id')

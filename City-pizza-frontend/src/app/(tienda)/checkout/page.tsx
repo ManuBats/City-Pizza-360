@@ -8,7 +8,7 @@ import { COSTO_DELIVERY, soles } from "@/lib/pizzas";
 export function CheckoutPage() {
   const {
     items, subtotal, total, esDelivery, errores, enviando,
-    nombres, apellidos, celular, direccion, referencia, entrega, metodoPago,
+    nombres, apellidos, celular, direccion, referencia, metodoPago,
     confirmado,
     setNombres, setApellidos, setCelular, setDireccion, setReferencia,
     setEntrega, setMetodoPago,

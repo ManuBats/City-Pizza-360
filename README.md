@@ -55,10 +55,13 @@ Al crear el entorno por primera vez, edita `.env` con estos valores antes de apl
 ```powershell
 npm run prisma:generate
 npm run prisma:migrate
-# Opcional: cargar catálogo, insumos y cuentas de demostración en desarrollo.
 npm run prisma:seed
+# Opcional: cargar datos ficticios en una base de desarrollo.
+npm run prisma:seed:demo
 npm run dev
 ```
+
+El seed base crea solo la cuenta de administrador. Configura `ADMIN_USUARIO`, `ADMIN_NOMBRE` y `ADMIN_PASSWORD` antes de ejecutarlo. El seed de demostración añade catálogo, insumos, promociones y trabajadores ficticios.
 
 ### Frontend
 
