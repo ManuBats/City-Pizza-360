@@ -6,6 +6,7 @@ import { Campo } from "@/components/ui/Campo";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { StaffLayout } from "@/app/layouts/StaffLayout";
 import { useCajero, etiquetaEstado } from "@/hooks/use-cajero";
+import { ProductoPromocion } from "@/components/promociones/ProductoPromocion";
 import { soles } from "@/lib/pizzas";
 
 export default function CajeroPage() {
@@ -24,6 +25,7 @@ function CajeroContent() {
     productos, toggleDisponible,
     promos,
     titulo, setTitulo, detalle, setDetalle, precio, setPrecio, horas, setHoras,
+    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
     errorPromo, crearPromo, publicando,
   } = useCajero();
   const [comprobante, setComprobante] = useState<string | null>(null);
@@ -175,11 +177,13 @@ function CajeroContent() {
                     className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                   />
                 </Campo>
+                <ProductoPromocion productos={productos} pizzaId={promoPizza} tamano={promoTamano} onProducto={setPromoPizza} onTamano={setPromoTamano} />
                 <div className="grid grid-cols-2 gap-3">
                   <Campo titulo="Precio (S/)">
                     <input
                       type="number"
-                      min={1}
+                      min={0.01}
+                      step={0.01}
                       value={precio}
                       onChange={(e) => setPrecio(Number(e.target.value))}
                       className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"

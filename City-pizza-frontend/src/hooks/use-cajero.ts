@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PedidosService } from "@/services/pedidos.service";
 import { CatalogoService } from "@/services/catalogo.service";
-import { PromocionesService } from "@/services/promociones.service";
+import { PromocionesService, type PromocionApi } from "@/services/promociones.service";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { getErrorMessage } from "@/services/api";
 import type { EstadoPedido } from "@/types/pedido";
@@ -37,6 +37,8 @@ export function useCajero() {
   const [tab, setTab] = useState<TabCajero>("pedidos");
   const [titulo, setTitulo] = useState("");
   const [detalle, setDetalle] = useState("");
+  const [promoPizza, setPromoPizza] = useState<number | null>(null);
+  const [promoTamano, setPromoTamano] = useState<NonNullable<PromocionApi["tamano"]>>("Familiar");
   const [precio, setPrecio] = useState(38);
   const [horas, setHoras] = useState(24);
   const [errorPromo, setErrorPromo] = useState<string | null>(null);
@@ -96,6 +98,8 @@ export function useCajero() {
         nombre: titulo.trim(),
         descripcion: detalle.trim() || undefined,
         precioPromo: precio,
+        pizzaId: promoPizza ?? undefined,
+        tamano: promoPizza ? promoTamano : undefined,
         tipo: "Flash",
         vigenciaHoras: horas,
       }),
@@ -104,6 +108,8 @@ export function useCajero() {
       setTitulo("");
       setDetalle("");
       setPrecio(38);
+      setPromoPizza(null);
+      void queryClient.invalidateQueries({ queryKey: ["promociones-visibles"] });
       setHoras(24);
       toast.success("Promo flash publicada");
       void queryClient.invalidateQueries({ queryKey: ["promos-turno"] });
@@ -160,6 +166,7 @@ export function useCajero() {
       toggleCarta.mutate({ id, disponible }),
     promos: promosQ.data ?? [],
     titulo, setTitulo, detalle, setDetalle, precio, setPrecio, horas, setHoras,
+    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
     errorPromo, crearPromo: onCrearPromo, publicando: crearPromo.isPending,
   };
 }

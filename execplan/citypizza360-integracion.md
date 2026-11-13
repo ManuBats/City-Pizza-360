@@ -14,7 +14,14 @@ Dejar operativos el catálogo y el panel administrativo, las promociones públic
 - [x] (2026-11-12, Lima) Integrar los cinco PR localmente en codex/integracion-citypizza360 (orden 1, 2, 4, 5, 3). Resolver README en 47535e1 y seed en 01d87ea.
 - [x] (2026-11-12, Lima) Corregir permisos, estados, stock, compras duplicadas, privacidad de comprobantes, imágenes de promociones y precios con céntimos.
 - [x] (2026-11-12, Lima) Ejecutar las migraciones en PostgreSQL aislado, verificar un pedido histórico y probar checkout móvil, Yape y reparto.
-- [ ] Validar el número, titular y QR con el negocio antes de activar Yape real. La inspección o depuración de datos reales queda separada de la prueba aislada.
+- [x] Verificar por API fotos de pizzas y promociones, reemplazo de foto, precios con céntimos, promociones visibles y reportes. Servir las fotos al iniciar otra instancia del backend.
+- [x] Guardar la integración y las correcciones principales en el commit `200556f` de `codex/integracion-citypizza360`.
+- [x] Restaurar el número y el QR del PR #4 como valores de desarrollo. Verificar que la compilación de producción excluye ambos.
+- [ ] Revisar y publicar la integración con destino a `dev`.
+- [x] Auditar la base local en solo lectura. Dos de quince pedidos coincidieron con términos de prueba y ninguno de doce productos coincidió.
+- [x] Aplicar promociones vigentes al carrito web por producto y tamaño. Administración y Caja pueden asociarlas desde sus paneles.
+- [ ] Validar el titular, número y QR del negocio antes de habilitar Yape en producción.
+- [x] Verificar por API el cierre de salón y recojo, y comparar los archivos tras rechazar y reemplazar una carga.
 
 ## Hallazgos
 
@@ -24,15 +31,19 @@ En dev, JwtAuthGuard toma el rol del token sin consultar si la cuenta continúa 
 
 ## Decisiones
 
+Seguimiento: el equipo confirmó que el número y el QR del PR #4 corresponden a la cuenta de una compañera destinada a pruebas. Se usan juntos por defecto en desarrollo, con un rótulo de cuenta de pruebas; producción exige configuración explícita.
+
 Propuesta, 2026-11-12: partir del dev actualizado en una rama de integración aislada, conservar main intacta y apuntar cualquier PR nuevo a dev. Mantener el borrador #5 hasta que el equipo decida pasarlo a revisión.
 
-Propuesta, 2026-11-12: en los gráficos de ventas y productos vendidos contar pedidos pagados, excluyendo pendientes y rechazados; conservar una métrica separada de pedidos operativos si aplica. Confirmar cómo se registra el cobro en efectivo para que entre en el informe cuando corresponda. Mostrar precios de promociones vigentes en la tienda; aplicar descuentos al pedido solo si se confirma el alcance y la regla de elegibilidad.
+Decisión aplicada: los gráficos cuentan pedidos con pago verificado. El efectivo se registra al marcar el pedido como entregado. El usuario confirmó que las promociones deben aplicarse al carrito. Se vinculan a un producto y tamaño y se aplica el menor precio vigente. Si el total mostrado difiere del calculado por el servidor, se solicita confirmarlo de nuevo.
 
-Propuesta, 2026-11-12: cocina puede comenzar un pedido web Yape después de la aprobación de caja. Un comprobante rechazado se puede reemplazar desde seguimiento mientras el pedido siga pendiente de preparación. Probar número, titular y QR ficticios; habilitar los reales tras validarlos con el negocio.
+Decisión aplicada: cocina puede comenzar un pedido web Yape después de la aprobación de caja. El cliente puede reemplazar un comprobante rechazado desde seguimiento mientras el pedido siga pendiente de preparación. El recorrido móvil usó datos ficticios y el ajuste posterior recuperó la cuenta de pruebas del PR #4 para desarrollo.
 
 ## Resultados
 
 Integración local verificada. Pasaron 122 pruebas unitarias del backend, 17 del frontend y 5 pruebas de integración. Se aplicaron ocho migraciones y ambos seeds en PostgreSQL aislado. En la prueba histórica, Mesero pasó a Cajero; el importe y precio unitario se mantuvieron en S/ 15,00 tras subir la pizza a S/ 25,00. Se recorrió la carta, carrito, checkout, carga y seguimiento de recojo a 390 px con datos ficticios. La API confirmó fotos, reemplazo, céntimos, promociones visibles y reportes. No se modificaron ramas remotas.
+
+En la revisión final se aplicó la novena migración en PostgreSQL aislado. Pasaron seis pruebas de integración, incluida la promoción por tamaño, la vigencia y el reintento del mismo pedido después de corregir el total. Se verificó también el cierre de recojo y salón y que una carga rechazada no deje archivos.
 
 ## Contexto
 
@@ -92,7 +103,7 @@ Conservar las referencias originales y registrar los commits integrados. Repetir
 
 ## Artefactos y notas
 
-Registrar aquí la matriz de PR y conflictos, las pruebas ejecutadas y sus resultados, y una muestra de la comparación antes/después de migración. Usar identificadores ficticios y omitir credenciales, comprobantes y datos personales.
+`parte.md` reúne la matriz de PR, las correcciones verificadas y los pendientes. Los commits `47535e1` y `01d87ea` guardan las resoluciones de README y seed. Las pruebas de concurrencia, permisos y Yape están en `City-pizza-backend/test/pedidos.e2e-spec.ts`.
 
 ## Interfaces y dependencias
 

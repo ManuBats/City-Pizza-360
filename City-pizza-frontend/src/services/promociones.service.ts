@@ -7,6 +7,8 @@ export type PromocionApi = {
   descripcion: string | null;
   imagenUrl?: string | null;
   precioPromo: number;
+  pizzaId?: number | null;
+  tamano?: "Personal" | "Mediana" | "Familiar" | null;
   tipo: "Permanente" | "Flash";
   inicio: string;
   fin: string | null;
@@ -40,6 +42,8 @@ export const PromocionesService = {
     nombre: string;
     descripcion?: string;
     precioPromo: number;
+    pizzaId?: number;
+    tamano?: NonNullable<PromocionApi["tamano"]>;
     tipo: "Permanente" | "Flash";
     vigenciaHoras?: number;
   }): Promise<PromocionApi> {
@@ -69,6 +73,8 @@ export const PromocionesService = {
         | "nombre"
         | "descripcion"
         | "precioPromo"
+        | "pizzaId"
+        | "tamano"
         | "tipo"
         | "activa"
       >

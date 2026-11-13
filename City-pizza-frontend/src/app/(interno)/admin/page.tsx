@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { etiquetaEstadoAdmin, useAdminDashboard } from "@/hooks/use-admin-dashboard";
 import { LOCAL, soles } from "@/lib/pizzas";
+import { ProductoPromocion } from "@/components/promociones/ProductoPromocion";
 import { urlPublica } from "@/lib/imagenes";
 import type { TabAdmin } from "@/types/admin";
 
@@ -37,6 +38,7 @@ function AdminDashboard() {
     guardarPrecioPromo, guardandoPrecioPromo,
     promos, togglePromo,
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
+    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
     promoPrecio, setPromoPrecio, promoHoras, setPromoHoras, subirImagenPromo, subiendoImagenPromo,
     crearPromo, creandoPromo,
     inventario, alertas,
@@ -368,6 +370,7 @@ function AdminDashboard() {
                     className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                 </Campo>
+                <ProductoPromocion productos={productos} pizzaId={promoPizza} tamano={promoTamano} onProducto={setPromoPizza} onTamano={setPromoTamano} />
                 <div className="grid grid-cols-2 gap-2">
                   <Campo titulo="Precio promo (S/)">
                     <input
@@ -463,6 +466,11 @@ function AdminDashboard() {
                               e.target.value = "";
                             }} />
                         </label>
+                        {editando && precioEditPromo && (
+                          <ProductoPromocion productos={productos} pizzaId={precioEditPromo.pizzaId} tamano={precioEditPromo.tamano}
+                            onProducto={(pizzaId) => setPrecioEditPromo({ ...precioEditPromo, pizzaId })}
+                            onTamano={(tamano) => setPrecioEditPromo({ ...precioEditPromo, tamano })} />
+                        )}
                         {editando && (
                           <div className="flex flex-col sm:flex-row sm:items-end gap-2">
                             <Campo

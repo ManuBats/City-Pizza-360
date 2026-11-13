@@ -41,6 +41,7 @@ export type Pedido = {
 };
 
 export type CrearPedidoPayload = {
+  totalEsperado?: number;
   nombres: string;
   apellidos: string;
   celular: string;

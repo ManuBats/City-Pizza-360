@@ -13,6 +13,15 @@ import {
 } from 'class-validator';
 
 export class CreatePromocionDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  pizzaId?: number;
+
+  @IsOptional()
+  @IsIn(['Personal', 'Mediana', 'Familiar'])
+  tamano?: 'Personal' | 'Mediana' | 'Familiar';
+
   @IsString()
   @MinLength(3)
   @MaxLength(80)
@@ -45,6 +54,15 @@ export class TogglePromocionDto {
 }
 
 export class UpdatePromocionDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  pizzaId?: number | null;
+
+  @IsOptional()
+  @IsIn(['Personal', 'Mediana', 'Familiar'])
+  tamano?: 'Personal' | 'Mediana' | 'Familiar' | null;
+
   @IsOptional()
   @IsString()
   @MinLength(3)

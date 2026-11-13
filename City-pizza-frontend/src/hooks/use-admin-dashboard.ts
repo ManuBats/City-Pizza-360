@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { PedidosService } from "@/services/pedidos.service";
 import { CatalogoService } from "@/services/catalogo.service";
-import { PromocionesService } from "@/services/promociones.service";
+import { PromocionesService, type PromocionApi } from "@/services/promociones.service";
 import { InventarioService, ReportesService } from "@/services/operacion.service";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { getErrorMessage } from "@/services/api";
@@ -50,6 +50,8 @@ export function useAdminDashboard() {
   const [promoNombre, setPromoNombre] = useState("");
   const [promoDetalle, setPromoDetalle] = useState("");
   const [promoPrecio, setPromoPrecio] = useState(45);
+  const [promoPizza, setPromoPizza] = useState<number | null>(null);
+  const [promoTamano, setPromoTamano] = useState<NonNullable<PromocionApi["tamano"]>>("Familiar");
   const [promoHoras, setPromoHoras] = useState(0);
   const [prodNombre, setProdNombre] = useState("");
   const [prodTipo, setProdTipo] = useState("Pizza");
@@ -67,6 +69,8 @@ export function useAdminDashboard() {
     familiar: number;
   } | null>(null);
   const [precioEditPromo, setPrecioEditPromo] = useState<{
+    pizzaId: number | null;
+    tamano: NonNullable<PromocionApi["tamano"]>;
     id: number;
     nombre: string;
     precioPromo: number;
@@ -95,6 +99,10 @@ export function useAdminDashboard() {
   });
 
   const recargar = (key: string[]) => queryClient.invalidateQueries({ queryKey: key });
+  const recargarPromos = () => Promise.all([
+    recargar(["promos-admin"]),
+    recargar(["promociones-visibles"]),
+  ]);
 
   const imagenPromo = useMutation({
     mutationFn: ({ id, archivo }: { id: number; archivo: File }) => PromocionesService.subirImagen(id, archivo),
@@ -159,6 +167,8 @@ export function useAdminDashboard() {
         nombre: promoNombre.trim(),
         descripcion: promoDetalle.trim() || undefined,
         precioPromo: promoPrecio,
+        pizzaId: promoPizza ?? undefined,
+        tamano: promoPizza ? promoTamano : undefined,
         tipo: "Permanente",
         vigenciaHoras: promoHoras > 0 ? promoHoras : undefined,
       }),
@@ -167,8 +177,9 @@ export function useAdminDashboard() {
       setPromoDetalle("");
       setPromoPrecio(45);
       setPromoHoras(0);
+      setPromoPizza(null);
       toast.success("Promoción creada");
-      void recargar(["promos-admin"]);
+      void recargarPromos();
     },
     onError: (e) => err(e, "No se pudo crear la promo."),
   });
@@ -223,7 +234,7 @@ export function useAdminDashboard() {
     onSuccess: () => {
       setEliminarTarget(null);
       toast.success("Eliminado");
-      void recargar(["promos-admin"]);
+      void recargarPromos();
       void recargar(["pizzas"]);
       void recargar(["inventario"]);
     },
@@ -233,7 +244,7 @@ export function useAdminDashboard() {
   const togglePromo = useMutation({
     mutationFn: ({ id, activa }: { id: number; activa: boolean }) =>
       PromocionesService.toggle(id, activa),
-    onSuccess: () => void recargar(["promos-admin"]),
+    onSuccess: () => void recargarPromos(),
     onError: (e) => err(e, "No se pudo actualizar la promo."),
   });
 
@@ -256,12 +267,14 @@ export function useAdminDashboard() {
       if (!precioEditPromo) throw new Error("Sin promoción seleccionada");
       return PromocionesService.actualizar(precioEditPromo.id, {
         precioPromo: precioEditPromo.precioPromo,
+        pizzaId: precioEditPromo.pizzaId,
+        tamano: precioEditPromo.pizzaId ? precioEditPromo.tamano : null,
       });
     },
     onSuccess: () => {
       setPrecioEditPromo(null);
       toast.success("Precio de promoción actualizado");
-      void recargar(["promos-admin"]);
+      void recargarPromos();
     },
     onError: (e) => err(e, "No se pudo actualizar el precio de la promoción."),
   });
@@ -335,8 +348,8 @@ export function useAdminDashboard() {
     guardarImagenProducto: () => guardarImagenProducto.mutate(),
     guardandoImagenProducto: guardarImagenProducto.isPending,
     precioEditPromo, setPrecioEditPromo,
-    abrirEditorPrecioPromo: (promo: { id: number; nombre: string; precioPromo: number }) =>
-      setPrecioEditPromo({ id: promo.id, nombre: promo.nombre, precioPromo: promo.precioPromo }),
+    abrirEditorPrecioPromo: (promo: PromocionApi) =>
+      setPrecioEditPromo({ id: promo.id, nombre: promo.nombre, precioPromo: promo.precioPromo, pizzaId: promo.pizzaId ?? null, tamano: promo.tamano ?? "Familiar" }),
     cerrarEditorPrecioPromo: () => setPrecioEditPromo(null),
     cambiarPrecioPromo: (valor: number) =>
       setPrecioEditPromo((prev) => (prev ? { ...prev, precioPromo: valor } : prev)),
@@ -348,6 +361,7 @@ export function useAdminDashboard() {
     togglePromo: (id: number, activa: boolean) => togglePromo.mutate({ id, activa }),
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
     promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
+    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
     crearPromo: () => crearPromo.mutate(), creandoPromo: crearPromo.isPending,
     inventario, cargandoInventario: inventarioQ.isLoading, alertas,
     ajustar: (id: number, delta: number) => ajustar.mutate({ id, delta }),

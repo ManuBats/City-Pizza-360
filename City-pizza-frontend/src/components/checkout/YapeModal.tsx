@@ -11,10 +11,18 @@ interface YapeModalProps {
   onOmitir: () => void;
 }
 
-const YAPE_TITULAR = import.meta.env.VITE_YAPE_TITULAR;
-const YAPE_NUMERO = import.meta.env.VITE_YAPE_NUMERO;
+const yapeConfiguracion = {
+  titular: import.meta.env.VITE_YAPE_TITULAR?.trim(),
+  numero: import.meta.env.VITE_YAPE_NUMERO?.trim(),
+  qr: import.meta.env.VITE_YAPE_QR_URL?.trim(),
+};
+// El número y el QR del PR #4 pertenecen a la cuenta de pruebas del equipo.
+// Si se configura algún dato manualmente, exigir el conjunto completo para no mezclar cuentas.
+const yapePruebas = import.meta.env.DEV && !Object.values(yapeConfiguracion).some(Boolean);
+const YAPE_TITULAR = yapePruebas ? "Cuenta de pruebas del equipo" : yapeConfiguracion.titular;
+const YAPE_NUMERO = yapePruebas ? "959 787 947" : yapeConfiguracion.numero;
 const YAPE_NUMERO_LIMPIO = YAPE_NUMERO?.replace(/\s/g, "");
-const YAPE_QR_URL = import.meta.env.VITE_YAPE_QR_URL;
+const YAPE_QR_URL = yapePruebas ? "/src/assets/yape-pruebas.png" : yapeConfiguracion.qr;
 export const yapeConfigurado = Boolean(YAPE_TITULAR && /^9\d{8}$/.test(YAPE_NUMERO_LIMPIO ?? "") && YAPE_QR_URL);
 
 /** Modal de pago Yape: muestra QR + titular y sube el comprobante. */

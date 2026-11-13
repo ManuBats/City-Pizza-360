@@ -73,9 +73,11 @@ npm run dev
 
 `VITE_API_URL` apunta a la API y viene configurada como `http://localhost:3000` en el ejemplo. Si cambias el puerto de la API, actualiza esa variable antes de iniciar Vite. Abre `http://localhost:5173` para acceder a la tienda.
 
-Yape se habilita en el checkout cuando se configuran `VITE_YAPE_TITULAR`, `VITE_YAPE_NUMERO` y `VITE_YAPE_QR_URL`. Usa datos ficticios durante las pruebas y confirma los tres valores con el negocio antes de habilitar el medio de pago real.
+Con `npm run dev`, si las tres variables de Yape están vacías, el checkout usa el número y el QR que aportó el equipo en el PR #4 para probar el flujo con su cuenta de pruebas. Si necesitas usar otra cuenta, configura juntos `VITE_YAPE_TITULAR`, `VITE_YAPE_NUMERO` y `VITE_YAPE_QR_URL`. En una compilación de producción las tres variables son obligatorias para habilitar Yape; usa los datos confirmados por el negocio.
 
 Los gráficos de ventas y productos vendidos cuentan pedidos con pago verificado. El efectivo se registra al marcar el pedido como entregado.
+
+Administración y Caja pueden vincular una promoción a un producto y un tamaño. En el carrito web, se aplica automáticamente el menor precio vigente para cada línea. Si una promoción vence o cambia mientras se confirma el pedido, el checkout actualiza el total y pide confirmarlo de nuevo. Administración puede vincular las promociones ya existentes desde su editor.
 
 ## API y verificación
 

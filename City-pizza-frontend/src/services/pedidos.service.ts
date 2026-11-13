@@ -4,6 +4,7 @@ import type { CrearPedidoPayload, EstadoPedido, Pedido } from "@/types/pedido";
 
 function toWriteBody(payload: CrearPedidoPayload) {
   return {
+    totalEsperado: payload.totalEsperado,
     nombres: payload.nombres.trim(),
     apellidos: payload.apellidos.trim(),
     celular: payload.celular.trim(),
@@ -34,12 +35,13 @@ export const PedidosService = {
   async crear(payload: CrearPedidoPayload, intento: { actual?: { body: string; clave: string } }): Promise<Pedido> {
     const path = payload.tipoEntrega === "Mesa" ? "/pedidos/mesa" : "/pedidos";
     const body = toWriteBody(payload);
-    const key = JSON.stringify(body);
+    const { totalEsperado, ...contenido } = body;
+    const key = JSON.stringify(contenido);
     if (intento.actual?.body !== key)
       intento.actual = { body: key, clave: crypto.randomUUID() };
     return apiFetch<Pedido>(path, {
       method: "POST",
-      body: JSON.stringify({ ...body, claveSolicitud: intento.actual.clave }),
+      body: JSON.stringify({ ...contenido, totalEsperado, claveSolicitud: intento.actual.clave }),
     });
   },
 

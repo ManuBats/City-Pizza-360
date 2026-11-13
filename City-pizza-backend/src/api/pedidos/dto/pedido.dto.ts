@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -39,6 +40,11 @@ export class PedidoItemDto {
 }
 
 export class CreatePedidoDto {
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  totalEsperado?: number;
+
   @IsOptional()
   @IsUUID('4')
   claveSolicitud?: string;

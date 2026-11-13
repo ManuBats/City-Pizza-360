@@ -20,6 +20,9 @@ export function PromocionCard({ promocion }: { promocion: PromocionApi }) {
           {promocion.descripcion || "Consulta las condiciones de esta promoción en tienda."}
         </p>
         <p className="text-3xl font-extrabold text-primary">{soles(promocion.precioPromo)}</p>
+        {promocion.pizzaId && promocion.tamano && (
+          <p className="text-sm text-muted-foreground">Tamaño {promocion.tamano.toLowerCase()}. Se aplica en el carrito.</p>
+        )}
         <p className="mt-auto flex items-start gap-2 border-t border-border pt-3 text-sm text-muted-foreground">
           <Clock aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
           {promocion.fin ? (

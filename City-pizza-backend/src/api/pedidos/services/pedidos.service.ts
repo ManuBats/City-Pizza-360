@@ -17,7 +17,7 @@ import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { ConfigService } from '@nestjs/config';
 import type { JwtPayload } from '../../../middlewares/jwt-auth.guard';
-import { precioLinea, type Tamano } from '../../../utils/precios';
+import { precioPorTamano, EXTRA_QUESO_PRECIO } from '../../../utils/precios';
 import { COSTO_DELIVERY } from '../../../constants/negocio.constants';
 import { serializarPedido } from '../../../utils/serializar';
 import { PrismaService } from '../../../config/prisma/prisma.service';
@@ -126,7 +126,7 @@ export class PedidosService {
       );
     if (tipoEntrega === 'Mesa' && (!dto.mesa || dto.mesa < 1 || dto.mesa > 12))
       throw new BadRequestException('Indica una mesa del 1 al 12');
-    const { claveSolicitud, ...contenido } = dto;
+    const { claveSolicitud, totalEsperado, ...contenido } = dto;
     const huella = createHash('sha256')
       .update(
         JSON.stringify({
@@ -212,19 +212,6 @@ export class PedidosService {
     }
 
     // El total lo calcula el servidor: líneas + fee delivery si aplica.
-    const subtotal = dto.items.reduce((acc, item) => {
-      const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
-      const unit = precioLinea(
-        pizza,
-        item.tamano as Tamano,
-        item.extraQueso === true,
-      );
-      return acc + unit * item.cantidad;
-    }, 0);
-    const total =
-      subtotal +
-      (tipoEntrega === 'Delivery' && subtotal > 0 ? COSTO_DELIVERY : 0);
-
     let codigo = codigoPedido();
     for (let i = 0; i < 5; i++) {
       const existe = await this.prisma.pedido.findUnique({ where: { codigo } });
@@ -234,6 +221,26 @@ export class PedidosService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
+        const ahora = new Date();
+        const ofertas = tipoEntrega === 'Mesa' ? [] : await tx.promocion.findMany({
+          where: {
+            pizzaId: { in: idsUnicos }, activa: true, inicio: { lte: ahora },
+            OR: [{ fin: null }, { fin: { gt: ahora } }],
+          },
+        });
+        const lineas = dto.items.map((item) => {
+          const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
+          const base = ofertas.reduce((precio, oferta) =>
+            oferta.pizzaId === item.pizzaId && oferta.tamano === item.tamano
+              ? Math.min(precio, Number(oferta.precioPromo)) : precio,
+          precioPorTamano(pizza, item.tamano));
+          const precioUnit = Math.round(base * 100) + (item.extraQueso ? EXTRA_QUESO_PRECIO * 100 : 0);
+          return { item, precioUnit };
+        });
+        const subtotal = lineas.reduce((acc, { item, precioUnit }) => acc + precioUnit * item.cantidad, 0);
+        const total = (subtotal + (tipoEntrega === 'Delivery' && subtotal > 0 ? COSTO_DELIVERY * 100 : 0)) / 100;
+        if (totalEsperado != null && Math.round(totalEsperado * 100) !== Math.round(total * 100))
+          throw new ConflictException('El precio cambió. Revisa el total actualizado y vuelve a confirmar.');
         const pedido = await tx.pedido.create({
           data: {
             codigo,
@@ -261,22 +268,16 @@ export class PedidosService {
               'Sin stock suficiente para completar el pedido',
             );
         }
-        for (const item of dto.items) {
-          const pizza = pizzas.find((p) => p.id === item.pizzaId)!;
-          const unit = precioLinea(
-            pizza,
-            item.tamano as Tamano,
-            item.extraQueso === true,
-          );
+        for (const { item, precioUnit } of lineas) {
           await tx.detallePedido.create({
             data: {
               pedidoId: pedido.id,
-              pizzaId: pizza.id,
+              pizzaId: item.pizzaId,
               cantidad: item.cantidad,
               tamano: item.tamano,
               nota: item.nota?.trim() || null,
               extraQueso: item.extraQueso === true,
-              precioUnit: unit,
+              precioUnit: precioUnit / 100,
             },
           });
         }

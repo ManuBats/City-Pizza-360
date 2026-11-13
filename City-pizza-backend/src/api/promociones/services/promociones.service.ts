@@ -17,6 +17,13 @@ import { CreatePromocionDto, UpdatePromocionDto } from '../dto/promocion.dto';
 export class PromocionesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async validarProducto(pizzaId?: number | null, tamano?: string | null) {
+    if (Boolean(pizzaId) !== Boolean(tamano))
+      throw new BadRequestException('Selecciona un producto y un tamaño');
+    if (pizzaId && !(await this.prisma.pizza.findUnique({ where: { id: pizzaId } })))
+      throw new BadRequestException('El producto de la promoción no existe');
+  }
+
   /** Promos visibles para el cliente: activas y no vencidas. */
   async visibles() {
     const promos = await this.prisma.promocion.findMany({
@@ -72,6 +79,7 @@ export class PromocionesService {
   }
 
   async crear(dto: CreatePromocionDto, rol: string) {
+    await this.validarProducto(dto.pizzaId, dto.tamano);
     // Cajero: solo Flash ≤48h, no permanentes, no elimina base ni cambia precio.
     if (rol === 'Cajero') {
       if (dto.tipo !== 'Flash')
@@ -86,6 +94,8 @@ export class PromocionesService {
           nombre: dto.nombre.trim(),
           descripcion: dto.descripcion?.trim() || null,
           precioPromo: dto.precioPromo,
+          pizzaId: dto.pizzaId,
+          tamano: dto.tamano,
           tipo: 'Flash' as TipoPromocion,
           fin: new Date(Date.now() + horas * 3_600_000),
         },
@@ -97,6 +107,8 @@ export class PromocionesService {
         nombre: dto.nombre.trim(),
         descripcion: dto.descripcion?.trim() || null,
         precioPromo: dto.precioPromo,
+        pizzaId: dto.pizzaId,
+        tamano: dto.tamano,
         tipo: dto.tipo as TipoPromocion,
         fin: dto.vigenciaHoras
           ? new Date(Date.now() + dto.vigenciaHoras * 3_600_000)
@@ -112,6 +124,13 @@ export class PromocionesService {
     if (!promo) throw new NotFoundException('Promoción no encontrada');
 
     const data: Prisma.PromocionUpdateInput = {};
+    if (dto.pizzaId !== undefined || dto.tamano !== undefined) {
+      const pizzaId = dto.pizzaId === undefined ? promo.pizzaId : dto.pizzaId;
+      const tamano = dto.tamano === undefined ? promo.tamano : dto.tamano;
+      await this.validarProducto(pizzaId, tamano);
+      data.pizza = pizzaId ? { connect: { id: pizzaId } } : { disconnect: true };
+      data.tamano = tamano;
+    }
     if (dto.nombre !== undefined) data.nombre = dto.nombre.trim();
     if (dto.descripcion !== undefined)
       data.descripcion = dto.descripcion?.trim() || null;

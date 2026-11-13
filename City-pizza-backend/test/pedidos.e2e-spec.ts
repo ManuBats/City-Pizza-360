@@ -1,7 +1,7 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
-import { rm } from 'node:fs/promises';
+import { readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { JwtService } from '@nestjs/jwt';
 import * as request from 'supertest';
@@ -54,6 +54,7 @@ describe('Pedidos con PostgreSQL aislado', () => {
       await db.detallePedido.deleteMany({ where: { pizzaId: { in: pizzas } } });
       await db.pedido.deleteMany({ where: { id: { in: pedidos } } });
       await db.trabajador.deleteMany({ where: { id: { in: trabajadores } } });
+      await db.promocion.deleteMany({ where: { pizzaId: { in: pizzas } } });
       await Promise.all(
         archivos.map((archivo) =>
           rm(join(process.cwd(), 'uploads-private', 'comprobantes', archivo), {
@@ -143,6 +144,28 @@ describe('Pedidos con PostgreSQL aislado', () => {
     expect(await stock()).toBeCloseTo(0);
   });
 
+  it('aplica la mejor promoción vigente al tamaño exacto y rechaza un total desactualizado', async () => {
+    const http = request(app.getHttpServer());
+    await db.insumo.update({ where: { id: insumo }, data: { stock: 1 } });
+    await db.promocion.createMany({ data: [
+      { nombre: 'Vigente', pizzaId: pizzas[0], tamano: 'Personal', precioPromo: 7.25 },
+      { nombre: 'Otra vigente', pizzaId: pizzas[0], tamano: 'Personal', precioPromo: 8 },
+      { nombre: 'Vencida', pizzaId: pizzas[0], tamano: 'Personal', precioPromo: 1, fin: new Date(0) },
+    ] });
+    const payload = { ...body(), claveSolicitud: randomUUID(), items: [
+      { ...body().items[0], extraQueso: true },
+      { ...body().items[0], tamano: 'Mediana' },
+    ] };
+    await http.post('/pedidos').send({ ...payload, totalEsperado: 28 }).expect(409);
+    expect(await stock()).toBe(1);
+    const pedido = await http.post('/pedidos').send({ ...payload, totalEsperado: 25.25 }).expect(201);
+    pedidos.push(pedido.body.id);
+    expect(pedido.body.total).toBe(25.25);
+    expect(pedido.body.detalles.map((linea: { precioUnit: number }) => linea.precioUnit)).toEqual([10.25, 15]);
+    const repetido = await http.post('/pedidos').send({ ...payload, totalEsperado: 28 }).expect(201);
+    expect(repetido.body.id).toBe(pedido.body.id);
+  });
+
   it('protege la entrega, revoca cuentas y permite reemplazar y aprobar Yape', async () => {
     async function trabajador(rol: 'Cajero' | 'Cocinero' | 'Repartidor') {
       const cuenta = await db.trabajador.create({
@@ -187,7 +210,15 @@ describe('Pedidos con PostgreSQL aislado', () => {
         .attach('comprobante', png, 'prueba.png');
     await estado('Preparacion', repartidor.auth).expect(403);
     await estado('Preparacion', cocina.auth).expect(400);
+    const directorio = join(process.cwd(), 'uploads-private', 'comprobantes');
+    const listarArchivos = async () =>
+      (await readdir(directorio).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return [];
+        throw error;
+      })).sort();
+    const antes = await listarArchivos();
     await subir().expect(403);
+    expect(await listarArchivos()).toEqual(antes);
     await http.get(comprobante).expect(401);
     await http
       .get(comprobante)
@@ -215,6 +246,7 @@ describe('Pedidos con PostgreSQL aislado', () => {
     archivos.push(
       (await db.pedido.findUniqueOrThrow({ where: { id } })).comprobanteUrl!,
     );
+    expect(await listarArchivos()).not.toContain(primero);
     await http
       .patch(`/pedidos/${id}/pago`)
       .set('Authorization', caja.auth)
@@ -229,6 +261,21 @@ describe('Pedidos con PostgreSQL aislado', () => {
       .expect(200);
     await estado('EnCamino', repartidor.auth).expect(200);
     await estado('Entregado', repartidor.auth).expect(200);
+
+    for (const tipoEntrega of ['Recojo', 'Mesa']) {
+      const crear = tipoEntrega === 'Mesa'
+        ? http.post('/pedidos/mesa').set('Authorization', caja.auth)
+        : http.post('/pedidos');
+      const local = await crear.send({
+        ...body(), tipoEntrega, ...(tipoEntrega === 'Mesa' ? { mesa: 2 } : {}),
+      }).expect(201);
+      pedidos.push(local.body.id);
+      for (const estado of ['Preparacion', 'Listo', 'Entregado']) {
+        const respuesta = await http.patch(`/pedidos/${local.body.id}/estado`)
+          .set('Authorization', caja.auth).send({ estado }).expect(200);
+        expect(respuesta.body.estado).toBe(estado);
+      }
+    }
     await db.trabajador.update({
       where: { id: caja.id },
       data: { activo: false },

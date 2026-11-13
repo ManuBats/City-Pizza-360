@@ -56,6 +56,7 @@ model Pizza {
   disponible     Boolean        @default(true)
   insumos        PizzaInsumo[]
   detalles       DetallePedido[]
+  promociones    Promocion[]
 }
 
 model Insumo {
@@ -117,6 +118,9 @@ model Promocion {
   nombre      String
   descripcion String?
   imagenUrl   String?
+  pizzaId     Int?
+  tamano      String?
+  pizza       Pizza?         @relation(fields: [pizzaId], references: [id], onDelete: SetNull)
   precioPromo Decimal        @db.Decimal(10, 2)
   tipo        TipoPromocion  @default(Permanente)
   inicio      DateTime       @default(now())

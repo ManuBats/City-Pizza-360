@@ -7,6 +7,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePromociones } from "@/hooks/use-promociones";
+import { usePizzas } from "@/hooks/use-pizzas";
+import { resolverProducto } from "@/lib/pizzas";
 
 export type CartItem = {
   key: string;
@@ -36,8 +39,20 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "citypizza360-cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [guardados, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const { productos } = usePizzas();
+  const { promociones } = usePromociones();
+  const items = guardados.map((item) => {
+    const producto = resolverProducto(productos, item.productoId);
+    if (!producto) return item;
+    const base = item.tamano === "Personal" ? producto.precioPersonal :
+      item.tamano === "Mediana" ? producto.precioMediana : producto.precioFamiliar;
+    const precio = promociones.reduce((mejor, promo) =>
+      promo.pizzaId === producto.id && promo.tamano === item.tamano
+        ? Math.min(mejor, promo.precioPromo) : mejor, base);
+    return { ...item, precio: precio + (item.extraQueso ? 3 : 0) };
+  });
 
   useEffect(() => {
     try {
@@ -52,11 +67,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(guardados));
     } catch {
       /* ignore */
     }
-  }, [items, hydrated]);
+  }, [guardados, hydrated]);
 
   const add = useCallback((item: Omit<CartItem, "key" | "qty">, qty = 1) => {
     const key = `${item.productoId}-${item.tamano}`;

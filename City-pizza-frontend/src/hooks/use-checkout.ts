@@ -6,7 +6,8 @@ import { COSTO_DELIVERY, resolverProducto } from "@/lib/pizzas";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { PedidosService } from "@/services/pedidos.service";
 import { guardarUltimoPedido } from "@/hooks/use-tracking";
-import { getErrorMessage } from "@/services/api";
+import { ApiError, getErrorMessage } from "@/services/api";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Pedido } from "@/types/pedido";
 
 export type CheckoutErrores = {
@@ -28,6 +29,7 @@ export function useCheckout() {
   const { items, subtotal, setQty, setNota, setExtraQueso, remove, clear } = useCart();
   const { productos } = usePizzas();
   const navigate = useNavigate();
+  const consultas = useQueryClient();
 
   const [nombres, setNombres] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -86,6 +88,7 @@ export function useCheckout() {
         referencia: referencia.trim() || undefined,
         tipoEntrega: esDelivery ? "Delivery" : "Recojo",
         metodoPago,
+        totalEsperado: Math.round(total * 100) / 100,
         items: lineas,
       }, intento.current);
       const resultado = { pedido, requiereYape: metodoPago === "Yape" };
@@ -107,6 +110,12 @@ export function useCheckout() {
       setConfirmado(resultado);
       return resultado;
     } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        await Promise.all([
+          consultas.invalidateQueries({ queryKey: ["promociones-visibles"] }),
+          consultas.invalidateQueries({ queryKey: ["pizzas"] }),
+        ]);
+      }
       setErrores({ items: getErrorMessage(error, "No se pudo confirmar el pedido.") });
       return null;
     } finally {
