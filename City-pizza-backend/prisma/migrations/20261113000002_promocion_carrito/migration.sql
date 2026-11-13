@@ -1,0 +1,3 @@
+ALTER TABLE "Promocion" ADD COLUMN "pizzaId" INTEGER, ADD COLUMN "tamano" TEXT;
+ALTER TABLE "Promocion" ADD CONSTRAINT "Promocion_pizzaId_fkey"
+  FOREIGN KEY ("pizzaId") REFERENCES "Pizza"("id") ON DELETE SET NULL ON UPDATE CASCADE;

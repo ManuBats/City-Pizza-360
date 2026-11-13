@@ -15,6 +15,7 @@ import { CATEGORIAS, type Categoria } from "@/lib/pizzas";
 import { AppShell } from "./app/shell";
 import Landing from "./routes/index";
 import MenuPage from "./routes/menu";
+import PromocionesPage from "./routes/promociones";
 import CheckoutPage from "./routes/checkout";
 import TrackingPage from "./routes/tracking";
 import LoginPage from "./routes/login";
@@ -78,6 +79,12 @@ const menuRoute = createRoute({
         : undefined,
   }),
   component: MenuPage,
+});
+
+const promocionesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/promociones",
+  component: PromocionesPage,
 });
 
 const checkoutRoute = createRoute({
@@ -150,6 +157,7 @@ const adminUsuariosRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   menuRoute,
+  promocionesRoute,
   checkoutRoute,
   trackingRoute,
   loginRoute,

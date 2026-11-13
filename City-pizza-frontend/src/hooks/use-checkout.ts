@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
@@ -6,7 +6,8 @@ import { COSTO_DELIVERY, resolverProducto } from "@/lib/pizzas";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { PedidosService } from "@/services/pedidos.service";
 import { guardarUltimoPedido } from "@/hooks/use-tracking";
-import { getErrorMessage } from "@/services/api";
+import { ApiError, getErrorMessage } from "@/services/api";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Pedido } from "@/types/pedido";
 
 export type CheckoutErrores = {
@@ -28,6 +29,7 @@ export function useCheckout() {
   const { items, subtotal, setQty, setNota, setExtraQueso, remove, clear } = useCart();
   const { productos } = usePizzas();
   const navigate = useNavigate();
+  const consultas = useQueryClient();
 
   const [nombres, setNombres] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -39,12 +41,15 @@ export function useCheckout() {
   const [errores, setErrores] = useState<CheckoutErrores>({});
   const [enviando, setEnviando] = useState(false);
   const [confirmado, setConfirmado] = useState<PedidoConfirmado | null>(null);
+  const intento = useRef<{ actual?: { body: string; clave: string } }>({});
+  const enCurso = useRef(false);
 
   const esDelivery = entrega === "delivery";
   const total = subtotal + (esDelivery && subtotal > 0 ? COSTO_DELIVERY : 0);
   const celularValido = useMemo(() => /^9\d{8}$/.test(celular), [celular]);
 
   async function confirmar(): Promise<PedidoConfirmado | null> {
+    if (enCurso.current || confirmado) return null;
     const errs: CheckoutErrores = {};
     if (items.length === 0) errs.items = "Tu carrito está vacío.";
     if (nombres.trim().length < 2) errs.nombres = "Ingresa tus nombres.";
@@ -72,6 +77,7 @@ export function useCheckout() {
       });
     }
 
+    enCurso.current = true;
     setEnviando(true);
     try {
       const pedido = await PedidosService.crear({
@@ -82,8 +88,9 @@ export function useCheckout() {
         referencia: referencia.trim() || undefined,
         tipoEntrega: esDelivery ? "Delivery" : "Recojo",
         metodoPago,
+        totalEsperado: Math.round(total * 100) / 100,
         items: lineas,
-      });
+      }, intento.current);
       const resultado = { pedido, requiereYape: metodoPago === "Yape" };
       guardarUltimoPedido(pedido.codigo, pedido.celular);
       // Coherencia de precios: el servidor manda; si el carrito tenía
@@ -92,6 +99,7 @@ export function useCheckout() {
         toast.warning("Los precios se actualizaron al confirmar. Revisa tu total en Mi pedido.");
       }
       if (!resultado.requiereYape) {
+        intento.current = {};
         clear();
         await navigate({
           to: "/tracking",
@@ -102,15 +110,23 @@ export function useCheckout() {
       setConfirmado(resultado);
       return resultado;
     } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        await Promise.all([
+          consultas.invalidateQueries({ queryKey: ["promociones-visibles"] }),
+          consultas.invalidateQueries({ queryKey: ["pizzas"] }),
+        ]);
+      }
       setErrores({ items: getErrorMessage(error, "No se pudo confirmar el pedido.") });
       return null;
     } finally {
+      enCurso.current = false;
       setEnviando(false);
     }
   }
 
   /** Tras subir el comprobante Yape: limpia y va al tracking con código. */
   async function irATracking(pedido: Pedido) {
+    intento.current = {};
     clear();
     setConfirmado(null);
     await navigate({

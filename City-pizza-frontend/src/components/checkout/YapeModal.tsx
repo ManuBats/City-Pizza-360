@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Banknote, CheckCircle2, Loader2, QrCode, Upload } from "lucide-react";
+import { Banknote, Check, CheckCircle2, Copy, Loader2, Upload } from "lucide-react";
 import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
-import { urlPublica } from "@/lib/imagenes";
 import { soles } from "@/lib/pizzas";
 import type { Pedido } from "@/types/pedido";
 
@@ -12,8 +11,19 @@ interface YapeModalProps {
   onOmitir: () => void;
 }
 
-const YAPE_TITULAR = "City Pizza Center";
-const YAPE_QR_URL = ""; // TODO: el dueño pasa el QR real (imagen en public/yape-qr.png)
+const yapeConfiguracion = {
+  titular: import.meta.env.VITE_YAPE_TITULAR?.trim(),
+  numero: import.meta.env.VITE_YAPE_NUMERO?.trim(),
+  qr: import.meta.env.VITE_YAPE_QR_URL?.trim(),
+};
+// El número y el QR del PR #4 pertenecen a la cuenta de pruebas del equipo.
+// Si se configura algún dato manualmente, exigir el conjunto completo para no mezclar cuentas.
+const yapePruebas = import.meta.env.DEV && !Object.values(yapeConfiguracion).some(Boolean);
+const YAPE_TITULAR = yapePruebas ? "Cuenta de pruebas del equipo" : yapeConfiguracion.titular;
+const YAPE_NUMERO = yapePruebas ? "959 787 947" : yapeConfiguracion.numero;
+const YAPE_NUMERO_LIMPIO = YAPE_NUMERO?.replace(/\s/g, "");
+const YAPE_QR_URL = yapePruebas ? "/src/assets/yape-pruebas.png" : yapeConfiguracion.qr;
+export const yapeConfigurado = Boolean(YAPE_TITULAR && /^9\d{8}$/.test(YAPE_NUMERO_LIMPIO ?? "") && YAPE_QR_URL);
 
 /** Modal de pago Yape: muestra QR + titular y sube el comprobante. */
 export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
@@ -21,6 +31,18 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recibido, setRecibido] = useState<Pedido | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  async function copiarNumero() {
+    if (!YAPE_NUMERO_LIMPIO) return;
+    try {
+      await navigator.clipboard.writeText(YAPE_NUMERO_LIMPIO);
+      setCopiado(true);
+      window.setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      setError("No se pudo copiar el número. Anótalo manualmente.");
+    }
+  }
 
   async function subir() {
     if (!archivo) {
@@ -30,7 +52,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
     setError(null);
     setSubiendo(true);
     try {
-      const actualizado = await PedidosService.subirComprobante(pedido.id, archivo);
+      const actualizado = await PedidosService.subirComprobante(pedido, archivo);
       setRecibido(actualizado);
     } catch (e) {
       setError(getErrorMessage(e, "No se pudo subir el comprobante."));
@@ -46,7 +68,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
           <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
           <h2 className="mt-3 text-2xl font-extrabold">¡Comprobante recibido!</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pedido {recibido.codigo} en cocina. Te avisaremos cuando esté en camino.
+            Caja revisará el comprobante del pedido {recibido.codigo} antes de que cocina lo prepare.
           </p>
           <button
             onClick={() => onSubido(recibido)}
@@ -68,18 +90,32 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
         </h2>
 
         <div className="mx-auto mt-4 grid h-52 w-52 place-items-center overflow-hidden rounded-2xl border border-border bg-muted">
-          {urlPublica(YAPE_QR_URL) ? (
-            <img src={urlPublica(YAPE_QR_URL)!} alt="QR Yape de City Pizza" className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex flex-col items-center gap-2 p-4 text-muted-foreground">
-              <QrCode className="h-12 w-12" />
-              <p className="text-xs">QR pendiente (el local lo configura pronto)</p>
-            </div>
-          )}
+          <img
+            src={YAPE_QR_URL}
+            alt="QR Yape de City Pizza"
+            className="h-full w-full object-cover"
+          />
         </div>
-        <p className="mt-3 text-sm">
-          Titular: <strong>{YAPE_TITULAR}</strong>
-        </p>
+        <div className="mt-3 rounded-xl border border-border bg-muted/60 px-3 py-2.5">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            Yape
+          </p>
+          <div className="mt-1 flex items-center justify-center gap-2">
+            <span className="text-lg font-extrabold tracking-wide">{YAPE_NUMERO}</span>
+            <button
+              type="button"
+              onClick={copiarNumero}
+              className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Copiar número de Yape"
+            >
+              {copiado ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+              {copiado ? "Copiado" : "Copiar"}
+            </button>
+          </div>
+          <p className="mt-1 text-sm">
+            Titular: <strong>{YAPE_TITULAR}</strong>
+          </p>
+        </div>
         <p className="mt-1 text-xs text-muted-foreground">
           Escanea, yapea el total exacto y sube tu captura para validar el pedido.
         </p>
@@ -113,7 +149,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
           onClick={onOmitir}
           className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
         >
-          <Banknote className="h-3.5 w-3.5" /> Seguir sin comprobante (pagaré en tienda)
+          <Banknote className="h-3.5 w-3.5" /> Adjuntar comprobante más tarde
         </button>
       </div>
     </div>

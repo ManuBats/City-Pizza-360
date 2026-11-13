@@ -7,14 +7,13 @@ import type {
   WorkerSession,
 } from "@/types/trabajador";
 
-type RolBackend = "Admin" | "Cajero" | "Cocinero" | "Repartidor" | "Mesero";
+type RolBackend = "Admin" | "Cajero" | "Cocinero" | "Repartidor";
 
 const ROL_UI_POR_BACKEND: Record<RolBackend, RolUi> = {
   Admin: "admin",
   Cajero: "cajero",
   Cocinero: "cocina",
   Repartidor: "delivery",
-  Mesero: "mesero",
 };
 
 const ROL_BACKEND_POR_UI: Record<RolUi, RolBackend> = {
@@ -22,7 +21,6 @@ const ROL_BACKEND_POR_UI: Record<RolUi, RolBackend> = {
   cajero: "Cajero",
   cocina: "Cocinero",
   delivery: "Repartidor",
-  mesero: "Mesero",
 };
 
 /** Normaliza "Admin" → "admin" (gap 2 del contrato). */

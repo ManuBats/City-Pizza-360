@@ -1,7 +1,11 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../middlewares/jwt-auth.guard';
 import { Roles } from '../../../middlewares/roles.decorator';
 import { RolesGuard } from '../../../middlewares/roles.guard';
+import {
+  RangoFechasDto,
+  TopProductosQueryDto,
+} from '../dto/reportes-query.dto';
 import { ReportesService } from '../services/reportes.service';
 
 @Controller('reportes')
@@ -16,12 +20,12 @@ export class ReportesController {
   }
 
   @Get('ventas-por-dia')
-  ventasPorDia() {
-    return this.reportes.ventasPorDia();
+  ventasPorDia(@Query() query: RangoFechasDto) {
+    return this.reportes.ventasPorDia(query);
   }
 
   @Get('top-productos')
-  topProductos() {
-    return this.reportes.topProductos();
+  topProductos(@Query() query: TopProductosQueryDto) {
+    return this.reportes.topProductos(query);
   }
 }

@@ -1,10 +1,14 @@
 import { apiFetch } from "./api";
+import { getWorkerToken } from "@/lib/worker-token";
 
 export type PromocionApi = {
   id: number;
   nombre: string;
   descripcion: string | null;
+  imagenUrl?: string | null;
   precioPromo: number;
+  pizzaId?: number | null;
+  tamano?: "Personal" | "Mediana" | "Familiar" | null;
   tipo: "Permanente" | "Flash";
   inicio: string;
   fin: string | null;
@@ -21,10 +25,25 @@ export const PromocionesService = {
     return apiFetch<PromocionApi[]>("/promociones");
   },
 
+  async subirImagen(id: number, imagen: File): Promise<PromocionApi> {
+    const body = new FormData();
+    body.append("imagen", imagen);
+    const base = String(import.meta.env.VITE_API_URL).replace(/\/$/, "");
+    const res = await fetch(`${base}/promociones/${id}/imagen`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${getWorkerToken() ?? ""}` },
+      body,
+    });
+    if (!res.ok) throw new Error("No se pudo subir la imagen de la promoción.");
+    return res.json();
+  },
+
   async crear(input: {
     nombre: string;
     descripcion?: string;
     precioPromo: number;
+    pizzaId?: number;
+    tamano?: NonNullable<PromocionApi["tamano"]>;
     tipo: "Permanente" | "Flash";
     vigenciaHoras?: number;
   }): Promise<PromocionApi> {
@@ -43,5 +62,27 @@ export const PromocionesService = {
 
   async eliminar(id: number): Promise<{ ok: boolean }> {
     return apiFetch<{ ok: boolean }>(`/promociones/${id}`, { method: "DELETE" });
+  },
+
+  /** Edita campos de una promoción existente. */
+  async actualizar(
+    id: number,
+    patch: Partial<
+      Pick<
+        PromocionApi,
+        | "nombre"
+        | "descripcion"
+        | "precioPromo"
+        | "pizzaId"
+        | "tamano"
+        | "tipo"
+        | "activa"
+      >
+    > & { vigenciaHoras?: number },
+  ): Promise<PromocionApi> {
+    return apiFetch<PromocionApi>(`/promociones/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
   },
 };

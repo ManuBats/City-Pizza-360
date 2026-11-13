@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSessionContext } from "@/context/session-context";
-import { esErrorDeRed } from "@/services/api";
+import { ApiError, esErrorDeRed } from "@/services/api";
 
 // Lógica de login extraída de app/(interno)/login/page.tsx (como use-login de CCA).
 export function useLogin() {
@@ -22,6 +22,18 @@ export function useLogin() {
         setError("Usuario o contraseña incorrectos.");
       }
     } catch (e) {
+      if (e instanceof ApiError && e.status === 429) {
+        const seconds = (e.data as { retryAfterSeconds?: unknown } | null)
+          ?.retryAfterSeconds;
+        const wait =
+          typeof seconds === "number" && Number.isFinite(seconds) && seconds > 0
+            ? Math.ceil(seconds)
+            : 60;
+        setError(
+          `Demasiados intentos. Espera ${wait} segundos antes de volver a intentarlo.`,
+        );
+        return;
+      }
       setError(
         esErrorDeRed(e)
           ? "Sin conexión con el servidor. Revisa tu internet e intenta de nuevo."

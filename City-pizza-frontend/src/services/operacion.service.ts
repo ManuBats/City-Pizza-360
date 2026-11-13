@@ -16,6 +16,32 @@ export type ResumenApi = {
   alertasStock: number;
 };
 
+export type VentaDiaApi = {
+  fecha: string;
+  pedidos: number;
+  ventas: number;
+};
+
+export type TopProductoApi = {
+  pizzaId: number;
+  nombre: string;
+  cantidad: number;
+};
+
+export type RangoReporte = {
+  desde?: string;
+  hasta?: string;
+};
+
+function querystring(params: Record<string, string | number | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [clave, valor] of Object.entries(params)) {
+    if (valor !== undefined && valor !== "") search.set(clave, String(valor));
+  }
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
+}
+
 /** Módulo Cocina: cola KDS + asignación de repartidor. */
 export const CocinaService = {
   async cola(): Promise<Pedido[]> {
@@ -63,9 +89,23 @@ export const InventarioService = {
   },
 };
 
-/** Módulo Reportes: dashboard básico (solo admin). */
+/** Módulo Reportes: dashboard y ventas por rango de fechas (solo admin). */
 export const ReportesService = {
   async resumen(): Promise<ResumenApi> {
     return apiFetch<ResumenApi>("/reportes/resumen");
+  },
+
+  async ventasPorDia(params: RangoReporte = {}): Promise<VentaDiaApi[]> {
+    return apiFetch<VentaDiaApi[]>(
+      `/reportes/ventas-por-dia${querystring(params)}`,
+    );
+  },
+
+  async topProductos(
+    params: RangoReporte & { limit?: number } = {},
+  ): Promise<TopProductoApi[]> {
+    return apiFetch<TopProductoApi[]>(
+      `/reportes/top-productos${querystring(params)}`,
+    );
   },
 };

@@ -1,5 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../config/prisma/prisma.service';
+import type {
+  RangoFechasDto,
+  TopProductosQueryDto,
+} from '../dto/reportes-query.dto';
+import {
+  claveDiaLima,
+  diasEntre,
+  fechaISOValida,
+  finDiaLimaExclusivo,
+  inicioDiaLima,
+  sumarDiasISO,
+} from '../utils/fechas-lima';
+
+const MAX_DIAS_RANGO = 90;
 
 @Injectable()
 export class ReportesService {
@@ -7,52 +22,78 @@ export class ReportesService {
 
   /** Dashboard básico: pedidos hoy, en curso, ventas, alertas stock. */
   async resumen() {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+    const hoy = claveDiaLima(new Date());
     const [pedidosHoy, enCurso, insumos] = await Promise.all([
-      this.prisma.pedido.findMany({ where: { creadoEn: { gte: hoy } } }),
+      this.prisma.pedido.findMany({
+        where: {
+          creadoEn: {
+            gte: inicioDiaLima(hoy),
+            lt: finDiaLimaExclusivo(hoy),
+          },
+        },
+        select: { total: true, estadoPago: true },
+      }),
       this.prisma.pedido.count({ where: { estado: { not: 'Entregado' } } }),
       this.prisma.insumo.findMany(),
     ]);
     return {
       pedidosHoy: pedidosHoy.length,
       enCurso,
-      ventasHoy: pedidosHoy.reduce((acc, p) => acc + Number(p.total), 0),
+      ventasHoy: pedidosHoy
+        .filter((p) => p.estadoPago === 'Verificado')
+        .reduce((acc, p) => acc + Number(p.total), 0),
       alertasStock: insumos.filter((i) => i.stock <= i.stockMinimo).length,
     };
   }
 
-  /** Ventas de los últimos 7 días + top 5 productos por cantidad. */
-  async ventasPorDia() {
-    const desde = new Date();
-    desde.setHours(0, 0, 0, 0);
-    desde.setDate(desde.getDate() - 6);
+  /** Ventas por día local. Por defecto: últimos 7 días (incluye hoy). */
+  async ventasPorDia(dto: RangoFechasDto = {}) {
+    const rango = this.resolverRango(dto.desde, dto.hasta);
     const pedidos = await this.prisma.pedido.findMany({
-      where: { creadoEn: { gte: desde } },
+      where: {
+        estadoPago: 'Verificado',
+        creadoEn: {
+          gte: inicioDiaLima(rango.desde),
+          lt: finDiaLimaExclusivo(rango.hasta),
+        },
+      },
+      select: { creadoEn: true, total: true },
+      orderBy: { creadoEn: 'asc' },
     });
-    const dias: Record<string, { pedidos: number; ventas: number }> = {};
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() - i);
-      dias[d.toISOString().slice(0, 10)] = { pedidos: 0, ventas: 0 };
+
+    const dias = new Map<string, { pedidos: number; ventas: number }>();
+    for (
+      let fecha = rango.desde;
+      fecha <= rango.hasta;
+      fecha = sumarDiasISO(fecha, 1)
+    ) {
+      dias.set(fecha, { pedidos: 0, ventas: 0 });
     }
-    for (const p of pedidos) {
-      const key = p.creadoEn.toISOString().slice(0, 10);
-      if (dias[key]) {
-        dias[key].pedidos += 1;
-        dias[key].ventas += Number(p.total);
+
+    for (const pedido of pedidos) {
+      const key = claveDiaLima(pedido.creadoEn);
+      const dia = dias.get(key);
+      if (dia) {
+        dia.pedidos += 1;
+        dia.ventas += Number(pedido.total);
       }
     }
-    return Object.entries(dias).map(([fecha, v]) => ({ fecha, ...v }));
+
+    return Array.from(dias, ([fecha, valores]) => ({
+      fecha,
+      ...valores,
+    }));
   }
 
-  async topProductos() {
+  /** Top productos por cantidad. Sin rango: histórico completo. */
+  async topProductos(dto: TopProductosQueryDto = {}) {
+    const where = this.filtroPorRango(dto);
     const grupos = await this.prisma.detallePedido.groupBy({
       by: ['pizzaId'],
+      where,
       _sum: { cantidad: true },
       orderBy: { _sum: { cantidad: 'desc' } },
-      take: 5,
+      take: dto.limit ?? 5,
     });
     const pizzas = await this.prisma.pizza.findMany({
       where: { id: { in: grupos.map((g) => g.pizzaId) } },
@@ -62,5 +103,45 @@ export class ReportesService {
       nombre: pizzas.find((p) => p.id === g.pizzaId)?.nombre ?? `#${g.pizzaId}`,
       cantidad: g._sum.cantidad ?? 0,
     }));
+  }
+
+  private filtroPorRango(
+    dto: RangoFechasDto,
+  ): Prisma.DetallePedidoWhereInput | undefined {
+    if (!dto.desde && !dto.hasta)
+      return { pedido: { estadoPago: 'Verificado' } };
+    const rango = this.resolverRango(dto.desde, dto.hasta);
+    return {
+      pedido: {
+        estadoPago: 'Verificado',
+        creadoEn: {
+          gte: inicioDiaLima(rango.desde),
+          lt: finDiaLimaExclusivo(rango.hasta),
+        },
+      },
+    };
+  }
+
+  private resolverRango(desde?: string, hasta?: string) {
+    const hastaFinal = hasta ?? claveDiaLima(new Date());
+    const desdeFinal = desde ?? sumarDiasISO(hastaFinal, -6);
+
+    if (!fechaISOValida(desdeFinal) || !fechaISOValida(hastaFinal)) {
+      throw new BadRequestException(
+        'El rango de fechas no es válido (formato YYYY-MM-DD).',
+      );
+    }
+
+    const dias = diasEntre(desdeFinal, hastaFinal);
+    if (dias < 0) {
+      throw new BadRequestException('"desde" no puede ser mayor que "hasta".');
+    }
+    if (dias + 1 > MAX_DIAS_RANGO) {
+      throw new BadRequestException(
+        `El rango máximo es de ${MAX_DIAS_RANGO} días.`,
+      );
+    }
+
+    return { desde: desdeFinal, hasta: hastaFinal };
   }
 }

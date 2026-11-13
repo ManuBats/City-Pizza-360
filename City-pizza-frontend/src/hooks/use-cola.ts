@@ -60,7 +60,7 @@ export function useCola() {
     entrega: (p.tipoEntrega === "Mesa" ? "Mesa" : p.tipoEntrega) as TicketKds["entrega"],
     recibidoEn: new Date(p.creadoEn).getTime(),
     estado: p.estado === "Recibido" ? "nuevo" : "preparando",
-    yapePendiente: p.metodoPago === "Yape" && p.estadoPago === "Pendiente",
+    yapePendiente: p.tipoEntrega !== "Mesa" && p.metodoPago === "Yape" && p.estadoPago !== "Verificado",
     repartidorId: p.repartidorId,
     items: p.detalles.map((d) => ({
       qty: d.cantidad,

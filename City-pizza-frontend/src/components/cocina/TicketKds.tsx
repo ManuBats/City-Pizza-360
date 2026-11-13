@@ -63,7 +63,7 @@ export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, 
         ))}
       </ul>
 
-      <div className="mt-4 flex gap-2">
+      {t.entrega === "Delivery" && <div className="mt-4 flex gap-2">
         <select
           value={t.repartidorId ? String(t.repartidorId) : repId}
           disabled={Boolean(t.repartidorId)}
@@ -87,11 +87,12 @@ export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, 
             <Bike className="h-4 w-4" />
           </button>
         )}
-      </div>
+      </div>}
 
       <div className="mt-3">
         {t.estado === "nuevo" ? (
           <button
+            disabled={t.yapePendiente}
             onClick={() => onIniciar(t.id)}
             className="btn-tactile w-full bg-brand-black text-lg text-white transition-colors hover:bg-brand-black/90"
           >

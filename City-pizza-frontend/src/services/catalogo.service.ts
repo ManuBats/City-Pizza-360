@@ -37,7 +37,19 @@ export const CatalogoService = {
     return normalizar(data);
   },
 
-  async actualizar(id: number, patch: Partial<Pick<PizzaApi, "disponible"> & { destacada?: boolean }>): Promise<PizzaApi> {
+  async actualizar(
+    id: number,
+    patch: Partial<
+      Pick<
+        PizzaApi,
+        | "disponible"
+        | "destacada"
+        | "precioPersonal"
+        | "precioMediana"
+        | "precioFamiliar"
+      >
+    >,
+  ): Promise<PizzaApi> {
     const data = await apiFetch<PizzaRaw>(`/pizzas/${id}`, {
       method: "PATCH",
       body: JSON.stringify(patch),

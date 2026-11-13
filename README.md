@@ -4,12 +4,12 @@ CityPizza360 es el sistema de pedidos y operación de City Pizza Center, en San 
 
 ## Cómo funciona
 
-1. El cliente consulta la carta y realiza un pedido como invitado para delivery o recojo en tienda. El mesero registra las comandas de mesa desde el panel interno.
+1. El cliente consulta la carta y realiza un pedido como invitado para delivery o recojo en tienda. El cajero registra las comandas de mesa desde el panel interno.
 2. La API calcula el total, comprueba la disponibilidad de las pizzas y valida el stock según sus recetas. Registra el pedido, sus líneas y el descuento de insumos en una transacción.
 3. Cocina consulta la cola de preparación. En el flujo de reparto, cocina puede asignar un repartidor y este consulta sus entregas asignadas. La secuencia de estados de la API es **Recibido → En preparación → Listo → En camino → Entregado**.
 4. El cliente consulta el estado en `/tracking` con su código de pedido y celular. La pantalla de cocina actualiza sus datos cada 3 segundos y el seguimiento público cada 10 segundos.
 
-El sistema admite efectivo y Yape. Para pedidos web con Yape, el cliente puede adjuntar un comprobante y caja o administración lo verifica manualmente. El QR real de Yape está pendiente de configuración. Los comprobantes y las imágenes de productos subidas se guardan en el directorio local `uploads/` del backend.
+El sistema admite efectivo y Yape. En pedidos web con Yape, caja o administración debe aprobar el comprobante antes de que cocina pueda iniciar la preparación. El cliente puede adjuntarlo o reemplazarlo desde seguimiento. Los comprobantes nuevos se guardan en `uploads-private/comprobantes/` y se consultan por la API con sesión de caja o administración. Las fotos públicas de catálogo y promociones se guardan en `uploads/productos/`. Conserva ambos directorios entre reinicios y despliegues.
 
 ### Acceso del personal
 
@@ -18,10 +18,9 @@ El personal ingresa por `/login`. La API usa JWT y permisos por rol en los endpo
 | Rol | Panel | Funciones principales |
 | --- | --- | --- |
 | Administrador | `/admin`, `/admin/usuarios` | Gestionar catálogo, inventario, promociones y personal, y consultar reportes. También puede acceder a los demás paneles. |
-| Cajero | `/cajero` | Consultar pedidos, revisar pagos Yape, cambiar la disponibilidad de la carta y publicar promociones flash. |
+| Cajero | `/cajero` | Consultar pedidos, revisar pagos Yape, cambiar la disponibilidad de la carta y publicar promociones flash y registrar comandas en `/mesa`. |
 | Cocinero | `/cocina` | Consultar la cola de preparación, actualizar pedidos y asignar repartidores. |
 | Repartidor | `/delivery` | Consultar entregas asignadas y actualizar su estado. |
-| Mesero | `/mesa` | Registrar comandas de mesa con notas por producto. |
 
 ## Arquitectura
 
@@ -55,10 +54,13 @@ Al crear el entorno por primera vez, edita `.env` con estos valores antes de apl
 ```powershell
 npm run prisma:generate
 npm run prisma:migrate
-# Opcional: cargar catálogo, insumos y cuentas de demostración en desarrollo.
 npm run prisma:seed
+# Opcional: cargar datos ficticios en una base de desarrollo.
+npm run prisma:seed:demo
 npm run dev
 ```
+
+El seed base crea solo la cuenta de administrador. Configura `ADMIN_USUARIO`, `ADMIN_NOMBRE` y `ADMIN_PASSWORD` antes de ejecutarlo. El seed de demostración añade catálogo, insumos, promociones y trabajadores ficticios.
 
 ### Frontend
 
@@ -70,6 +72,12 @@ npm run dev
 ```
 
 `VITE_API_URL` apunta a la API y viene configurada como `http://localhost:3000` en el ejemplo. Si cambias el puerto de la API, actualiza esa variable antes de iniciar Vite. Abre `http://localhost:5173` para acceder a la tienda.
+
+Con `npm run dev`, si las tres variables de Yape están vacías, el checkout usa el número y el QR que aportó el equipo en el PR #4 para probar el flujo con su cuenta de pruebas. Si necesitas usar otra cuenta, configura juntos `VITE_YAPE_TITULAR`, `VITE_YAPE_NUMERO` y `VITE_YAPE_QR_URL`. En una compilación de producción las tres variables son obligatorias para habilitar Yape; usa los datos confirmados por el negocio.
+
+Los gráficos de ventas y productos vendidos cuentan pedidos con pago verificado. El efectivo se registra al marcar el pedido como entregado.
+
+Administración y Caja pueden vincular una promoción a un producto y un tamaño. En el carrito web, se aplica automáticamente el menor precio vigente para cada línea. Si una promoción vence o cambia mientras se confirma el pedido, el checkout actualiza el total y pide confirmarlo de nuevo. Administración puede vincular las promociones ya existentes desde su editor.
 
 ## API y verificación
 

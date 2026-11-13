@@ -9,12 +9,13 @@ import {
 } from "lucide-react";
 import { PedidosService } from "@/services/pedidos.service";
 import { CatalogoService } from "@/services/catalogo.service";
-import { PromocionesService } from "@/services/promociones.service";
+import { PromocionesService, type PromocionApi } from "@/services/promociones.service";
 import { InventarioService, ReportesService } from "@/services/operacion.service";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { getErrorMessage } from "@/services/api";
 import type { EstadoPedido } from "@/types/pedido";
 import type { TabAdmin } from "@/types/admin";
+import type { Producto } from "@/lib/pizzas";
 
 const ETIQUETA: Record<EstadoPedido, string> = {
   Recibido: "Recibido",
@@ -49,6 +50,8 @@ export function useAdminDashboard() {
   const [promoNombre, setPromoNombre] = useState("");
   const [promoDetalle, setPromoDetalle] = useState("");
   const [promoPrecio, setPromoPrecio] = useState(45);
+  const [promoPizza, setPromoPizza] = useState<number | null>(null);
+  const [promoTamano, setPromoTamano] = useState<NonNullable<PromocionApi["tamano"]>>("Familiar");
   const [promoHoras, setPromoHoras] = useState(0);
   const [prodNombre, setProdNombre] = useState("");
   const [prodTipo, setProdTipo] = useState("Pizza");
@@ -57,6 +60,21 @@ export function useAdminDashboard() {
   const [prodMediana, setProdMediana] = useState(25);
   const [prodFamiliar, setProdFamiliar] = useState(32);
   const [prodImagen, setProdImagen] = useState<File | null>(null);
+  const [prodEditImagen, setProdEditImagen] = useState<File | null>(null);
+  const [precioEdit, setPrecioEdit] = useState<{
+    id: number;
+    nombre: string;
+    personal: number;
+    mediana: number;
+    familiar: number;
+  } | null>(null);
+  const [precioEditPromo, setPrecioEditPromo] = useState<{
+    pizzaId: number | null;
+    tamano: NonNullable<PromocionApi["tamano"]>;
+    id: number;
+    nombre: string;
+    precioPromo: number;
+  } | null>(null);
   const [insNombre, setInsNombre] = useState("");
   const [insStock, setInsStock] = useState(0);
   const [insMinimo, setInsMinimo] = useState(0);
@@ -81,6 +99,19 @@ export function useAdminDashboard() {
   });
 
   const recargar = (key: string[]) => queryClient.invalidateQueries({ queryKey: key });
+  const recargarPromos = () => Promise.all([
+    recargar(["promos-admin"]),
+    recargar(["promociones-visibles"]),
+  ]);
+
+  const imagenPromo = useMutation({
+    mutationFn: ({ id, archivo }: { id: number; archivo: File }) => PromocionesService.subirImagen(id, archivo),
+    onSuccess: () => {
+      void queryClient.invalidateQueries();
+      toast.success("Imagen de promoción actualizada.");
+    },
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo subir la imagen.")),
+  });
   const err = (e: unknown, fb: string) => toast.error(getErrorMessage(e, fb));
 
   const avanzar = useMutation({
@@ -113,12 +144,31 @@ export function useAdminDashboard() {
     onError: (e) => err(e, "No se pudo actualizar."),
   });
 
+  const guardarPrecios = useMutation({
+    mutationFn: () => {
+      if (!precioEdit) throw new Error("Sin producto seleccionado");
+      return CatalogoService.actualizar(precioEdit.id, {
+        precioPersonal: precioEdit.personal,
+        precioMediana: precioEdit.mediana,
+        precioFamiliar: precioEdit.familiar,
+      });
+    },
+    onSuccess: () => {
+      setPrecioEdit(null);
+      toast.success("Precios actualizados");
+      void recargar(["pizzas"]);
+    },
+    onError: (e) => err(e, "No se pudieron actualizar los precios."),
+  });
+
   const crearPromo = useMutation({
     mutationFn: () =>
       PromocionesService.crear({
         nombre: promoNombre.trim(),
         descripcion: promoDetalle.trim() || undefined,
         precioPromo: promoPrecio,
+        pizzaId: promoPizza ?? undefined,
+        tamano: promoPizza ? promoTamano : undefined,
         tipo: "Permanente",
         vigenciaHoras: promoHoras > 0 ? promoHoras : undefined,
       }),
@@ -127,8 +177,9 @@ export function useAdminDashboard() {
       setPromoDetalle("");
       setPromoPrecio(45);
       setPromoHoras(0);
+      setPromoPizza(null);
       toast.success("Promoción creada");
-      void recargar(["promos-admin"]);
+      void recargarPromos();
     },
     onError: (e) => err(e, "No se pudo crear la promo."),
   });
@@ -183,7 +234,7 @@ export function useAdminDashboard() {
     onSuccess: () => {
       setEliminarTarget(null);
       toast.success("Eliminado");
-      void recargar(["promos-admin"]);
+      void recargarPromos();
       void recargar(["pizzas"]);
       void recargar(["inventario"]);
     },
@@ -193,8 +244,39 @@ export function useAdminDashboard() {
   const togglePromo = useMutation({
     mutationFn: ({ id, activa }: { id: number; activa: boolean }) =>
       PromocionesService.toggle(id, activa),
-    onSuccess: () => void recargar(["promos-admin"]),
+    onSuccess: () => void recargarPromos(),
     onError: (e) => err(e, "No se pudo actualizar la promo."),
+  });
+
+  const guardarImagenProducto = useMutation({
+    mutationFn: async () => {
+      if (!precioEdit || !prodEditImagen)
+        throw new Error("Sin producto o imagen seleccionada");
+      return CatalogoService.subirImagen(precioEdit.id, prodEditImagen);
+    },
+    onSuccess: () => {
+      setProdEditImagen(null);
+      toast.success("Imagen actualizada");
+      void recargar(["pizzas"]);
+    },
+    onError: (e) => err(e, "No se pudo subir la imagen."),
+  });
+
+  const guardarPrecioPromo = useMutation({
+    mutationFn: async () => {
+      if (!precioEditPromo) throw new Error("Sin promoción seleccionada");
+      return PromocionesService.actualizar(precioEditPromo.id, {
+        precioPromo: precioEditPromo.precioPromo,
+        pizzaId: precioEditPromo.pizzaId,
+        tamano: precioEditPromo.pizzaId ? precioEditPromo.tamano : null,
+      });
+    },
+    onSuccess: () => {
+      setPrecioEditPromo(null);
+      toast.success("Precio de promoción actualizado");
+      void recargarPromos();
+    },
+    onError: (e) => err(e, "No se pudo actualizar el precio de la promoción."),
   });
 
   const ajustar = useMutation({
@@ -216,7 +298,10 @@ export function useAdminDashboard() {
     total: Number(p.total),
     estado: p.estado,
     etiqueta: etiquetaEstadoAdmin(p.estado),
-    siguiente: SIGUIENTE[p.estado],
+    siguiente: p.estado === "Recibido" && p.tipoEntrega !== "Mesa" && p.metodoPago === "Yape" && p.estadoPago !== "Verificado"
+      ? null
+      : p.estado === "Listo" && p.tipoEntrega !== "Delivery" ? "Entregado" as const
+      : p.estado === "Listo" && !p.repartidorId ? null : SIGUIENTE[p.estado],
     entrega: p.tipoEntrega,
     hora: new Date(p.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
   }));
@@ -245,10 +330,38 @@ export function useAdminDashboard() {
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
     prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
     prodImagen, setProdImagen,
+    precioEdit,
+    abrirEditorPrecios: (prod: Producto) =>
+      setPrecioEdit({
+        id: prod.id,
+        nombre: prod.nombre,
+        personal: prod.precioPersonal,
+        mediana: prod.precioMediana,
+        familiar: prod.precioFamiliar,
+      }),
+    cerrarEditorPrecios: () => setPrecioEdit(null),
+    cambiarPrecio: (campo: "personal" | "mediana" | "familiar", valor: number) =>
+      setPrecioEdit((prev) => (prev ? { ...prev, [campo]: valor } : prev)),
+    guardarPrecios: () => guardarPrecios.mutate(),
+    guardandoPrecios: guardarPrecios.isPending,
+    prodEditImagen, setProdEditImagen,
+    guardarImagenProducto: () => guardarImagenProducto.mutate(),
+    guardandoImagenProducto: guardarImagenProducto.isPending,
+    precioEditPromo, setPrecioEditPromo,
+    abrirEditorPrecioPromo: (promo: PromocionApi) =>
+      setPrecioEditPromo({ id: promo.id, nombre: promo.nombre, precioPromo: promo.precioPromo, pizzaId: promo.pizzaId ?? null, tamano: promo.tamano ?? "Familiar" }),
+    cerrarEditorPrecioPromo: () => setPrecioEditPromo(null),
+    cambiarPrecioPromo: (valor: number) =>
+      setPrecioEditPromo((prev) => (prev ? { ...prev, precioPromo: valor } : prev)),
+    guardarPrecioPromo: () => guardarPrecioPromo.mutate(),
+    guardandoPrecioPromo: guardarPrecioPromo.isPending,
+    subirImagenPromo: (id: number, archivo: File) => imagenPromo.mutate({ id, archivo }),
+    subiendoImagenPromo: imagenPromo.isPending,
     promos: promosQ.data ?? [],
     togglePromo: (id: number, activa: boolean) => togglePromo.mutate({ id, activa }),
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
     promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
+    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
     crearPromo: () => crearPromo.mutate(), creandoPromo: crearPromo.isPending,
     inventario, cargandoInventario: inventarioQ.isLoading, alertas,
     ajustar: (id: number, delta: number) => ajustar.mutate({ id, delta }),

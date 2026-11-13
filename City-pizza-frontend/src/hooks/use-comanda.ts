@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PedidosService } from "@/services/pedidos.service";
 import { getErrorMessage } from "@/services/api";
@@ -27,6 +27,8 @@ export function useComanda() {
   const [enviadas, setEnviadas] = useState<Comanda[]>(leerEnviadas);
   const [tamanoPorId, setTamanoPorId] = useState<Record<number, "Personal" | "Familiar">>({});
   const [enviando, setEnviando] = useState(false);
+  const intento = useRef<{ actual?: { body: string; clave: string } }>({});
+  const enCurso = useRef(false);
 
   const total = useMemo(() => lineas.reduce((acc, l) => acc + l.precio * l.qty, 0), [lineas]);
   const celularValido = useMemo(() => /^9\d{8}$/.test(celular), [celular]);
@@ -54,7 +56,7 @@ export function useComanda() {
   }
 
   async function enviarACocina() {
-    if (mesa === null || lineas.length === 0) return;
+    if (enCurso.current || mesa === null || lineas.length === 0) return;
     if (nombre.trim().length < 2) {
       toast.error("Ingresa el nombre del cliente.");
       return;
@@ -63,6 +65,7 @@ export function useComanda() {
       toast.error("Celular de 9 dígitos, empieza con 9.");
       return;
     }
+    enCurso.current = true;
     setEnviando(true);
     try {
       const notaLinea = nota.trim() || undefined;
@@ -80,7 +83,8 @@ export function useComanda() {
           tamano: l.tamano,
           nota: notaLinea,
         })),
-      });
+      }, intento.current);
+      intento.current = {};
       const comanda: Comanda = {
         id: pedido.codigo,
         mesa,
@@ -110,6 +114,7 @@ export function useComanda() {
     } catch (e) {
       toast.error(getErrorMessage(e, "No se pudo enviar la comanda."));
     } finally {
+      enCurso.current = false;
       setEnviando(false);
     }
   }

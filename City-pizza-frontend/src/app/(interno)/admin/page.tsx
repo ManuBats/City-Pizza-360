@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { Bike, ChefHat, Package, Plus, Star, Tag, Trash2, Upload, Users } from "lucide-react";
+import { Bike, ChefHat, Check, Package, Pencil, Plus, Tag, Trash2, Upload, Users, X } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { ReportesPanel } from "@/components/admin/ReportesPanel";
 import { Campo } from "@/components/ui/Campo";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { RequireRole } from "@/components/worker/worker-auth";
 import { etiquetaEstadoAdmin, useAdminDashboard } from "@/hooks/use-admin-dashboard";
 import { LOCAL, soles } from "@/lib/pizzas";
+import { ProductoPromocion } from "@/components/promociones/ProductoPromocion";
+import { urlPublica } from "@/lib/imagenes";
 import type { TabAdmin } from "@/types/admin";
 
 export default function AdminPage() {
@@ -21,14 +24,22 @@ function AdminDashboard() {
   const {
     tab, setTab,
     pedidos, cargandoPedidos, errorPedidos, reintentarPedidos, avanzarPedido,
-    productos, toggleDisponible, toggleDestacada,
+    productos,
     crearProducto, creandoProducto,
     prodNombre, setProdNombre, prodTipo, setProdTipo, prodCategoria, setProdCategoria,
     prodPersonal, setProdPersonal, prodMediana, setProdMediana, prodFamiliar, setProdFamiliar,
     prodImagen, setProdImagen,
+    prodEditImagen, setProdEditImagen,
+    precioEdit, abrirEditorPrecios, cerrarEditorPrecios, cambiarPrecio,
+    guardarPrecios, guardandoPrecios,
+    guardarImagenProducto, guardandoImagenProducto,
+    precioEditPromo, setPrecioEditPromo,
+    abrirEditorPrecioPromo, cerrarEditorPrecioPromo, cambiarPrecioPromo,
+    guardarPrecioPromo, guardandoPrecioPromo,
     promos, togglePromo,
     promoNombre, setPromoNombre, promoDetalle, setPromoDetalle,
-    promoPrecio, setPromoPrecio, promoHoras, setPromoHoras,
+    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
+    promoPrecio, setPromoPrecio, promoHoras, setPromoHoras, subirImagenPromo, subiendoImagenPromo,
     crearPromo, creandoPromo,
     inventario, alertas,
     ajustar,
@@ -78,6 +89,7 @@ function AdminDashboard() {
           {(
             [
               ["pedidos", "Pedidos en vivo"],
+              ["reportes", "Reportes"],
               ["catalogo", "Catálogo y Promos"],
               ["inventario", `Inventario${alertas.length ? ` (${alertas.length})` : ""}`],
             ] as [TabAdmin, string][]
@@ -143,6 +155,8 @@ function AdminDashboard() {
           </section>
         )}
 
+        {tab === "reportes" && <ReportesPanel />}
+
         {tab === "catalogo" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-2">
             {/* Productos */}
@@ -176,7 +190,7 @@ function AdminDashboard() {
                   </Campo>
                   <Campo titulo="Precio personal (S/)">
                     <input
-                      type="number" min={1} value={prodPersonal}
+                      type="number" min={0.01} step={0.01} value={prodPersonal}
                       onChange={(e) => setProdPersonal(Number(e.target.value))}
                       placeholder="18"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -184,7 +198,7 @@ function AdminDashboard() {
                   </Campo>
                   <Campo titulo="Precio mediana (S/)">
                     <input
-                      type="number" min={1} value={prodMediana}
+                      type="number" min={0.01} step={0.01} value={prodMediana}
                       onChange={(e) => setProdMediana(Number(e.target.value))}
                       placeholder="25"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -192,7 +206,7 @@ function AdminDashboard() {
                   </Campo>
                   <Campo titulo="Precio familiar (S/)">
                     <input
-                      type="number" min={1} value={prodFamiliar}
+                      type="number" min={0.01} step={0.01} value={prodFamiliar}
                       onChange={(e) => setProdFamiliar(Number(e.target.value))}
                       placeholder="32"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -221,21 +235,116 @@ function AdminDashboard() {
                 {productos.map((prod) => (
                   <li
                     key={prod.id}
-                    className="flex items-center gap-3 rounded-2xl border border-border p-3"
+                    className="rounded-2xl border border-border p-3"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">{prod.nombre}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {prod.categoria} · Pers {soles(prod.precioPersonal)} · Med {soles(prod.precioMediana)} · Fam {soles(prod.precioFamiliar)}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={urlPublica(prod.imagen) ?? undefined}
+                        alt={prod.nombre}
+                        className="w-16 h-16 rounded-lg object-cover bg-muted"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{prod.nombre}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {prod.categoria} · Pers {soles(prod.precioPersonal)} · Med {soles(prod.precioMediana)} · Fam {soles(prod.precioFamiliar)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => abrirEditorPrecios(prod)}
+                        className="grid h-9 w-9 place-items-center rounded-full text-primary hover:bg-primary/10"
+                        aria-label={`Editar precios de ${prod.nombre}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setEliminarTarget({ tipo: "producto", id: prod.id, nombre: prod.nombre })}
+                        className="grid h-9 w-9 place-items-center rounded-full text-primary"
+                        aria-label="Eliminar producto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setEliminarTarget({ tipo: "producto", id: prod.id, nombre: prod.nombre })}
-                      className="grid h-9 w-9 place-items-center rounded-full text-primary"
-                      aria-label="Eliminar producto"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+
+                    {precioEdit && precioEdit.id === prod.id && (
+                      <div className="mt-3 rounded-xl bg-muted/60 p-3">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                          Nuevos precios para {prod.nombre}
+                        </p>
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          <Campo titulo="Personal (S/)">
+                            <input
+                              type="number" min={0.01} step={0.01} value={precioEdit.personal}
+                              onChange={(e) => cambiarPrecio("personal", Number(e.target.value))}
+                              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                            />
+                          </Campo>
+                          <Campo titulo="Mediana (S/)">
+                            <input
+                              type="number" min={0.01} step={0.01} value={precioEdit.mediana}
+                              onChange={(e) => cambiarPrecio("mediana", Number(e.target.value))}
+                              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                            />
+                          </Campo>
+                          <Campo titulo="Familiar (S/)">
+                            <input
+                              type="number" min={0.01} step={0.01} value={precioEdit.familiar}
+                              onChange={(e) => cambiarPrecio("familiar", Number(e.target.value))}
+                              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                            />
+                          </Campo>
+                          <Campo titulo="Cambiar imagen" className="col-span-3">
+                            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-input px-3 py-2 text-sm">
+                              <Upload className="h-4 w-4 text-muted-foreground" />
+                              {prodEditImagen?.name ?? "Seleccionar imagen"}
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                onChange={(e) =>
+                                  setProdEditImagen(e.target.files?.[0] ?? null)
+                                }
+                              />
+                            </label>
+                          </Campo>
+                        </div>
+                        <div className="mt-3 flex flex-wrap justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setProdEditImagen(null);
+                              cerrarEditorPrecios();
+                            }}
+                            disabled={guardandoPrecios || guardandoImagenProducto}
+                            className="inline-flex min-h-9 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted disabled:opacity-60"
+                          >
+                            <X className="h-4 w-4" /> Cancelar
+                          </button>
+                          <button
+                            onClick={guardarPrecios}
+                            disabled={
+                              guardandoPrecios ||
+                              guardandoImagenProducto ||
+                              !preciosValidos(precioEdit)
+                            }
+                            className="inline-flex min-h-9 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                          >
+                            <Check className="h-4 w-4" />
+                            {guardandoPrecios ? "Guardando…" : "Guardar precios"}
+                          </button>
+                          {prodEditImagen && (
+                            <button
+                              onClick={guardarImagenProducto}
+                              disabled={guardandoImagenProducto}
+                              className="inline-flex min-h-9 items-center gap-1 rounded-xl bg-secondary px-4 text-sm font-semibold text-brand-black hover:bg-secondary/80 disabled:opacity-60"
+                            >
+                              <Upload className="h-4 w-4" />
+                              {guardandoImagenProducto
+                                ? "Subiendo…"
+                                : "Subir imagen"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -261,10 +370,11 @@ function AdminDashboard() {
                     className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                 </Campo>
+                <ProductoPromocion productos={productos} pizzaId={promoPizza} tamano={promoTamano} onProducto={setPromoPizza} onTamano={setPromoTamano} />
                 <div className="grid grid-cols-2 gap-2">
                   <Campo titulo="Precio promo (S/)">
                     <input
-                      type="number" min={1} value={promoPrecio}
+                      type="number" min={0.01} step={0.01} value={promoPrecio}
                       onChange={(e) => setPromoPrecio(Number(e.target.value))}
                       placeholder="45"
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -288,33 +398,121 @@ function AdminDashboard() {
                 </button>
               </div>
               <ul className="mt-4 space-y-2">
-                {promos.map((promo) => (
-                  <li
-                    key={promo.id}
-                    className="flex items-center gap-3 rounded-2xl border border-border p-3"
-                  >
-                    <Tag className="h-5 w-5 shrink-0 text-primary" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">{promo.nombre} · {soles(Number(promo.precioPromo))}</p>
-                      <p className="text-xs text-muted-foreground">{promo.descripcion}</p>
-                    </div>
-                    <button
-                      onClick={() => togglePromo(promo.id, !promo.activa)}
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${
-                        promo.activa ? "bg-secondary text-brand-black" : "bg-muted text-muted-foreground"
+                {promos.map((promo) => {
+                  const editando = precioEditPromo?.id === promo.id;
+                  return (
+                    <li
+                      key={promo.id}
+                      className={`rounded-2xl border border-border p-3 ${
+                        editando ? "bg-muted/50" : ""
                       }`}
                     >
-                      {promo.activa ? "Activa" : "Pausada"}
-                    </button>
-                    <button
-                      onClick={() => setEliminarTarget({ tipo: "promo", id: promo.id, nombre: promo.nombre })}
-                      className="grid h-9 w-9 place-items-center rounded-full text-primary"
-                      aria-label="Eliminar promo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                          <Tag className="h-5 w-5 shrink-0 text-primary" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold">
+                              {promo.nombre} · {soles(Number(promo.precioPromo))}
+                            </p>
+                            {promo.descripcion && (
+                              <p className="text-xs text-muted-foreground">
+                                {promo.descripcion}
+                              </p>
+                            )}
+                          </div>
+                          {!editando && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  togglePromo(promo.id, !promo.activa)
+                                }
+                                className={`rounded-full px-3 py-1 text-xs font-bold ${
+                                  promo.activa
+                                    ? "bg-secondary text-brand-black"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {promo.activa ? "Activa" : "Pausada"}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setEliminarTarget({
+                                    tipo: "promo",
+                                    id: promo.id,
+                                    nombre: promo.nombre,
+                                  })
+                                }
+                                className="grid h-9 w-9 place-items-center rounded-full text-primary"
+                                aria-label="Eliminar promo"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => abrirEditorPrecioPromo(promo)}
+                                className="grid h-9 w-9 place-items-center rounded-full text-secondary hover:bg-secondary/10"
+                                aria-label="Editar precio"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        <label className="flex flex-wrap items-center gap-2 text-sm">
+                          Imagen de la promoción
+                          <input type="file" accept="image/jpeg,image/png,image/webp" disabled={subiendoImagenPromo}
+                            onChange={(e) => {
+                              const archivo = e.target.files?.[0];
+                              if (archivo) subirImagenPromo(promo.id, archivo);
+                              e.target.value = "";
+                            }} />
+                        </label>
+                        {editando && precioEditPromo && (
+                          <ProductoPromocion productos={productos} pizzaId={precioEditPromo.pizzaId} tamano={precioEditPromo.tamano}
+                            onProducto={(pizzaId) => setPrecioEditPromo({ ...precioEditPromo, pizzaId })}
+                            onTamano={(tamano) => setPrecioEditPromo({ ...precioEditPromo, tamano })} />
+                        )}
+                        {editando && (
+                          <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                            <Campo
+                              titulo={`Nuevo precio para ${promo.nombre}`}
+                              className="flex-1"
+                            >
+                              <input
+                                type="number"
+                                min={0.01}
+                                step={0.01}
+                                value={precioEditPromo?.precioPromo ?? 0}
+                                onChange={(e) =>
+                                  cambiarPrecioPromo(Number(e.target.value))
+                                }
+                                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                              />
+                            </Campo>
+                            <div className="flex items-end gap-2">
+                              <button
+                                onClick={cerrarEditorPrecioPromo}
+                                disabled={guardandoPrecioPromo}
+                                className="inline-flex min-h-9 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted disabled:opacity-60"
+                              >
+                                <X className="h-4 w-4" /> Cancelar
+                              </button>
+                              <button
+                                onClick={guardarPrecioPromo}
+                                disabled={guardandoPrecioPromo}
+                                className="inline-flex min-h-9 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                              >
+                                <Check className="h-4 w-4" />
+                                {guardandoPrecioPromo
+                                  ? "Guardando…"
+                                  : "Guardar precio"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </section>
@@ -457,9 +655,20 @@ function AdminDashboard() {
               : "insumo"
         }
         itemName={eliminarTarget?.nombre}
+        submitting={eliminando}
         onClose={() => setEliminarTarget(null)}
         onConfirm={confirmarEliminar}
       />
     </div>
+  );
+}
+
+function preciosValidos(p: {
+  personal: number;
+  mediana: number;
+  familiar: number;
+}): boolean {
+  return [p.personal, p.mediana, p.familiar].every(
+    (n) => Number.isInteger(n) && n > 0,
   );
 }

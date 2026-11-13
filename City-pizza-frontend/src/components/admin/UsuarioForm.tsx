@@ -7,11 +7,20 @@ type Form = ReturnType<typeof useUsuarioForm>;
 /** Formulario de alta (extraído de app/(interno)/admin/usuarios/page.tsx). */
 export function UsuarioForm({ form }: { form: Form }) {
   const {
-    usuario, setUsuario,
-    nombre, setNombre,
-    password, setPassword,
-    rol, setRol,
-    error, creando, onSubmit,
+    usuario,
+    setUsuario,
+    nombre,
+    setNombre,
+    password,
+    setPassword,
+    passwordError,
+    mostrarPassword,
+    toggleMostrarPassword,
+    rol,
+    setRol,
+    error,
+    creando,
+    onSubmit,
   } = form;
 
   return (
@@ -49,16 +58,43 @@ export function UsuarioForm({ form }: { form: Form }) {
         </div>
         <div>
           <label htmlFor="nuevo-password" className="text-sm font-medium">
-            Contraseña temporal
+            Contraseña inicial
           </label>
           <input
             id="nuevo-password"
+            type={mostrarPassword ? "text" : "password"}
+            autoComplete="new-password"
+            aria-describedby={`password-ayuda${passwordError ? " password-error" : ""}`}
+            aria-invalid={Boolean(passwordError)}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mín. 4 caracteres"
+            placeholder="Al menos 12 caracteres"
             required
             className="mt-1 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
           />
+          <button
+            type="button"
+            onClick={toggleMostrarPassword}
+            aria-controls="nuevo-password"
+            aria-pressed={mostrarPassword}
+            className="mt-2 rounded-lg px-2 py-1 text-sm font-semibold text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            {mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+          </button>
+          <p id="password-ayuda" className="mt-2 text-xs text-muted-foreground">
+            Mínimo 12 caracteres y máximo 72 bytes UTF-8. Puedes usar frases con
+            espacios, tildes y emojis; estos últimos pueden ocupar varios bytes.
+            No se exige combinar mayúsculas, números ni símbolos.
+          </p>
+          {passwordError && (
+            <p
+              id="password-error"
+              role="alert"
+              className="mt-1 text-sm text-primary"
+            >
+              {passwordError}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="nuevo-rol" className="text-sm font-medium">

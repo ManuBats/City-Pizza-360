@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PedidosService } from "@/services/pedidos.service";
 import { CatalogoService } from "@/services/catalogo.service";
-import { PromocionesService } from "@/services/promociones.service";
+import { PromocionesService, type PromocionApi } from "@/services/promociones.service";
 import { usePizzas } from "@/hooks/use-pizzas";
 import { getErrorMessage } from "@/services/api";
 import type { EstadoPedido } from "@/types/pedido";
@@ -37,6 +37,8 @@ export function useCajero() {
   const [tab, setTab] = useState<TabCajero>("pedidos");
   const [titulo, setTitulo] = useState("");
   const [detalle, setDetalle] = useState("");
+  const [promoPizza, setPromoPizza] = useState<number | null>(null);
+  const [promoTamano, setPromoTamano] = useState<NonNullable<PromocionApi["tamano"]>>("Familiar");
   const [precio, setPrecio] = useState(38);
   const [horas, setHoras] = useState(24);
   const [errorPromo, setErrorPromo] = useState<string | null>(null);
@@ -63,6 +65,23 @@ export function useCajero() {
     onError: (e) => toast.error(getErrorMessage(e, "No se pudo avanzar el pedido.")),
   });
 
+  const pago = useMutation({
+    mutationFn: ({ id, estado }: { id: number; estado: "Verificado" | "Rechazado" }) =>
+      PedidosService.verificarPago(id, estado),
+    onSuccess: () => void recargarPedidos(),
+    onError: (e) => toast.error(getErrorMessage(e, "No se pudo revisar el pago.")),
+  });
+
+  async function verComprobante(id: number) {
+    try {
+      const url = URL.createObjectURL(await PedidosService.leerComprobante(id));
+      return url;
+    } catch (e) {
+      toast.error(getErrorMessage(e, "No se pudo abrir el comprobante."));
+      return null;
+    }
+  }
+
   const toggleCarta = useMutation({
     mutationFn: ({ id, disponible }: { id: number; disponible: boolean }) =>
       CatalogoService.setDisponibilidad(id, disponible),
@@ -79,6 +98,8 @@ export function useCajero() {
         nombre: titulo.trim(),
         descripcion: detalle.trim() || undefined,
         precioPromo: precio,
+        pizzaId: promoPizza ?? undefined,
+        tamano: promoPizza ? promoTamano : undefined,
         tipo: "Flash",
         vigenciaHoras: horas,
       }),
@@ -87,6 +108,8 @@ export function useCajero() {
       setTitulo("");
       setDetalle("");
       setPrecio(38);
+      setPromoPizza(null);
+      void queryClient.invalidateQueries({ queryKey: ["promociones-visibles"] });
       setHoras(24);
       toast.success("Promo flash publicada");
       void queryClient.invalidateQueries({ queryKey: ["promos-turno"] });
@@ -120,7 +143,13 @@ export function useCajero() {
     total: Number(p.total),
     estado: p.estado,
     etiqueta: etiquetaEstado(p.estado),
-    siguiente: SIGUIENTE[p.estado],
+    siguiente: p.estado === "Recibido" && p.tipoEntrega !== "Mesa" && p.metodoPago === "Yape" && p.estadoPago !== "Verificado"
+      ? null
+      : p.estado === "Listo"
+        ? p.tipoEntrega === "Delivery" ? null : "Entregado" as const
+        : p.tipoEntrega === "Delivery" && p.estado === "EnCamino" ? null : SIGUIENTE[p.estado],
+    comprobante: Boolean(p.comprobanteUrl),
+    revisarPago: Boolean(p.comprobanteUrl) && p.estadoPago === "Pendiente" && p.estado === "Recibido",
     entrega: p.tipoEntrega,
     hora: new Date(p.creadoEn).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
   }));
@@ -131,10 +160,13 @@ export function useCajero() {
     errorPedidos: pedidosQ.error ? getErrorMessage(pedidosQ.error, "No se pudieron cargar los pedidos.") : null,
     reintentarPedidos: () => queryClient.invalidateQueries({ queryKey: ["pedidos"] }),
     avanzarPedido: (id: number, a: EstadoPedido) => avanzar.mutate({ id, a }),
+    verComprobante,
+    revisarPago: (id: number, estado: "Verificado" | "Rechazado") => pago.mutate({ id, estado }),
     productos, cargandoCarta, toggleDisponible: (id: number, disponible: boolean) =>
       toggleCarta.mutate({ id, disponible }),
     promos: promosQ.data ?? [],
     titulo, setTitulo, detalle, setDetalle, precio, setPrecio, horas, setHoras,
+    promoPizza, setPromoPizza, promoTamano, setPromoTamano,
     errorPromo, crearPromo: onCrearPromo, publicando: crearPromo.isPending,
   };
 }
