@@ -46,7 +46,8 @@ El estado de GitHub de la tabla corresponde a la revisión del 12 de noviembre d
 
 ## Pendientes
 
-- [ ] Revisar la integración para su entrega a `dev` y confirmar el estado de los PR en GitHub al momento de publicar.
+- [x] Confirmar el estado de los PR #1 a #5 y abrir el [PR #6](https://github.com/ManuBats/City-Pizza-360/pull/6) en borrador hacia `dev`.
+- [ ] Revisar y fusionar el PR #6 en GitHub.
 - [x] Auditar PostgreSQL local en solo lectura. De 12 productos y 15 pedidos, dos pedidos coincidieron con términos de prueba y ningún producto coincidió. Los candidatos requieren revisión antes de cualquier limpieza.
 - [ ] Validar el titular, número y QR del negocio cuando corresponda habilitar Yape en producción. El recorrido móvil registrado usó datos ficticios.
 - [x] Verificar por API el cierre de salón y recojo hasta «Entregado». Comparar los archivos antes y después de una carga rechazada y comprobar que el archivo anterior se retira al reemplazarlo.

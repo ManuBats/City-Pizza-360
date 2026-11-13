@@ -17,7 +17,8 @@ Dejar operativos el catálogo y el panel administrativo, las promociones públic
 - [x] Verificar por API fotos de pizzas y promociones, reemplazo de foto, precios con céntimos, promociones visibles y reportes. Servir las fotos al iniciar otra instancia del backend.
 - [x] Guardar la integración y las correcciones principales en el commit `200556f` de `codex/integracion-citypizza360`.
 - [x] Restaurar el número y el QR del PR #4 como valores de desarrollo. Verificar que la compilación de producción excluye ambos.
-- [ ] Revisar y publicar la integración con destino a `dev`.
+- [x] Publicar la rama y abrir el [PR #6](https://github.com/ManuBats/City-Pizza-360/pull/6) en borrador hacia `dev`.
+- [ ] Revisar y fusionar el PR #6.
 - [x] Auditar la base local en solo lectura. Dos de quince pedidos coincidieron con términos de prueba y ninguno de doce productos coincidió.
 - [x] Aplicar promociones vigentes al carrito web por producto y tamaño. Administración y Caja pueden asociarlas desde sus paneles.
 - [ ] Validar el titular, número y QR del negocio antes de habilitar Yape en producción.
