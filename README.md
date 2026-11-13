@@ -9,7 +9,7 @@ CityPizza360 es el sistema de pedidos y operación de City Pizza Center, en San 
 3. Cocina consulta la cola de preparación. En el flujo de reparto, cocina puede asignar un repartidor y este consulta sus entregas asignadas. La secuencia de estados de la API es **Recibido → En preparación → Listo → En camino → Entregado**.
 4. El cliente consulta el estado en `/tracking` con su código de pedido y celular. La pantalla de cocina actualiza sus datos cada 3 segundos y el seguimiento público cada 10 segundos.
 
-El sistema admite efectivo y Yape. En pedidos web con Yape, caja o administración debe aprobar el comprobante antes de que cocina pueda iniciar la preparación. El cliente puede adjuntarlo o reemplazarlo desde seguimiento. Los comprobantes nuevos se guardan en `uploads-private/comprobantes/` y se consultan por la API con sesión de caja o administración. Las fotos públicas de catálogo y promociones se guardan en `uploads/productos/`. Conserva ambos directorios entre reinicios y despliegues.
+El sistema admite efectivo y Yape. Para confirmar un pedido web por Yape, el cliente debe enviar su captura desde la ventana del QR. Cerrar esa ventana antes del envío devuelve al carrito. Caja o Administración revisa el comprobante antes de que Cocina pueda iniciar la preparación. Si Caja lo rechaza, el cliente puede reemplazarlo desde seguimiento. Los comprobantes nuevos se guardan en `uploads-private/comprobantes/` y se consultan por la API con sesión de caja o administración. Las fotos públicas de catálogo y promociones se guardan en `uploads/productos/`. Conserva ambos directorios entre reinicios y despliegues.
 
 ### Acceso del personal
 

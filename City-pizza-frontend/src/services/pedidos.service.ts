@@ -33,16 +33,23 @@ function baseUrl(): string {
 /** Módulo Pedidos: checkout invitado + tracking + cambio de estado. */
 export const PedidosService = {
   /** POST /pedidos (sin token). */
-  async crear(payload: CrearPedidoPayload, intento: { actual?: { body: string; clave: string } }): Promise<Pedido> {
-    const path = payload.tipoEntrega === "Mesa" ? "/pedidos/mesa" : "/pedidos";
+  async crear(payload: CrearPedidoPayload, intento: { actual?: { body: string; clave: string; archivo?: File } }, archivo?: File): Promise<Pedido> {
+    const path = archivo ? "/pedidos/yape" : payload.tipoEntrega === "Mesa" ? "/pedidos/mesa" : "/pedidos";
     const body = toWriteBody(payload);
     const { totalEsperado, ...contenido } = body;
     const key = JSON.stringify(contenido);
-    if (intento.actual?.body !== key)
-      intento.actual = { body: key, clave: crypto.randomUUID() };
+    if (intento.actual?.body !== key || intento.actual.archivo !== archivo)
+      intento.actual = { body: key, clave: crypto.randomUUID(), archivo };
+    const datos = JSON.stringify({ ...contenido, totalEsperado, claveSolicitud: intento.actual.clave });
+    if (archivo) {
+      const form = new FormData();
+      form.append("pedido", datos);
+      form.append("comprobante", archivo);
+      return apiFetch<Pedido>(path, { method: "POST", body: form });
+    }
     return apiFetch<Pedido>(path, {
       method: "POST",
-      body: JSON.stringify({ ...contenido, totalEsperado, claveSolicitud: intento.actual.clave }),
+      body: datos,
     });
   },
 

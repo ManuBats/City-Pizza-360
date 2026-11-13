@@ -200,27 +200,41 @@ describe('Pedidos con PostgreSQL aislado', () => {
     const repartidor = await trabajador('Repartidor');
     const http = request(app.getHttpServer());
     await db.insumo.update({ where: { id: insumo }, data: { stock: 1 } });
-    const pedido = await http
-      .post('/pedidos')
-      .send({
-        ...body(),
-        tipoEntrega: 'Delivery',
-        direccion: 'Dirección ficticia',
-        metodoPago: 'Yape',
-      })
+    const datos = {
+      ...body(),
+      tipoEntrega: 'Delivery',
+      direccion: 'Dirección ficticia',
+      metodoPago: 'Yape',
+      claveSolicitud: randomUUID(),
+    };
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aK1sAAAAASUVORK5CYII=',
+      'base64',
+    );
+    const crearYape = () => http.post('/pedidos/yape').field('pedido', JSON.stringify(datos));
+    await http.post('/pedidos').send(datos).expect(400);
+    await crearYape().expect(400);
+    await crearYape().attach('comprobante', Buffer.from('no es imagen'), 'prueba.png').expect(400);
+    expect(await db.pedido.count({ where: { claveSolicitud: datos.claveSolicitud } })).toBe(0);
+    expect(await stock()).toBe(1);
+    const pedido = await crearYape()
+      .attach('comprobante', png, 'prueba.png')
       .expect(201);
     const { id, codigo } = pedido.body;
     pedidos.push(id);
+    const primero = (await db.pedido.findUniqueOrThrow({ where: { id } }))
+      .comprobanteUrl!;
+    archivos.push(primero);
+    expect(pedido.body.comprobanteUrl).toBe(`/pedidos/${id}/comprobante`);
+    const repetido = await crearYape().attach('comprobante', png, 'prueba.png').expect(201);
+    expect(repetido.body.id).toBe(id);
+    expect(await stock()).toBe(0.85);
     const comprobante = `/pedidos/${id}/comprobante`;
     const estado = (valor: string, auth: string) =>
       http
         .patch(`/pedidos/${id}/estado`)
         .set('Authorization', auth)
         .send({ estado: valor });
-    const png = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aK1sAAAAASUVORK5CYII=',
-      'base64',
-    );
     const subir = (token?: string) =>
       http
         .post(comprobante)
@@ -242,14 +256,6 @@ describe('Pedidos con PostgreSQL aislado', () => {
       .get(comprobante)
       .set('Authorization', repartidor.auth)
       .expect(403);
-    const seguimiento = await http
-      .get('/pedidos/tracking')
-      .query({ codigo, celular: body().celular })
-      .expect(200);
-    await subir(seguimiento.body.comprobanteToken).expect(201);
-    const primero = (await db.pedido.findUniqueOrThrow({ where: { id } }))
-      .comprobanteUrl!;
-    archivos.push(primero);
     await http
       .get(comprobante)
       .set('Authorization', caja.auth)
@@ -259,6 +265,10 @@ describe('Pedidos con PostgreSQL aislado', () => {
       .patch(`/pedidos/${id}/pago`)
       .set('Authorization', caja.auth)
       .send({ estadoPago: 'Rechazado' })
+      .expect(200);
+    const seguimiento = await http
+      .get('/pedidos/tracking')
+      .query({ codigo, celular: body().celular })
       .expect(200);
     await subir(seguimiento.body.comprobanteToken).expect(201);
     archivos.push(
@@ -271,12 +281,14 @@ describe('Pedidos con PostgreSQL aislado', () => {
       .send({ estadoPago: 'Verificado' })
       .expect(200);
     await estado('Preparacion', cocina.auth).expect(200);
-    await estado('Listo', cocina.auth).expect(200);
+    await estado('Listo', cocina.auth).expect(400);
+    expect((await db.pedido.findUniqueOrThrow({ where: { id } })).estado).toBe('Preparacion');
     await http
       .patch(`/pedidos/${id}/asignar`)
       .set('Authorization', cocina.auth)
       .send({ repartidorId: repartidor.id })
       .expect(200);
+    await estado('Listo', cocina.auth).expect(200);
     await estado('EnCamino', repartidor.auth).expect(200);
     await estado('Entregado', repartidor.auth).expect(200);
 

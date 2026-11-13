@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { Banknote, Check, CheckCircle2, Copy, Loader2, Upload } from "lucide-react";
-import { PedidosService } from "@/services/pedidos.service";
+import { Check, CheckCircle2, Copy, Loader2, Upload, X } from "lucide-react";
 import { getErrorMessage } from "@/services/api";
 import { soles } from "@/lib/pizzas";
 import type { Pedido } from "@/types/pedido";
 import { AccionesSeguimiento } from "@/components/checkout/AccionesSeguimiento";
 
 interface YapeModalProps {
-  pedido: Pedido;
+  total: number;
+  onConfirmar: (archivo: File) => Promise<Pedido | null>;
   onSubido: (pedido: Pedido) => void;
-  onOmitir: () => void;
+  onCerrar: () => void;
+  reemplazo?: boolean;
 }
 
 const yapeConfiguracion = {
@@ -27,7 +28,7 @@ const YAPE_QR_URL = yapePruebas ? "/src/assets/yape-pruebas.png" : yapeConfigura
 export const yapeConfigurado = Boolean(YAPE_TITULAR && /^9\d{8}$/.test(YAPE_NUMERO_LIMPIO ?? "") && YAPE_QR_URL);
 
 /** Modal de pago Yape: muestra QR + titular y sube el comprobante. */
-export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
+export function YapeModal({ total, onConfirmar, onSubido, onCerrar, reemplazo = false }: YapeModalProps) {
   const [archivo, setArchivo] = useState<File | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,8 +54,9 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
     setError(null);
     setSubiendo(true);
     try {
-      const actualizado = await PedidosService.subirComprobante(pedido, archivo);
-      setRecibido(actualizado);
+      const pedido = await onConfirmar(archivo);
+      if (pedido) setRecibido(pedido);
+      else setError("Revisa los datos de tu pedido antes de continuar.");
     } catch (e) {
       setError(getErrorMessage(e, "No se pudo subir el comprobante."));
     } finally {
@@ -85,11 +87,13 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-brand-black/70 p-4">
-      <div className="card-soft w-full max-w-sm p-6 text-center">
-        <p className="text-sm font-semibold text-muted-foreground">Pedido {pedido.codigo}</p>
-        <AccionesSeguimiento pedido={pedido} />
-        <h2 className="mt-1 text-2xl font-extrabold">
-          Paga {soles(Number(pedido.total))} por Yape
+      <div role="dialog" aria-modal="true" aria-labelledby="titulo-yape" className="card-soft relative w-full max-w-sm p-6 pt-12 text-center">
+        <button type="button" onClick={onCerrar} disabled={subiendo} aria-label="Cerrar pago Yape"
+          className="absolute right-3 top-3 rounded-full p-2 text-muted-foreground hover:bg-muted disabled:opacity-40">
+          <X className="h-5 w-5" />
+        </button>
+        <h2 id="titulo-yape" className="mt-1 text-2xl font-extrabold">
+          {reemplazo ? "Adjunta tu comprobante Yape" : `Paga ${soles(total)} por Yape`}
         </h2>
 
         <div className="mx-auto mt-4 grid h-52 w-52 place-items-center overflow-hidden rounded-2xl border border-border bg-muted">
@@ -137,7 +141,7 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
 
         <button
           onClick={subir}
-          disabled={subiendo}
+          disabled={subiendo || !archivo}
           className="btn-tactile mt-3 w-full bg-primary text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
           {subiendo ? (
@@ -145,14 +149,8 @@ export function YapeModal({ pedido, onSubido, onOmitir }: YapeModalProps) {
               <Loader2 className="h-4 w-4 animate-spin" /> Subiendo…
             </span>
           ) : (
-            "Confirmar pago"
+            reemplazo ? "Enviar comprobante" : "Enviar comprobante y confirmar pedido"
           )}
-        </button>
-        <button
-          onClick={onOmitir}
-          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
-        >
-          <Banknote className="h-3.5 w-3.5" /> Adjuntar comprobante más tarde
         </button>
       </div>
     </div>

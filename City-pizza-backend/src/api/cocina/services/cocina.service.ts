@@ -5,10 +5,15 @@ import { PrismaService } from '../../../config/prisma/prisma.service';
 export class CocinaService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Cola KDS: pedidos no entregados, más antiguos primero (polling 3s). */
+  /** Comandas activas y deliveries listos que aún requieren asignación. */
   cola() {
     return this.prisma.pedido.findMany({
-      where: { estado: { in: ['Recibido', 'Preparacion'] } },
+      where: {
+        OR: [
+          { estado: { in: ['Recibido', 'Preparacion'] } },
+          { estado: 'Listo', tipoEntrega: 'Delivery', repartidorId: null },
+        ],
+      },
       orderBy: { creadoEn: 'asc' },
       include: { detalles: { include: { pizza: true } } },
     });

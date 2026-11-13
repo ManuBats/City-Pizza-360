@@ -12,7 +12,7 @@ export type TicketKds = {
   cliente: string;
   entrega: "Delivery" | "Recojo" | "Mesa";
   recibidoEn: number;
-  estado: "nuevo" | "preparando";
+  estado: "nuevo" | "preparando" | "listo";
   yapePendiente: boolean;
   repartidorId: number | null;
   items: { qty: number; nombre: string; nota?: string }[];
@@ -59,7 +59,7 @@ export function useCola() {
     cliente: `${p.nombres} ${p.apellidos}`,
     entrega: (p.tipoEntrega === "Mesa" ? "Mesa" : p.tipoEntrega) as TicketKds["entrega"],
     recibidoEn: new Date(p.creadoEn).getTime(),
-    estado: p.estado === "Recibido" ? "nuevo" : "preparando",
+    estado: p.estado === "Listo" ? "listo" : p.estado === "Recibido" ? "nuevo" : "preparando",
     yapePendiente: p.tipoEntrega !== "Mesa" && p.metodoPago === "Yape" && p.estadoPago !== "Verificado",
     repartidorId: p.repartidorId,
     items: p.detalles.map((d) => ({

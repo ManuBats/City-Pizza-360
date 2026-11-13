@@ -16,6 +16,7 @@ export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, 
   const min = minutosDesde(t.recibidoEn, ahora);
   const tarde = min >= 15;
   const [repId, setRepId] = useState("");
+  const faltaRepartidor = t.entrega === "Delivery" && t.repartidorId == null;
 
   return (
     <article
@@ -82,6 +83,7 @@ export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, 
           <button
             onClick={() => repId && onAsignar(t.id, Number(repId))}
             disabled={!repId}
+            aria-label="Asignar repartidor"
             className="btn-tactile inline-flex shrink-0 items-center gap-1 rounded-xl bg-brand-black px-4 text-sm text-white disabled:opacity-40"
           >
             <Bike className="h-4 w-4" />
@@ -90,6 +92,11 @@ export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, 
       </div>}
 
       <div className="mt-3">
+        {faltaRepartidor && t.estado !== "nuevo" && (
+          <p className="mb-2 text-sm font-semibold text-muted-foreground">
+            {t.estado === "listo" ? "Pedido listo. Asigna un repartidor para enviarlo a reparto." : "Asigna un repartidor antes de marcar el pedido como listo."}
+          </p>
+        )}
         {t.estado === "nuevo" ? (
           <button
             disabled={t.yapePendiente}
@@ -98,10 +105,11 @@ export function TicketKds({ ticket: t, ahora, repartidores, onIniciar, onListo, 
           >
             Iniciar
           </button>
-        ) : (
+        ) : t.estado === "preparando" && (
           <button
+            disabled={faltaRepartidor}
             onClick={() => onListo(t.id)}
-            className="btn-tactile w-full bg-primary text-lg text-white transition-colors hover:bg-primary/90"
+            className="btn-tactile w-full bg-primary text-lg text-white transition-colors hover:bg-primary/90 disabled:opacity-40"
           >
             ¡Listo!
           </button>

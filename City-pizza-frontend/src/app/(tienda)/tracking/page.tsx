@@ -16,6 +16,7 @@ import { TiendaLayout } from "@/app/layouts/TiendaLayout";
 import { useTrackingReal, leerUltimoPedido, olvidarUltimoPedido } from "@/hooks/use-tracking";
 import { LOCAL, soles } from "@/lib/pizzas";
 import { YapeModal } from "@/components/checkout/YapeModal";
+import { PedidosService } from "@/services/pedidos.service";
 import { AccionesSeguimiento } from "@/components/checkout/AccionesSeguimiento";
 
 const PASOS = [
@@ -176,7 +177,10 @@ export function TrackingPage() {
               </button>
             )}
             {adjuntar && pedido.comprobanteToken && (
-              <YapeModal pedido={pedido} onSubido={() => setAdjuntar(false)} onOmitir={() => setAdjuntar(false)} />
+              <YapeModal total={pedido.total}
+                onConfirmar={(archivo) => PedidosService.subirComprobante(pedido, archivo)}
+                onSubido={() => setAdjuntar(false)} onCerrar={() => setAdjuntar(false)}
+                reemplazo />
             )}
             {/* Timeline */}
             <section className="card-soft mt-6 p-6">

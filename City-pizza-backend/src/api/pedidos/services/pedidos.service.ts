@@ -115,8 +115,11 @@ export class PedidosService {
   }
 
   /** POST /pedidos (sin token). Todo o nada: pedido + detalle + stock. */
-  async crear(dto: CreatePedidoDto, actor?: JwtPayload) {
+  async crear(dto: CreatePedidoDto, actor?: JwtPayload, comprobante?: Buffer) {
     const tipoEntrega = dto.tipoEntrega ?? 'Delivery';
+    if (tipoEntrega !== 'Mesa' && dto.metodoPago === 'Yape' && !comprobante)
+      throw new BadRequestException('Adjunta el comprobante de Yape para confirmar el pedido');
+    if (comprobante) tipoImagen(comprobante);
     if (
       tipoEntrega === 'Mesa' &&
       (!actor || !['Admin', 'Cajero'].includes(actor.rol))
@@ -132,6 +135,7 @@ export class PedidosService {
         JSON.stringify({
           ...contenido,
           actor: actor?.sub ?? null,
+          ...(comprobante ? { comprobante: createHash('sha256').update(comprobante).digest('hex') } : {}),
         }),
       )
       .digest('hex');
@@ -231,6 +235,9 @@ export class PedidosService {
       codigo = codigoPedido();
     }
 
+    const archivo = comprobante ? randomUUID() : undefined;
+    const ruta = archivo ? join(privados(), archivo) : undefined;
+    let escribiendoComprobante = false;
     try {
       return await this.prisma.$transaction(async (tx) => {
         const ahora = new Date();
@@ -276,6 +283,7 @@ export class PedidosService {
             referencia: dto.referencia?.trim() || null,
             tipoEntrega,
             metodoPago: dto.metodoPago ?? 'Efectivo',
+            comprobanteUrl: archivo,
             mesa: tipoEntrega === 'Mesa' ? dto.mesa : null,
             total,
           },
@@ -310,9 +318,15 @@ export class PedidosService {
           where: { id: pedido.id },
           include: { detalles: { include: { pizza: true } } },
         });
+        if (ruta && comprobante) {
+          await mkdir(privados(), { recursive: true });
+          escribiendoComprobante = true;
+          await writeFile(ruta, comprobante, { flag: 'wx' });
+        }
         return serializarPedido(creado);
       });
     } catch (error) {
+      if (ruta && escribiendoComprobante) await unlink(ruta).catch(() => undefined);
       if (
         claveSolicitud &&
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -371,7 +385,7 @@ export class PedidosService {
       throw new ForbiddenException(
         'Solo puedes avanzar tus entregas asignadas',
       );
-    if (delivery && entrega && !pedido.repartidorId)
+    if (delivery && (estado === 'Listo' || entrega) && !pedido.repartidorId)
       throw new BadRequestException('Asigna un repartidor primero');
     if (
       estado === 'Preparacion' &&

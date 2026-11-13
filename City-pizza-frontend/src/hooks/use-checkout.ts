@@ -41,14 +41,15 @@ export function useCheckout() {
   const [errores, setErrores] = useState<CheckoutErrores>({});
   const [enviando, setEnviando] = useState(false);
   const [confirmado, setConfirmado] = useState<PedidoConfirmado | null>(null);
-  const intento = useRef<{ actual?: { body: string; clave: string } }>({});
+  const [totalYape, setTotalYape] = useState<number | null>(null);
+  const intento = useRef<{ actual?: { body: string; clave: string; archivo?: File } }>({});
   const enCurso = useRef(false);
 
   const esDelivery = entrega === "delivery";
   const total = subtotal + (esDelivery && subtotal > 0 ? COSTO_DELIVERY : 0);
   const celularValido = useMemo(() => /^9\d{8}$/.test(celular), [celular]);
 
-  async function confirmar(): Promise<PedidoConfirmado | null> {
+  async function confirmar(archivo?: File): Promise<PedidoConfirmado | null> {
     if (enCurso.current || confirmado) return null;
     const errs: CheckoutErrores = {};
     if (items.length === 0) errs.items = "Tu carrito está vacío.";
@@ -85,6 +86,11 @@ export function useCheckout() {
       });
     }
 
+    if (metodoPago === "Yape" && !archivo) {
+      setTotalYape(total);
+      return null;
+    }
+    const totalEsperado = archivo ? totalYape ?? total : total;
     enCurso.current = true;
     setEnviando(true);
     try {
@@ -96,14 +102,14 @@ export function useCheckout() {
         referencia: referencia.trim() || undefined,
         tipoEntrega: esDelivery ? "Delivery" : "Recojo",
         metodoPago,
-        totalEsperado: Math.round(total * 100) / 100,
+        totalEsperado: Math.round(totalEsperado * 100) / 100,
         items: lineas,
-      }, intento.current);
+      }, intento.current, archivo);
       const resultado = { pedido, requiereYape: metodoPago === "Yape" };
       guardarUltimoPedido(pedido.codigo, pedido.celular);
       // Coherencia de precios: el servidor manda; si el carrito tenía
       // precios viejos, se avisa en vez de cobrar en silencio.
-      if (Math.abs(Number(pedido.total) - total) > 0.01) {
+      if (Math.abs(Number(pedido.total) - totalEsperado) > 0.01) {
         toast.warning("Los precios se actualizaron al confirmar. Revisa tu total en Mi pedido.");
       }
       setConfirmado(resultado);
@@ -117,6 +123,7 @@ export function useCheckout() {
           consultas.invalidateQueries({ queryKey: ["pizzas"] }),
         ]);
       }
+      if (archivo) throw error;
       setErrores({ items: getErrorMessage(error, "No se pudo confirmar el pedido.") });
       return null;
     } finally {
@@ -130,6 +137,7 @@ export function useCheckout() {
     intento.current = {};
     clear();
     setConfirmado(null);
+    setTotalYape(null);
     await navigate({
       to: "/tracking",
       search: { codigo: pedido.codigo, celular: pedido.celular },
@@ -139,7 +147,8 @@ export function useCheckout() {
   return {
     items, subtotal, total, esDelivery, celularValido, errores, enviando,
     nombres, apellidos, celular, direccion, referencia, entrega, metodoPago,
-    confirmado,
+    confirmado, totalYape,
+    cerrarYape: () => setTotalYape(null),
     setNombres, setApellidos, setCelular, setDireccion, setReferencia,
     setEntrega, setMetodoPago,
     setQty, setNota, setExtraQueso, remove, confirmar, irATracking,

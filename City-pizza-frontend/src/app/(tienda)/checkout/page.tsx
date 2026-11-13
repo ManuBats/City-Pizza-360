@@ -10,7 +10,7 @@ export function CheckoutPage() {
   const {
     items, subtotal, total, esDelivery, errores, enviando,
     nombres, apellidos, celular, direccion, referencia, metodoPago,
-    confirmado,
+    confirmado, totalYape, cerrarYape,
     setNombres, setApellidos, setCelular, setDireccion, setReferencia,
     setEntrega, setMetodoPago,
     setQty, setNota, setExtraQueso, remove, confirmar, irATracking,
@@ -261,7 +261,7 @@ export function CheckoutPage() {
                       <QrCode className="h-4 w-4 text-primary" /> Pago con Yape
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Al confirmar verás el QR del local y subirás tu captura.
+                      Abre el QR y adjunta tu captura para confirmar el pedido.
                     </p>
                   </>
                 ) : (
@@ -298,18 +298,19 @@ export function CheckoutPage() {
                 disabled={enviando}
                 className="btn-tactile w-full bg-primary text-base text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
-                Confirmar Pedido · {soles(total)}
+                {esYape ? "Ver QR de Yape" : "Confirmar pedido"} · {soles(total)}
               </button>
             </div>
           </aside>
         </div>
       </main>
 
-      {confirmado?.requiereYape && (
+      {totalYape !== null && (
         <YapeModal
-          pedido={confirmado.pedido}
+          total={totalYape}
+          onConfirmar={async (archivo) => (await confirmar(archivo))?.pedido ?? null}
           onSubido={(pedido) => void irATracking(pedido)}
-          onOmitir={() => void irATracking(confirmado.pedido)}
+          onCerrar={cerrarYape}
         />
       )}
     </TiendaLayout>

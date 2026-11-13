@@ -15,6 +15,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { EstadoPago } from '@prisma/client';
@@ -35,6 +36,15 @@ import {
 } from '../dto/pedido.dto';
 import { PedidosService } from '../services/pedidos.service';
 
+const comprobanteInterceptor = FileInterceptor('comprobante', {
+  storage: memoryStorage(),
+  limits: { fileSize: COMPROBANTE_MAX_BYTES },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(jpe?g|png|webp)$/.test(file.mimetype)) cb(null, true);
+    else cb(new BadRequestException('Solo imágenes JPG/PNG/WebP'), false);
+  },
+});
+
 @Controller('pedidos')
 export class PedidosController {
   constructor(private readonly pedidos: PedidosService) {}
@@ -42,6 +52,29 @@ export class PedidosController {
   @Post()
   crear(@Body() dto: CreatePedidoDto) {
     return this.pedidos.crear(dto);
+  }
+
+  @Post('yape')
+  @UseInterceptors(comprobanteInterceptor)
+  async crearYape(
+    @Body('pedido') datos: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('Falta la imagen del comprobante');
+    let contenido: unknown;
+    try {
+      contenido = JSON.parse(datos);
+    } catch {
+      throw new BadRequestException('Datos del pedido inválidos');
+    }
+    if (!contenido || typeof contenido !== 'object' || Array.isArray(contenido))
+      throw new BadRequestException('Datos del pedido inválidos');
+    const dto = await new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }).transform(contenido, { type: 'body', metatype: CreatePedidoDto });
+    return this.pedidos.crear({ ...dto, metodoPago: 'Yape' }, undefined, file.buffer);
   }
 
   @Post('mesa')
@@ -57,16 +90,7 @@ export class PedidosController {
   }
 
   @Post(':id/comprobante')
-  @UseInterceptors(
-    FileInterceptor('comprobante', {
-      storage: memoryStorage(),
-      limits: { fileSize: COMPROBANTE_MAX_BYTES },
-      fileFilter: (_req, file, cb) => {
-        if (/^image\/(jpe?g|png|webp)$/.test(file.mimetype)) cb(null, true);
-        else cb(new BadRequestException('Solo imágenes JPG/PNG/WebP'), false);
-      },
-    }),
-  )
+  @UseInterceptors(comprobanteInterceptor)
   subirComprobante(
     @Param('id', ParseIntPipe) id: number,
     @Headers('x-comprobante-token') token: string | undefined,
